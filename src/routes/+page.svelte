@@ -1,8 +1,8 @@
 <script>
-	import Hero from '$lib/modules/Hero.svelte';
+	import Homepage from '$lib/modules/Homepage';
 </script>
 
-<Hero />
+<Homepage />
 
 <style lang="postcss">
   @reference "tailwindcss";
