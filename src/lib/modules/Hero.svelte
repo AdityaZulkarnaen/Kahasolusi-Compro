@@ -12,17 +12,17 @@
 	
 	<div class="w-full mx-auto relative z-20 flex justify-center">
 		<div class="w-[85%] animate-fade-in-up flex-col align-start">
-			<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 drop-shadow-lg">
+			<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold font-family-sans text-white leading-tight mb-6 drop-shadow-lg">
 				Solusi Digital Inovatif untuk<br class="hidden sm:block">
 				Masa Depan Bisnis Anda
 			</h1>
-			<p class="text-base md:text-lg text-white/90 leading-relaxed mb-8 drop-shadow">
+			<p class="text-base md:text-lg text-white/90 font-family-sans leading-relaxed mb-8 drop-shadow">
 				Kahasolusi menghadirkan layanan pengembangan<br class="hidden sm:block">
 				teknologi berbasis website dan mobile apps<br class="hidden sm:block">
 				dengan kualitas terbaik, menghubungkan ide Anda<br class="hidden sm:block">
 				dengan solusi nyata.
 			</p>
-			<button class="inline-flex items-center gap-2 bg-[#176684] text-white px-8 py-4 rounded-full text-base font-semibold hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/30 transition-all group">
+			<button class="inline-flex items-center gap-2 bg-[#176684] font-family-sans text-white px-8 py-4 rounded-full text-base font-semibold hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/30 transition-all group">
 				Hubungi Kami
                 <ArrowRight class="w-5 h-5" />
 			</button>
