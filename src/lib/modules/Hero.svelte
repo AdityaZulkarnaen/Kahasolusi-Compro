@@ -3,15 +3,15 @@
     import { ArrowRight } from 'lucide-svelte';
 </script>
 
-<section class="relative h-[115vh] flex items-center justify-center bg-gray-900 rounded-b-3xl overflow-hidden">
+<section class="relative h-[135vh] flex items-center justify-center bg-gray-900 rounded-b-3xl overflow-hidden">
 	<!-- Background Image -->
 	<div class="absolute inset-0 bg-cover bg-center z-0" style="background-image: url({HeroBackground});"></div>
 	
 	<!-- Overlay Gradient -->
 	<div class="absolute inset-0 z-10 opacity-43" style="background: linear-gradient(to bottom, #000000 23%, #1F4353 67.23%, #367590 100%);"></div>
 	
-	<div class="w-full mx-auto relative z-20 flex justify-center">
-		<div class="w-[85%] animate-fade-in-up flex-col align-start">
+	<div class="w-full h-screen mx-auto relative z-20 flex self-start justify-center items-center">
+		<div class="w-[85%] h-fit animate-fade-in-up flex-col align-start mt-[8%]">
 			<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold font-family-sans text-white leading-tight mb-6 drop-shadow-lg">
 				Solusi Digital Inovatif untuk<br class="hidden sm:block">
 				Masa Depan Bisnis Anda
