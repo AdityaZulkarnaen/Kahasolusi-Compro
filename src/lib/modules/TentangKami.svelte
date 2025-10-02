@@ -1,23 +1,23 @@
-<section class="py-16 px-8 bg-gradient-to-br from-slate-800 to-slate-900">
-	<div class="max-w-7xl mx-auto">
-		<div class="bg-gradient-to-br from-teal-900/40 to-slate-800/60 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-teal-500/20">
+<script>
+    import { ArrowUpRight } from 'lucide-svelte';
+</script>
+<div class="max-w-7xl mx-auto">
+	<div class="bg-[#004D66] rounded-3xl p-8 md:p-12 shadow-2xl border border-teal-500/20">
 			<div class="grid md:grid-cols-2 gap-8 items-center">
 				<!-- Content -->
-				<div>
-					<h2 class="text-orange-500 uppercase tracking-wider text-sm font-semibold mb-4">
+				<div class="font-family-sans">
+					<h2 class="text-white uppercase tracking-wider text-md font-regular mb-4">
 						TENTANG KAMI
 					</h2>
-					<h3 class="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
+					<h3 class="text-3xl md:text-4xl font-regular text-white mb-6 leading-tight">
 						Memberikan solusi digital yang andal dan sesuai
 					</h3>
 					<p class="text-white/80 leading-relaxed mb-8">
 						Kahasolusi adalah software house yang berfokus pada pengembangan produk digital modern. Dengan pengalaman menjalankan lebih dari 10 proyek berskala pemerintah pusat dan daerah, kami membangun solusi digital yang andal, aman, dan sesuai kebutuhan klien.
 					</p>
-					<button class="inline-flex items-center gap-2 text-white hover:text-orange-400 font-medium transition-colors group">
+					<button class="inline-flex items-center gap-1 text-white hover:text-orange-400 font-regular underline transition-colors group">
 						Ketahui lebih banyak
-						<svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="group-hover:translate-x-1 transition-transform">
-							<path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-						</svg>
+						<ArrowUpRight class="w-5 h-5" />
 					</button>
 				</div>
 
@@ -41,5 +41,4 @@
 				</div>
 			</div>
 		</div>
-	</div>
-</section>
+</div>
