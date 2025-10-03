@@ -8,7 +8,6 @@
 		isMenuOpen = !isMenuOpen;
 	}
 
-	// Check if we're on portfolio page
 	$: isPortfolioPage = $page.url.pathname.includes('/portofolio');
 	$: navbarBg = isPortfolioPage ? 'bg-gray-900/95' : 'bg-white/5';
 	$: borderColor = isPortfolioPage ? 'border-gray-700' : 'border-white';

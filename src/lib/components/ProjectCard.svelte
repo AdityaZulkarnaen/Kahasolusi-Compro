@@ -6,7 +6,7 @@
         project = {
             title: 'Aplikasi Jepla Center',
             description: 'Jepla Center WM Online, Develop Produk Gitar & Government Portal dan Sistem UMK & Inventori, Jepla Center Sistem UMK, Jepla Center Portal, Sistem Jepla Portal Pembayaran, Jepla Center - Sistem Produk Keuangan System & Pembayaran di Hasil UMK...',
-            category: 'akademik', // 'akademik', 'pemerintah', 'swasta'
+            category: 'akademik', 
             image: ProjectExampleImg,
             link: '#'
         }
@@ -25,17 +25,14 @@
     
     <!-- Project Content -->
     <div class="p-6">
-        <!-- Project Title -->
         <h3 class="text-lg font-semibold text-gray-900 mb-3 font-family-sans">
             {project.title}
         </h3>
         
-        <!-- Project Description -->
         <p class="text-gray-600 text-sm leading-relaxed mb-4 font-family-sans line-clamp-4">
             {project.description}
         </p>
         
-        <!-- Social Links Placeholder -->
         <div class="flex gap-3 mb-4">
             <div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
             <div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
