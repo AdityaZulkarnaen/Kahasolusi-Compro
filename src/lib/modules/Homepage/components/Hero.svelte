@@ -4,7 +4,9 @@
 </script>
 
 <!-- Hero Section -->
-<section class="relative h-[135vh] flex items-center bg-gray-900 rounded-b-xl md:rounded-b-2xl lg:rounded-b-4xl overflow-hidden">
+<section
+	class="relative h-[135vh] flex items-center bg-gray-900 rounded-b-xl md:rounded-b-2xl lg:rounded-b-4xl overflow-hidden"
+>
 	<!-- Background Image -->
 	<div
 		class="absolute inset-0 bg-cover bg-center z-0"
