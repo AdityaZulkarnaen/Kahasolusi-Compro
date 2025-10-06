@@ -2,6 +2,7 @@
 	import Hero from './components/Hero.svelte';
 	import TentangKami from './components/TentangKami.svelte';
 	import Client from './components/Client.svelte';
+	import Kelebihan from './components/Kelebihan.svelte';
 </script>
 
 <!-- Homepage Container -->
@@ -17,5 +18,9 @@
 	<!-- Client Section -->
 	<section class="relative bg-white pt-32 z-20">
 		<Client />
+	</section>
+	<!-- Kelebihan Section -->
+	<section class="relative bg-white pt-32 z-20 overflow-hidden">
+		<Kelebihan />
 	</section>
 </div>

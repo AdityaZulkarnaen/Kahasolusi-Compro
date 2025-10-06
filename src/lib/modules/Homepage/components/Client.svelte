@@ -26,14 +26,18 @@
 		<!-- Clients Logo Grid -->
 		<div class="relative overflow-hidden">
 			<!-- Gradient Overlays -->
-			<div class="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-			<div class="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
-			
+			<div
+				class="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"
+			></div>
+			<div
+				class="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"
+			></div>
+
 			<!-- Scrolling Container -->
-			<div 
+			<div
 				class="scroll-container py-8"
-				on:mouseenter={() => isHovered = true}
-				on:mouseleave={() => isHovered = false}
+				on:mouseenter={() => (isHovered = true)}
+				on:mouseleave={() => (isHovered = false)}
 				role="region"
 				aria-label="Client logos"
 			>
@@ -41,8 +45,8 @@
 					<!-- First set of logos -->
 					{#each clients as client}
 						<div class="client-logo">
-							<img 
-								src={client.logo} 
+							<img
+								src={client.logo}
 								alt={client.name}
 								class="max-w-full max-h-full object-contain"
 								on:error={(e) => {
@@ -62,8 +66,8 @@
 					<!-- Duplicate set for seamless loop -->
 					{#each clients as client}
 						<div class="client-logo">
-							<img 
-								src={client.logo} 
+							<img
+								src={client.logo}
 								alt={client.name}
 								class="max-w-full max-h-full object-contain"
 								on:error={(e) => {
@@ -125,7 +129,7 @@
 		.scroll-content {
 			gap: 4rem;
 		}
-		
+
 		.client-logo {
 			width: 7rem;
 			height: 7rem;
