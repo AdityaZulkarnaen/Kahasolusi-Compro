@@ -4,6 +4,7 @@
 	import Layanan from './components/Layanan.svelte';
 	import Client from './components/Client.svelte';
 	import Kelebihan from './components/Kelebihan.svelte';
+	import CTA from './components/CTA.svelte';
 </script>
 
 <!-- Homepage Container -->
@@ -29,5 +30,10 @@
 	<!-- Layanan Section -->
 	<section class="relative bg-white pt-32 z-20" data-section="layanan">
 		<Layanan />
+	</section>
+
+	<!-- CTA Section -->
+	<section class="relative bg-white pt-16 z-20" data-section="cta">
+		<CTA />
 	</section>
 </div>
