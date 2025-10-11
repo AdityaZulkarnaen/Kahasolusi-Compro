@@ -1,6 +1,7 @@
 <script>
 	import Hero from './components/Hero.svelte';
 	import TentangKami from './components/TentangKami.svelte';
+	import Layanan from './components/Layanan.svelte';
 	import Client from './components/Client.svelte';
 	import Kelebihan from './components/Kelebihan.svelte';
 </script>
@@ -15,6 +16,7 @@
 		<TentangKami />
 	</div>
 
+
 	<!-- Client Section -->
 	<section class="relative bg-white pt-32 z-20" data-section="client">
 		<Client />
@@ -22,5 +24,10 @@
 	<!-- Kelebihan Section -->
 	<section class="relative bg-white pt-32 z-20 overflow-hidden">
 		<Kelebihan />
+	</section>
+
+	<!-- Layanan Section -->
+	<section class="relative bg-white pt-32 z-20" data-section="layanan">
+		<Layanan />
 	</section>
 </div>
