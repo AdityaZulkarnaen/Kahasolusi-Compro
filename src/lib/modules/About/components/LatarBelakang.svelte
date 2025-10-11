@@ -2,7 +2,10 @@
 	// You can add any interactive logic here if needed
 </script>
 
-<div class="max-w-7xl mx-auto">
+<div class="max-w-5xl mx-auto relative">
+	<!-- Blur Circle Effect - Pojok Kanan -->
+	<div class="absolute -top-32 -right-96 w-120 h-120 bg-[#176684] rounded-full blur-3xl opacity-60"></div>
+	
 	<div class="grid md:grid-cols-2 gap-12 items-start">
 		<!-- Left Side - Image -->
 		<div class="relative">
@@ -27,20 +30,17 @@
 		<!-- Right Side - Content -->
 		<div class="space-y-6">
 			<div>
-				<h2 class="text-[#0088AA] uppercase tracking-wider text-sm font-semibold mb-3">
+				<h2 class="text-[#0088AA] uppercase tracking-wider text-sm font-medium font-family-sans mb-3">
 					Latar Belakang
 				</h2>
-				<p class="text-gray-700 leading-relaxed">
-					Kahasolusi merupakan perusahaan software house yang berdiri pada tanggal 03 Januari
-					2022. Berfokus pada di berbagai sektor pemerintah.
+				<p class="text-gray-700 leading-relaxed font-family-sans font-semibold border-t-2 border-[#0088AA] pt-4">
+					Kahasolusi merupakan perusahaan software house yang berdiri pada tanggal 01 Januari 2022, Berkantor pusat di Sleman Daerah Istimewa Yogyakarta.
 				</p>
 			</div>
 
 			<div>
-				<p class="text-gray-700 leading-relaxed">
-					Kahasolusi mengembangkan produk dan layanan yang berbasis teknologi informasi terbaru
-					sebagai wadah yang ulung dalam menyajikan berbagai teknologi terbaru dan sudah menjadi
-					lebih dari 10 proyek pemerintah pusat maupun daerah untuk memberikan solusi terbaik.
+				<p class="text-gray-700 leading-relaxed font-family-sans font-semibold">
+					Kahasolusi mengembangkan produk dan layanan teknologi informasi berbasis website dan mobile apps dengan teknologi terbaru dan sudah melayani lebih dari 10 proyek pemerintah pusat maupun daerah untuk tahun pertamanya.
 				</p>
 			</div>
 		</div>
