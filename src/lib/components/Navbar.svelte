@@ -3,6 +3,7 @@
 	let isMenuOpen = false;
 	import { ChevronDown } from 'lucide-svelte';
 	import Logo from '$lib/assets/svg/Logo.svg';
+	import LogoBlue from '$lib/assets/svg/LogoBlue.svg';
 	import { page } from '$app/stores';
 
 	let isClientSectionVisible = false;
@@ -49,10 +50,12 @@
 	});
 
 	$: isPortfolioPage = $page.url.pathname.includes('/portofolio');
+	$: isAboutPage = $page.url.pathname.includes('/about');
 	$: isDarkMode = isPortfolioPage || isClientSectionVisible;
 	$: navbarBg = isDarkMode ? 'bg-gray-900/95' : 'bg-white/5';
 	$: borderColor = isDarkMode ? 'border-gray-700' : 'border-white';
-	$: textColor = isDarkMode ? 'text-white' : 'text-white';
+	$: textColor = isAboutPage ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
+	$: logoSrc = isAboutPage ? LogoBlue : Logo;
 </script>
 
 <nav
@@ -62,7 +65,7 @@
 		<div class="flex items-center justify-between">
 			<!-- Logo -->
 			<a href="/" class="flex items-center gap-2 {textColor} no-underline flex-shrink-0">
-				<img src={Logo} alt="Kahasolusi Logo" class="h-6 sm:h-8 w-auto" />
+				<img src={logoSrc} alt="Kahasolusi Logo" class="h-6 sm:h-8 w-auto" />
 			</a>
 
 			<!-- Desktop Menu -->
@@ -72,12 +75,13 @@
 					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Home</a
 				>
-				<div
+				<a
+					href="/about"
 					class="flex items-center gap-1 {textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 				>
 					<span>Tentang Kami</span>
 					<ChevronDown class="w-4 h-4 flex mt-1" />
-				</div>
+				</a>
 				<a
 					href="/layanan"
 					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
