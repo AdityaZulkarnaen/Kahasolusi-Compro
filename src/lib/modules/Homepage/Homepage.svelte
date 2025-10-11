@@ -16,7 +16,7 @@
 	</div>
 
 	<!-- Client Section -->
-	<section class="relative bg-white pt-32 z-20">
+	<section class="relative bg-white pt-32 z-20" data-section="client">
 		<Client />
 	</section>
 	<!-- Kelebihan Section -->
