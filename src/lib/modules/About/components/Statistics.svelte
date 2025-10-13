@@ -34,7 +34,7 @@
 
 	<div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 md:gap-6 mt-8 sm:mt-12 md:mt-[10%]">
 		{#each stats as stat, index}
-			<!-- Container dengan tinggi responsif -->
+			<!-- Container  -->
 			<div class="relative flex {index % 2 === 0 ? 'items-start' : 'items-center'} min-h-[280px] sm:min-h-[350px] md:min-h-[480px]">
 				<div class="relative w-full">
 					<!-- Radiating blur effect -->
