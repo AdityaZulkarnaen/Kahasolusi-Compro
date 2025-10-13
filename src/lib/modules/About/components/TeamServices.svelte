@@ -41,14 +41,14 @@
 
 					<!-- Content Overlay -->
 					<div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8 text-white">
-						<h3 class="text-3xl self-center text-start w-[95%] md:text-4xl font-semibold mb-6">
+						<h3 class="text-3xl self-center text-start w-[95%] font-family-sans md:text-4xl font-semibold mb-6">
 							{card.title}
 						</h3>
-						<p class="text-sm sm:text-md md:text-xl w-[95%] text-start self-center text-white/90 leading-relaxed mb-[10%]">
+						<p class="text-sm sm:text-md md:text-xl w-[95%] text-start self-center text-white/90 leading-relaxed font-family-sans mb-[10%]">
 							{card.description}
 						</p>
 						<button
-							class="w-[95%] px-6 py-3 border-2 border-white rounded-full text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
+							class="w-[95%] px-6 py-3 border-2 border-white rounded-full font-family-sans text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
 						>
 							{card.buttonText}
 							<svg
@@ -68,16 +68,24 @@
 		</div>
 
 		<!-- CTA Section -->
-		<div class="bg-gradient-to-br from-[#D7EDF5] to-[#B3DDF2] rounded-3xl p-8 md:p-12 lg:p-16 text-center">
-			<h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#004D66] mb-4 md:mb-6">
-				Kisah Sukses Digital Dimulai dari Sini
-			</h2>
-			<p class="text-sm sm:text-base md:text-lg text-[#004D66]/80 leading-relaxed max-w-3xl mx-auto mb-8">
-				Di balik setiap proyek Kahasolusi, ada cerita tentang tantangan, kerja sama, dan keberhasilan. Kami percaya, kisah sukses berikutnya adalah milik Anda. Bergabunglah bersama kami dalam perjalanan transformasi digital yang penuh makna.
-			</p>
-			<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+		<div class="relative bg-gradient-to-br from-[#D7EDF5] to-[#B3DDF2] rounded-3xl p-8 md:p-12 lg:p-16 text-center overflow-hidden">
+			<!-- Blur Circle Effect - Top Left -->
+			<div class="absolute -top-36 -left-36 w-100 h-100 bg-[#004D66] rounded-full blur-3xl opacity-60"></div>
+			
+			<!-- Blur Circle Effect - Bottom Right -->
+			<div class="absolute -bottom-36 -right-36 w-100 h-100 bg-[#004D66] rounded-full blur-3xl opacity-60"></div>
+			
+			<!-- Content -->
+			<div class="relative z-10">
+				<h2 class="text-2xl sm:text-3xl md:text-4xl font-regular font-family-sans text-[#004D66] mb-4 md:mb-6">
+					Kisah Sukses Digital Dimulai dari Sini
+				</h2>
+				<p class="text-sm sm:text-base md:text-lg text-black font-family-sans font-medium leading-relaxed max-w-6xl mx-auto mb-8">
+					Di balik setiap proyek Kahasolusi, ada cerita tentang tantangan, kerja sama, dan keberhasilan. Kami percaya, kisah sukses berikutnya adalah milik Anda. Bergabunglah bersama kami dalam perjalanan transformasi digital yang penuh makna.
+				</p>
+				<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
 				<button
-					class="w-full sm:w-auto px-8 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl"
+					class="w-full sm:w-auto px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl"
 				>
 					Hubungi Kami
 				</button>
@@ -86,6 +94,7 @@
 				>
 					Lihat Layanan
 				</button>
+				</div>
 			</div>
 		</div>
 	</div>
