@@ -3,6 +3,7 @@
 	import VisiMisi from './components/VisiMisi.svelte';
 	import Statistics from './components/Statistics.svelte';
 	import Foundation from './components/Foundation.svelte';
+	import TeamServices from './components/TeamServices.svelte';
 </script>
 
 <main class="min-h-screen bg-white overflow-hidden">
@@ -33,4 +34,7 @@
 
 	<!-- Foundation Section -->
 	<Foundation />
+
+	<!-- Team & Services Section -->
+	<TeamServices />
 </main>
