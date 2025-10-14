@@ -2,6 +2,9 @@
 	import LatarBelakang from './components/LatarBelakang.svelte';
 	import VisiMisi from './components/VisiMisi.svelte';
 	import Statistics from './components/Statistics.svelte';
+	import Foundation from './components/Foundation.svelte';
+	import TeamServices from './components/TeamServices.svelte';
+	import MapSection from './components/MapSection.svelte';
 </script>
 
 <main class="min-h-screen bg-white overflow-hidden">
@@ -29,4 +32,13 @@
 	<section class="py-20 px-4">
 		<Statistics />
 	</section>
+
+	<!-- Foundation Section -->
+	<Foundation />
+
+	<!-- Team & Services Section -->
+	<TeamServices />
+
+	<!-- Map Section -->
+	<MapSection />
 </main>

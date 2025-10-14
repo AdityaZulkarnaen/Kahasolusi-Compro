@@ -1,5 +1,5 @@
 <script>
-	// You can add any interactive logic here if needed
+	import img from '$lib/assets/images/Frame78.png';
 </script>
 
 <div class="max-w-5xl mx-auto relative">
@@ -9,9 +9,9 @@
 	<div class="grid md:grid-cols-2 gap-12 items-start">
 		<!-- Left Side - Image -->
 		<div class="relative">
-			<div class="rounded-2xl overflow-hidden shadow-xl">
+			<div class="rounded-3xl overflow-hidden shadow-xl">
 				<img
-					src="/images/about-background.jpg"
+					src={img}
 					alt="Kahasolusi Team"
 					class="w-full h-auto object-cover"
 					on:error={(e) => {
