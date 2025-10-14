@@ -1,5 +1,5 @@
 <script>
-	// You can add any interactive logic here if needed
+	import img from '$lib/assets/images/Frame79.png';
 </script>
 
 <div class="max-w-5xl mx-auto relative bg-transparent">
@@ -37,7 +37,7 @@ Memberikan solusi perangkat lunak berkualitas tinggi, berfokus pada inovasi tekn
 		<div class="relative bg-transparent h-full">
 			<div class="rounded-2xl overflow-hidden shadow-xl h-full">
 				<img
-					src="/images/visi-misi-team.jpg"
+					src={img}
 					alt="Visi Misi Kahasolusi"
 					class="w-full h-full object-cover"
 					on:error={(e) => {
