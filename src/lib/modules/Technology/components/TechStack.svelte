@@ -32,7 +32,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 	<div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
 		{#each technologies as tech}
-			<div class="tech-item relative flex items-center justify-center p-6 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors group">
+			<div class="tech-item relative flex items-center justify-center p-6 bg-[#D7EDF5] rounded-2xl hover:bg-blue-100 transition-colors group">
 				<!-- Placeholder for VS Code icon -->
 				<div class="w-12 h-12 flex items-center justify-center">
                     <img src={Code} alt={tech.name}>

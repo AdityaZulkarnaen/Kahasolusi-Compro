@@ -1,5 +1,6 @@
 <script>
 	import { ArrowUpRight } from 'lucide-svelte';
+	import Code from '$lib/assets/images/Code.png';
 </script>
 
 <div class="max-w-7xl mx-auto">
@@ -31,7 +32,7 @@
 				>
 					<!-- Placeholder for image - replace with actual image -->
 					<img
-						src="/images/tentang-kami.jpg"
+						src={Code}
 						alt="Tentang Kami"
 						class="w-full h-full object-cover"
 						on:error={(e) => {
