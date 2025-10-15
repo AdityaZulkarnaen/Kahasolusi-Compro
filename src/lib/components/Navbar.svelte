@@ -53,12 +53,13 @@
 	$: isPortfolioPage = $page.url.pathname.includes('/portofolio');
 	$: isAboutPage = $page.url.pathname.includes('/about');
 	$: isTechPage = $page.url.pathname.includes('/teknologi');
+	$: isLayananPage = $page.url.pathname.includes('/layanan');
 	$: isHomePage = $page.url.pathname === '/';
 	$: isDarkMode = isPortfolioPage || isClientSectionVisible;
-	$: navbarBg = (isTechPage || isAboutPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
-	$: borderColor = (isTechPage || isAboutPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-700' : 'border-white');
-	$: textColor = (isAboutPage || isTechPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
-	$: logoSrc = isTechPage ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
+	$: navbarBg = (isTechPage || isAboutPage || isLayananPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
+	$: borderColor = (isTechPage || isAboutPage || isLayananPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-700' : 'border-white');
+	$: textColor = (isAboutPage || isTechPage || isLayananPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
+	$: logoSrc = (isTechPage || isLayananPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
 	$: Strip = (isHomePage || isPortfolioPage) ? 'bg-white' : 'bg-[#176684]';
 </script>
 
@@ -126,17 +127,17 @@
 				aria-expanded={isMenuOpen}
 			>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? 'rotate-45 translate-y-2'
 						: ''}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? 'opacity-0'
 						: 'opacity-100'}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? '-rotate-45 -translate-y-2'
 						: ''}"
 				></span>
