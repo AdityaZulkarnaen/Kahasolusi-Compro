@@ -30,7 +30,7 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-	<div class="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
+	<div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
 		{#each technologies as tech}
 			<div class="tech-item relative flex items-center justify-center p-6 bg-blue-50 rounded-2xl hover:bg-blue-100 transition-colors group">
 				<!-- Placeholder for VS Code icon -->
@@ -40,10 +40,10 @@
 				
 				<!-- Bubble Chat Tooltip -->
 				<div class="tooltip absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out pointer-events-none">
-					<div class="bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap shadow-lg">
+					<div class="bg-[#747474] text-white text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap shadow-lg">
 						{tech.name}
 						<!-- Triangle pointer -->
-						<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-gray-800"></div>
+						<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-[#747474]"></div>
 					</div>
 				</div>
 			</div>
