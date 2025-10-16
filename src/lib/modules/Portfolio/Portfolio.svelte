@@ -12,7 +12,74 @@
     
     // Pagination state
     let currentPage = 1;
-    const itemsPerPage = 8; 
+    const itemsPerPage = 8;
+    
+    // Testimonial state
+    let currentTestimonialSet = 0;
+    const testimonialSets = [
+        [
+            {
+                id: 1,
+                text: "Sangat membantu! Cepat, dapat diandalkan, dan profesional. Kahasolusi membantu perusahaan kami untuk melakukan transformasi digital dengan mudah.",
+                name: "Sarah Mediana",
+                position: "CEO Alternative"
+            },
+            {
+                id: 2,
+                text: "Tim yang sangat responsif dan solusi yang diberikan sangat sesuai dengan kebutuhan bisnis kami. Highly recommended!",
+                name: "Ahmad Rizki",
+                position: "CTO Tech Corp"
+            },
+            {
+                id: 3,
+                text: "Pelayanan yang excellent dan hasil yang memuaskan. Kahasolusi benar-benar memahami kebutuhan digital transformation.",
+                name: "Linda Sari",
+                position: "Operations Manager"
+            }
+        ],
+        [
+            {
+                id: 4,
+                text: "Proyek berjalan sesuai timeline dan budget yang disepakati. Komunikasi yang baik sepanjang proses development.",
+                name: "Budi Santoso",
+                position: "IT Director"
+            },
+            {
+                id: 5,
+                text: "Solusi yang inovatif dan implementasi yang smooth. Tim Kahasolusi sangat professional dalam menangani project kami.",
+                name: "Maya Putri",
+                position: "Business Analyst"
+            },
+            {
+                id: 6,
+                text: "Kualitas hasil kerja yang tinggi dengan dukungan after-sales yang memuaskan. Pasti akan bekerjasama lagi di masa depan.",
+                name: "Rudi Hartono",
+                position: "General Manager"
+            }
+        ],
+        [
+            {
+                id: 7,
+                text: "Pendekatan yang sistematis dan metodologi yang jelas membuat project kami berjalan dengan lancar dari awal hingga akhir.",
+                name: "Siti Nurhaliza",
+                position: "Project Manager"
+            },
+            {
+                id: 8,
+                text: "User experience yang dibuat sangat user-friendly dan sesuai dengan ekspektasi end-user kami. Great job!",
+                name: "Andi Wijaya",
+                position: "UX Lead"
+            },
+            {
+                id: 9,
+                text: "Teknologi terdepan yang diimplementasikan membuat sistem kami menjadi lebih efisien dan scalable.",
+                name: "Dewi Lestari",
+                position: "Systems Architect"
+            }
+        ]
+    ];
+    
+    $: currentTestimonials = testimonialSets[currentTestimonialSet] || testimonialSets[0]; 
     
     // Filtered projects 
     $: filteredProjects = getProjectsByCategory(selectedFilter);
@@ -44,18 +111,19 @@
             currentPage--;
         }
     }
+    
+    function setTestimonialSet(index) {
+        currentTestimonialSet = index;
+    }
 </script>
 
 <!-- Portfolio Container -->
 <div class="relative bg-white min-h-screen">
-    <!-- Header Section with Title and Map -->
     <section class="relative pt-28 pb-16 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto text-center">
-            <!-- Page Title -->
             <div class="mb-16">
                 <h1 class="text-4xl sm:text-5xl lg:text-6xl font-normal text-gray-900 mb-4 font-family-sans inline-block relative">
                     Portfolio Proyek.
-                    <!-- Underline -->
                     <div class="absolute -bottom-6 left-0 w-full h-[2px] bg-gray-900"></div>
                 </h1>
             </div>
@@ -179,6 +247,171 @@
                         />
                     </div>
                 {/each}
+            </div>
+        </div>
+    </section>
+    
+    <!-- Testimonial Section -->
+    <section class="relative bg-[#D7EDF5] py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl sm:text-4xl font-medium text-[#000] font-family-sans">
+                    Mereka yang Telah <span class="text-[#176684] font-semibold">Mempercayai</span> Kahasolusi
+                </h2>
+            </div>
+            
+            <!-- Testimonial Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                {#each currentTestimonials as testimonial, index (testimonial.id)}
+                    <div class="bg-white rounded-xl p-6 shadow-lg relative flex flex-col" in:fade={{ duration: 300, delay: index * 100 }}>
+                        <!-- Quote Icon - dengan radius yang lebih rounded -->
+                        <div class="absolute top-4 left-4 w-10 h-10 bg-[#176684] rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609v3.441c-2.984.448-4.983 2.598-4.983 5.167v2.012h4.983v7.391h-8.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609v3.441c-3.001.448-5 2.598-5 5.167v2.012h5v7.391h-9z"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Quote Text - dengan tinggi yang konsisten -->
+                        <div class="mt-12 mb-6 flex-1 flex items-start">
+                            <p class="text-gray-800 text-sm leading-relaxed font-family-sans font-medium min-h-[120px] flex items-center">
+                                "{testimonial.text}"
+                            </p>
+                        </div>
+                        
+                        <!-- Footer Section dengan posisi yang konsisten -->
+                        <div class="mt-auto">
+                            <!-- Divider Line -->
+                            <div class="w-full h-px bg-gray-200 mb-4"></div>
+                            
+                            <!-- Author -->
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 text-sm font-family-sans">{testimonial.name}</h4>
+                                    <p class="text-gray-500 text-xs font-family-sans">{testimonial.position}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+            
+            <!-- Pagination Dots -->
+            <div class="flex justify-center gap-2">
+                {#each testimonialSets as _, index}
+                    <button
+                        class="transition-all duration-300 rounded-full {currentTestimonialSet === index 
+                            ? 'w-6 h-2 bg-[#176684]' 
+                            : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'}"
+                        on:click={() => setTestimonialSet(index)}
+                        aria-label="Testimonial set {index + 1}"
+                    ></button>
+                {/each}
+            </div>
+        </div>
+    </section>
+    
+    <!-- Contact Form Section -->
+    <section class="relative bg-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                <!-- Left Column - Text Content -->
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-medium text-[#176684] font-family-sans leading-tight">
+                            Kami Senang Menjadi<br />
+                            Bagian dari <span class="font-bold">Kisah Sukses</span> Anda
+                        </h2>
+                        <!-- Underline -->
+                        <div class="mt-4 w-24 h-[2px] bg-[#176684]"></div>
+                    </div>
+                    
+                    <div class="space-y-4 text-gray-700 font-family-sans">
+                        <p class="text-base leading-relaxed">
+                            Setiap proyek yang kami jalankan berawal dari kepercayaan dan berakhir dengan komitmen untuk memberikan hasil terbaik. Kami percaya, tidak ada pencapaian yang lebih berharga selain melihat klien kami tumbuh bersama solusi yang kami hadirkan.
+                        </p>
+                        <p class="text-base leading-relaxed">
+                            Tinggalkan ulasan Anda dan bantu kami terus memberikan layanan terbaik untuk semua mitra.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Right Column - Contact Form -->
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <form class="space-y-6">
+                        <!-- Name Fields Row -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
+                                    Nama Lengkap
+                                </label>
+                                <input 
+                                    type="text" 
+                                    placeholder="John Doe"
+                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
+                                    Nama Perusahaan
+                                </label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Kahasolusi"
+                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                                />
+                            </div>
+                        </div>
+                        
+                        <!-- Email Field -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
+                                Email
+                            </label>
+                            <input 
+                                type="email" 
+                                placeholder="JohnDoe@Kahasolusi.com"
+                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                            />
+                        </div>
+                        
+                        <!-- Message Field -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
+                                Ulasan
+                            </label>
+                            <textarea 
+                                rows="4"
+                                placeholder="Berikan ulasan Anda dan bantu kami berkembang untuk memberikan pelayan terbaik bagi mitra"
+                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 resize-vertical"
+                            ></textarea>
+                        </div>
+                        
+                        <!-- Privacy Notice -->
+                        <div class="flex items-start gap-3 text-xs text-gray-500 font-family-sans">
+                            <input 
+                                type="checkbox" 
+                                id="privacy"
+                                class="mt-1 w-4 h-4 text-[#176684] bg-gray-50 border-0 rounded focus:ring-[#176684] focus:ring-2"
+                            />
+                            <label for="privacy" class="leading-relaxed">
+                                Sembunyikan nama pada ulasan
+                            </label>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit"
+                            class="w-full bg-[#176684] text-white py-3 px-6 rounded-lg font-medium font-family-sans hover:bg-[#145561] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                        >
+                            Kirim Ulasan
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </section>
