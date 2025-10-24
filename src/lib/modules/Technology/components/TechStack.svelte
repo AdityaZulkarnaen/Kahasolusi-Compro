@@ -1,5 +1,5 @@
 <script>
-    import Code from '$lib/assets/svg/code.svg';
+    import Code from '$lib/assets/svg/Code.svg';
 	// Technology logos - You can replace these with actual logo URLs or SVG imports
 	const technologies = [
 		{ name: 'Visual Studio Code', icon: 'vscode' },
