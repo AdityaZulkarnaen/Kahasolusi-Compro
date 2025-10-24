@@ -163,7 +163,7 @@
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Home</a
 				>
 				<a
-					href="/tentang-kami"
+					href="/about"
 					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Tentang Kami</a
@@ -186,12 +186,7 @@
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Teknologi</a
 				>
-				<a
-					href="/sdm"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
-						? 'hover:bg-white/10'
-						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">SDM</a
-				>
+				
 				<div class="flex flex-col gap-3 mt-4 px-2">
 					<button
 						class="bg-[#D0E6F3] text-[#176684] font-family-sans font-medium px-6 py-2.5 rounded-full text-sm hover:bg-white hover:text-[#176684] transition-all w-full"
