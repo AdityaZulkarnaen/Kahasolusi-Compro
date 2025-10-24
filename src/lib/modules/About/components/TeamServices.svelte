@@ -47,21 +47,40 @@
 						<p class="text-sm sm:text-md md:text-xl w-[95%] text-start self-center text-white/90 leading-relaxed font-family-sans mb-[10%]">
 							{card.description}
 						</p>
-						<button
-							class="w-[95%] px-6 py-3 border-2 border-white rounded-full font-family-sans text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
-						>
-							{card.buttonText}
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke-width="2"
-								stroke="currentColor"
-								class="w-5 h-5"
+						{#if card.buttonText === 'Meet Our Team'}
+							<a
+								href="/sdm"
+								class="w-[95%] px-6 py-3 border-2 border-white rounded-full font-family-sans text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
 							>
-								<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-							</svg>
-						</button>
+								{card.buttonText}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="2"
+									stroke="currentColor"
+									class="w-5 h-5"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+								</svg>
+							</a>
+						{:else}
+							<button
+								class="w-[95%] px-6 py-3 border-2 border-white rounded-full font-family-sans text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
+							>
+								{card.buttonText}
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke-width="2"
+									stroke="currentColor"
+									class="w-5 h-5"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+								</svg>
+							</button>
+						{/if}
 					</div>
 				</div>
 			{/each}

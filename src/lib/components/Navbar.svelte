@@ -54,12 +54,13 @@
 	$: isAboutPage = $page.url.pathname.includes('/about');
 	$: isTechPage = $page.url.pathname.includes('/teknologi');
 	$: isLayananPage = $page.url.pathname.includes('/layanan');
+	$: isSDMPage = $page.url.pathname.includes('/sdm');
 	$: isHomePage = $page.url.pathname === '/';
 	$: isDarkMode = isPortfolioPage || isClientSectionVisible;
-	$: navbarBg = (isTechPage || isAboutPage || isLayananPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
-	$: borderColor = (isTechPage || isAboutPage || isLayananPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-700' : 'border-white');
-	$: textColor = (isAboutPage || isTechPage || isLayananPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
-	$: logoSrc = (isTechPage || isLayananPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
+	$: navbarBg = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
+	$: borderColor = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-700' : 'border-white');
+	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
+	$: logoSrc = (isTechPage || isLayananPage || isSDMPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
 	$: Strip = (isHomePage || isPortfolioPage) ? 'bg-white' : 'bg-[#176684]';
 </script>
 
@@ -132,12 +133,12 @@
 						: ''}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? 'opacity-0'
 						: 'opacity-100'}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? '-rotate-45 -translate-y-2'
 						: ''}"
 				></span>
@@ -184,6 +185,12 @@
 					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Teknologi</a
+				>
+				<a
+					href="/sdm"
+					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+						? 'hover:bg-white/10'
+						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">SDM</a
 				>
 				<div class="flex flex-col gap-3 mt-4 px-2">
 					<button
