@@ -171,9 +171,9 @@
 	<title>Technology Management - Dashboard Kahasolusi</title>
 </svelte:head>
 
-<div class="p-6 max-w-7xl mx-auto">
+<div class="p-4 lg:p-6 max-w-none mx-auto">
 	<!-- Header Section -->
-	<div class="mb-8">
+	<div class="mb-6">
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
 				<h1 class="text-3xl font-bold text-gray-900">Technology Management</h1>
@@ -192,7 +192,7 @@
 	</div>
 
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+	<div class="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6 mb-6">
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 			<div class="flex items-center justify-between">
 				<div>
@@ -244,40 +244,67 @@
 	</div>
 
 	<!-- Filters and Search -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-		<div class="flex flex-col sm:flex-row gap-4">
-			<div class="flex-1">
+	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
+		<div class="flex flex-col xl:flex-row gap-4">
+			<!-- Search Bar -->
+			<div class="flex-1 min-w-0">
 				<div class="relative">
-					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 					<input
 						type="text"
 						placeholder="Cari teknologi berdasarkan nama, tipe, atau deskripsi..."
 						bind:value={searchQuery}
-						class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+						class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
 					/>
 				</div>
 			</div>
-			<div class="flex gap-3">
-				<select 
-					bind:value={selectedType}
-					class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-				>
-					<option value="">Semua Tipe</option>
-					{#each techTypes as type}
-						<option value={type}>{type}</option>
-					{/each}
-				</select>
-				<select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-					<option value="">Semua Status</option>
-					<option value="active">Active</option>
-					<option value="inactive">Inactive</option>
-				</select>
+			
+			<!-- Filter Buttons -->
+			<div class="flex flex-wrap gap-2">
+				<!-- Technology Type Filter -->
+				<div class="relative">
+					<select 
+						bind:value={selectedType}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[180px]"
+					>
+						<option value="">Semua Tipe</option>
+						<option value="Frontend Framework">Frontend Framework</option>
+						<option value="Backend Framework">Backend Framework</option>
+						<option value="Backend Runtime">Backend Runtime</option>
+						<option value="Database">Database</option>
+						<option value="CSS Framework">CSS Framework</option>
+						<option value="Programming Language">Programming Language</option>
+						<option value="Mobile Framework">Mobile Framework</option>
+						<option value="Cloud Service">Cloud Service</option>
+						<option value="DevOps Tool">DevOps Tool</option>
+						<option value="Design Tool">Design Tool</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
+				
+				<!-- Status Filter -->
+				<div class="relative">
+					<select class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]">
+						<option value="">Semua Status</option>
+						<option value="active">Active</option>
+						<option value="inactive">Inactive</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Technology Grid -->
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
 		{#each filteredTechnologies as tech}
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
 				<!-- Header -->
@@ -289,7 +316,7 @@
 									src={tech.icon_url} 
 									alt={tech.tech_name}
 									class="w-8 h-8 object-contain"
-									on:error={(e) => e.target.style.display = 'none'}
+									onerror={(e) => e.target.style.display = 'none'}
 								/>
 							{:else}
 								<Code2 class="w-6 h-6 text-gray-500" />
@@ -333,14 +360,14 @@
 				<div class="flex items-center justify-between pt-4 border-t border-gray-200">
 					<div class="flex items-center gap-2">
 						<button 
-							on:click={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}`}
+							onclick={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}`}
 							class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
 							title="View Details"
 						>
 							<Eye class="w-4 h-4" />
 						</button>
 						<button 
-							on:click={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}/edit`}
+							onclick={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}/edit`}
 							class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
 							title="Edit"
 						>
@@ -349,13 +376,13 @@
 					</div>
 					<div class="flex items-center gap-2">
 						<button 
-							on:click={() => toggleActive(tech.tech_id)}
+							onclick={() => toggleActive(tech.tech_id)}
 							class="text-sm px-3 py-1 rounded-md border {tech.is_active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'} transition-colors"
 						>
 							{tech.is_active ? 'Deactivate' : 'Activate'}
 						</button>
 						<button 
-							on:click={() => handleDelete(tech.tech_id)}
+							onclick={() => handleDelete(tech.tech_id)}
 							class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
 							title="Delete"
 							disabled={tech.usage_count > 0}
