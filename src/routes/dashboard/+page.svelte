@@ -12,7 +12,12 @@
 		LogOut,
 		ChevronDown,
 		Menu,
-		X
+		X,
+		Image,
+		MessageSquare,
+		Settings,
+		Phone,
+		Layers
 	} from 'lucide-svelte';
 	
 	// State untuk mobile menu
@@ -107,6 +112,11 @@
 						<span class="font-medium" style="display: block !important; color: inherit !important;">Dashboard</span>
 					</a>
 				</li>
+				
+				<!-- Content Management -->
+				<li class="pt-2">
+					<p class="text-xs text-gray-500 font-semibold uppercase tracking-wider px-4 mb-2">Konten</p>
+				</li>
 				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
 					<a 
 						href="/dashboard/portfolio" 
@@ -137,9 +147,14 @@
 						<span class="font-medium" style="display: block !important; color: inherit !important;">SDM</span>
 					</a>
 				</li>
+
+				<!-- Company Management -->
+				<li class="pt-4">
+					<p class="text-xs text-gray-500 font-semibold uppercase tracking-wider px-4 mb-2">Perusahaan</p>
+				</li>
 				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
 					<a 
-						href="/dashboard/profil" 
+						href="/dashboard/company" 
 						class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-white hover:rounded-lg transition-colors"
 						style="display: flex !important; visibility: visible !important; opacity: 1 !important; align-items: center !important; gap: 0.75rem !important; padding: 0.75rem 1rem !important; color: #374151 !important; text-decoration: none !important; border-radius: 0.5rem !important;"
 					>
@@ -147,6 +162,57 @@
 						<span class="font-medium" style="display: block !important; color: inherit !important;">Profil Perusahaan</span>
 					</a>
 				</li>
+				
+				<!-- Communication -->
+				<li class="pt-4">
+					<p class="text-xs text-gray-500 font-semibold uppercase tracking-wider px-4 mb-2">Komunikasi</p>
+				</li>
+				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+					<a 
+						href="/dashboard/multimedia" 
+						class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-white hover:rounded-lg transition-colors"
+						style="display: flex !important; visibility: visible !important; opacity: 1 !important; align-items: center !important; gap: 0.75rem !important; padding: 0.75rem 1rem !important; color: #374151 !important; text-decoration: none !important; border-radius: 0.5rem !important;"
+					>
+						<Image class="w-5 h-5" style="display: block !important; width: 1.25rem !important; height: 1.25rem !important;" />
+						<span class="font-medium" style="display: block !important; color: inherit !important;">Multimedia</span>
+					</a>
+				</li>
+				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+					<a 
+						href="/dashboard/contact-cta" 
+						class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-white hover:rounded-lg transition-colors"
+						style="display: flex !important; visibility: visible !important; opacity: 1 !important; align-items: center !important; gap: 0.75rem !important; padding: 0.75rem 1rem !important; color: #374151 !important; text-decoration: none !important; border-radius: 0.5rem !important;"
+					>
+						<Phone class="w-5 h-5" style="display: block !important; width: 1.25rem !important; height: 1.25rem !important;" />
+						<span class="font-medium" style="display: block !important; color: inherit !important;">Contact CTA</span>
+					</a>
+				</li>
+				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+					<a 
+						href="/dashboard/feedback" 
+						class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-white hover:rounded-lg transition-colors"
+						style="display: flex !important; visibility: visible !important; opacity: 1 !important; align-items: center !important; gap: 0.75rem !important; padding: 0.75rem 1rem !important; color: #374151 !important; text-decoration: none !important; border-radius: 0.5rem !important;"
+					>
+						<MessageSquare class="w-5 h-5" style="display: block !important; width: 1.25rem !important; height: 1.25rem !important;" />
+						<span class="font-medium" style="display: block !important; color: inherit !important;">Feedback</span>
+					</a>
+				</li>
+				
+				<!-- System -->
+				<li class="pt-4">
+					<p class="text-xs text-gray-500 font-semibold uppercase tracking-wider px-4 mb-2">Sistem</p>
+				</li>
+				<li style="display: block !important; visibility: visible !important; opacity: 1 !important;">
+					<a 
+						href="/dashboard/settings" 
+						class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-white hover:rounded-lg transition-colors"
+						style="display: flex !important; visibility: visible !important; opacity: 1 !important; align-items: center !important; gap: 0.75rem !important; padding: 0.75rem 1rem !important; color: #374151 !important; text-decoration: none !important; border-radius: 0.5rem !important;"
+					>
+						<Settings class="w-5 h-5" style="display: block !important; width: 1.25rem !important; height: 1.25rem !important;" />
+						<span class="font-medium" style="display: block !important; color: inherit !important;">Pengaturan</span>
+					</a>
+				</li>
+				
 				<li class="pt-4 border-t border-gray-200" style="display: block !important; visibility: visible !important; opacity: 1 !important; padding-top: 1rem !important; border-top: 1px solid #e5e7eb !important;">
 					<a 
 						href="/logout" 
