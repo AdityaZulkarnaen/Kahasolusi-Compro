@@ -195,9 +195,9 @@
 	<title>SDM Management - Dashboard Kahasolusi</title>
 </svelte:head>
 
-<div class="p-6 max-w-7xl mx-auto">
+<div class="p-4 lg:p-6 max-w-none mx-auto">
 	<!-- Header Section -->
-	<div class="mb-8">
+	<div class="mb-6">
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
 				<h1 class="text-3xl font-bold text-gray-900">SDM Management</h1>
@@ -215,8 +215,23 @@
 		</div>
 	</div>
 
+	<!-- Team Overview by Position -->
+	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+		<h3 class="text-lg font-semibold text-gray-900 mb-4">Team Overview by Position</h3>
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+			{#each Object.entries(stats.byPosition) as [position, count]}
+				{#if count > 0}
+					<div class="text-center p-4 bg-gray-50 rounded-lg">
+						<p class="text-2xl font-bold text-gray-900">{count}</p>
+						<p class="text-sm text-gray-600">{position}</p>
+					</div>
+				{/if}
+			{/each}
+		</div>
+	</div>
+
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+	<div class="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6 mb-6">
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 			<div class="flex items-center justify-between">
 				<div>
@@ -267,46 +282,68 @@
 		</div>
 	</div>
 
+	
+
 	<!-- Filters and Search -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-		<div class="flex flex-col lg:flex-row gap-4">
-			<div class="flex-1">
+	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
+		<div class="flex flex-col xl:flex-row gap-4">
+			<!-- Search Bar -->
+			<div class="flex-1 min-w-0">
 				<div class="relative">
-					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 					<input
 						type="text"
 						placeholder="Cari berdasarkan nama, posisi, skills, atau spesialisasi..."
 						bind:value={searchQuery}
-						class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+						class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
 					/>
 				</div>
 			</div>
-			<div class="flex gap-3">
-				<select 
-					bind:value={selectedPosition}
-					class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-				>
-					<option value="">Semua Posisi</option>
-					{#each positions as position}
-						<option value={position}>{position}</option>
-					{/each}
-				</select>
-				<select 
-					bind:value={sortBy}
-					class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-				>
-					<option value="name">Sort by Name</option>
-					<option value="experience">Sort by Experience</option>
-					<option value="projects">Sort by Projects</option>
-				</select>
+			
+			<!-- Filter Buttons -->
+			<div class="flex flex-wrap gap-2">
+				<!-- Position Filter -->
+				<div class="relative">
+					<select 
+						bind:value={selectedPosition}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[180px]"
+					>
+						<option value="">Semua Posisi</option>
+						{#each positions as position}
+							<option value={position}>{position}</option>
+						{/each}
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
+				
+				<!-- Sort Filter -->
+				<div class="relative">
+					<select 
+						bind:value={sortBy}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
+					>
+						<option value="name">Sort by Name</option>
+						<option value="experience">Sort by Experience</option>
+						<option value="projects">Sort by Projects</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Team Members Grid -->
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
 		{#each filteredMembers as member}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col">
 				<!-- Header with Photo -->
 				<div class="p-6 pb-4">
 					<div class="flex items-start gap-4">
@@ -317,7 +354,7 @@
 										src={member.photo_url} 
 										alt={member.member_name}
 										class="w-full h-full object-cover"
-										on:error={(e) => e.target.style.display = 'none'}
+										onerror={(e) => e.target.style.display = 'none'}
 									/>
 								{:else}
 									<div class="w-full h-full flex items-center justify-center">
@@ -340,43 +377,24 @@
 					</div>
 				</div>
 				
-				<!-- Bio -->
-				<div class="px-6 pb-4">
-					<p class="text-sm text-gray-600 line-clamp-3">{member.bio}</p>
+				<!-- Member Info (moved to top) -->
+				<div class="px-6 pb-3">
+					<div class="flex items-center justify-between text-sm text-gray-500">
+						<span>{member.years_experience} years experience</span>
+						<span>{member.projects_count} projects</span>
+					</div>
 				</div>
 				
-				<!-- Stats -->
-				<div class="px-6 pb-4">
-					<div class="grid grid-cols-3 gap-4 text-center">
-						<div>
-							<p class="text-lg font-bold text-gray-900">{member.years_experience}</p>
-							<p class="text-xs text-gray-500">Years Exp</p>
-						</div>
-						<div>
-							<p class="text-lg font-bold text-gray-900">{member.projects_count}</p>
-							<p class="text-xs text-gray-500">Projects</p>
-						</div>
-						<div>
-							<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getExperienceBadgeColor(member.years_experience)}">
-								{#if member.years_experience >= 7}
-									Senior
-								{:else if member.years_experience >= 5}
-									Mid-Senior
-								{:else if member.years_experience >= 3}
-									Mid-Level
-								{:else}
-									Junior
-								{/if}
-							</span>
-						</div>
-					</div>
+				<!-- Bio -->
+				<div class="px-6 pb-4 flex-grow">
+					<p class="text-sm text-gray-600 line-clamp-3">{member.bio}</p>
 				</div>
 				
 				<!-- Skills -->
 				<div class="px-6 pb-4">
 					<div class="flex flex-wrap gap-1">
 						{#each member.skills.split(',').slice(0, 3) as skill}
-							<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+							<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
 								{skill.trim()}
 							</span>
 						{/each}
@@ -388,45 +406,66 @@
 					</div>
 				</div>
 				
-				<!-- Social Links -->
-				<div class="px-6 pb-4">
-					<div class="flex items-center gap-2">
-						{#if member.linkedin_url}
-							<a 
-								href={member.linkedin_url}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="text-blue-600 hover:text-blue-700 text-sm"
-							>
-								LinkedIn
-							</a>
-						{/if}
-						{#if member.github_url}
-							<a 
-								href={member.github_url}
-								target="_blank"
-								rel="noopener noreferrer"
-								class="text-gray-600 hover:text-gray-700 text-sm"
-							>
-								GitHub
-							</a>
-						{/if}
+				<!-- Certifications (if any) -->
+				{#if member.certifications}
+					<div class="px-6 pb-4">
+						<p class="text-xs text-gray-500 mb-1">Certifications:</p>
+						<div class="flex flex-wrap gap-1">
+							{#each member.certifications.split(',').slice(0, 2) as cert}
+								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+									{cert.trim()}
+								</span>
+							{/each}
+							{#if member.certifications.split(',').length > 2}
+								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+									+{member.certifications.split(',').length - 2} more
+								</span>
+							{/if}
+						</div>
 					</div>
-				</div>
+				{/if}
+				
+				<!-- Social Links -->
+				{#if member.linkedin_url || member.github_url}
+					<div class="px-6 pb-4">
+						<div class="flex items-center gap-3">
+							{#if member.linkedin_url}
+								<a 
+									href={member.linkedin_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+								>
+									LinkedIn
+								</a>
+							{/if}
+							{#if member.github_url}
+								<a 
+									href={member.github_url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-gray-600 hover:text-gray-700 text-sm font-medium"
+								>
+									GitHub
+								</a>
+							{/if}
+						</div>
+					</div>
+				{/if}
 				
 				<!-- Actions -->
-				<div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+				<div class="px-6 py-4 border-t border-gray-200 mt-auto">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<button 
-								on:click={() => window.location.href = `/dashboard/sdm/${member.member_id}`}
+								onclick={() => window.location.href = `/dashboard/sdm/${member.member_id}`}
 								class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
 								title="View Details"
 							>
 								<Eye class="w-4 h-4" />
 							</button>
 							<button 
-								on:click={() => window.location.href = `/dashboard/sdm/${member.member_id}/edit`}
+								onclick={() => window.location.href = `/dashboard/sdm/${member.member_id}/edit`}
 								class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
 								title="Edit"
 							>
@@ -435,13 +474,13 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<button 
-								on:click={() => toggleActive(member.member_id)}
+								onclick={() => toggleActive(member.member_id)}
 								class="text-sm px-3 py-1 rounded-md border {member.is_active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'} transition-colors"
 							>
 								{member.is_active ? 'Deactivate' : 'Activate'}
 							</button>
 							<button 
-								on:click={() => handleDelete(member.member_id)}
+								onclick={() => handleDelete(member.member_id)}
 								class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
 								title="Delete"
 								disabled={member.projects_count > 0}
@@ -480,21 +519,6 @@
 			</div>
 		</div>
 	{/if}
-
-	<!-- Team Overview by Position -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-8">
-		<h3 class="text-lg font-semibold text-gray-900 mb-4">Team Overview by Position</h3>
-		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-			{#each Object.entries(stats.byPosition) as [position, count]}
-				{#if count > 0}
-					<div class="text-center p-4 bg-gray-50 rounded-lg">
-						<p class="text-2xl font-bold text-gray-900">{count}</p>
-						<p class="text-sm text-gray-600">{position}</p>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	</div>
 </div>
 
 <style>

@@ -46,9 +46,7 @@
 	// Form state
 	let isSubmitting = false;
 	let errors = {};
-	let iconFile = null;
 	let logoFile = null;
-	let iconPreview = '';
 	let logoPreview = '';
 	let customType = '';
 	let showCustomType = false;
@@ -90,19 +88,6 @@
 	}
 	
 	// Handle file uploads
-	function handleIconUpload(event) {
-		const file = event.target.files[0];
-		if (file) {
-			iconFile = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				iconPreview = e.target.result;
-				formData.icon_url = e.target.result;
-			};
-			reader.readAsDataURL(file);
-		}
-	}
-	
 	function handleLogoUpload(event) {
 		const file = event.target.files[0];
 		if (file) {
@@ -136,7 +121,9 @@
 	}
 	
 	// Form submission
-	async function handleSubmit() {
+	async function handleSubmit(event) {
+		event.preventDefault();
+		
 		// Handle custom type
 		if (showCustomType && customType.trim()) {
 			formData.tech_type = customType.trim();
@@ -155,7 +142,6 @@
 			// In real app, this would send data to API
 			console.log('Technology data:', {
 				...formData,
-				iconFile,
 				logoFile
 			});
 			
@@ -169,12 +155,6 @@
 	}
 	
 	// Remove uploaded files
-	function removeIcon() {
-		iconFile = null;
-		iconPreview = '';
-		formData.icon_url = '';
-	}
-	
 	function removeLogo() {
 		logoFile = null;
 		logoPreview = '';
@@ -192,7 +172,7 @@
 		<div class="mb-8">
 			<div class="flex items-center gap-4 mb-4">
 				<button 
-					on:click={() => goto('/dashboard/teknologi')}
+					onclick={() => goto('/dashboard/teknologi')}
 					class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 				>
 					<ArrowLeft class="w-5 h-5 text-gray-600" />
@@ -204,7 +184,7 @@
 			</div>
 		</div>
 
-		<form on:submit|preventDefault={handleSubmit} class="space-y-8">
+		<form onsubmit={handleSubmit} class="space-y-8">
 			<!-- Basic Information -->
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Informasi Dasar</h2>
@@ -232,7 +212,7 @@
 						</label>
 						<select
 							bind:value={formData.tech_type}
-							on:change={handleTypeChange}
+							onchange={handleTypeChange}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
 							class:border-red-500={errors.tech_type}
 						>
@@ -325,46 +305,11 @@
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Visual Assets</h2>
 				
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-					<!-- Icon Upload -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-4">
-							Icon (Rekomendasi: 64x64px, SVG/PNG)
-						</label>
-						
-						<div class="space-y-4">
-							<div class="flex items-center justify-center w-full">
-								<label class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-									{#if iconPreview}
-										<div class="relative">
-											<img src={iconPreview} alt="Icon Preview" class="w-16 h-16 object-contain" />
-											<button
-												type="button"
-												on:click|preventDefault={removeIcon}
-												class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-											>
-												<X class="w-3 h-3" />
-											</button>
-										</div>
-									{:else}
-										<div class="flex flex-col items-center justify-center pt-5 pb-6">
-											<Code2 class="w-8 h-8 mb-2 text-gray-500" />
-											<p class="mb-2 text-sm text-gray-500">
-												<span class="font-semibold">Click to upload icon</span>
-											</p>
-											<p class="text-xs text-gray-500">SVG, PNG, JPG (MAX. 64x64px)</p>
-										</div>
-									{/if}
-									<input type="file" accept="image/*" class="hidden" on:change={handleIconUpload} />
-								</label>
-							</div>
-						</div>
-					</div>
-					
+				<div class="max-w-md mx-auto">
 					<!-- Logo Upload -->
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-4">
-							Logo (Rekomendasi: 200x100px, PNG/SVG)
+							Logo Teknologi (Rekomendasi: 200x100px, PNG/SVG)
 						</label>
 						
 						<div class="space-y-4">
@@ -375,7 +320,7 @@
 											<img src={logoPreview} alt="Logo Preview" class="max-w-32 max-h-16 object-contain" />
 											<button
 												type="button"
-												on:click|preventDefault={removeLogo}
+												onclick={(e) => { e.preventDefault(); removeLogo(); }}
 												class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
 											>
 												<X class="w-3 h-3" />
@@ -383,14 +328,14 @@
 										</div>
 									{:else}
 										<div class="flex flex-col items-center justify-center pt-5 pb-6">
-											<Palette class="w-8 h-8 mb-2 text-gray-500" />
+											<ImageIcon class="w-8 h-8 mb-2 text-gray-500" />
 											<p class="mb-2 text-sm text-gray-500">
 												<span class="font-semibold">Click to upload logo</span>
 											</p>
 											<p class="text-xs text-gray-500">SVG, PNG, JPG (MAX. 200x100px)</p>
 										</div>
 									{/if}
-									<input type="file" accept="image/*" class="hidden" on:change={handleLogoUpload} />
+									<input type="file" accept="image/*" class="hidden" onchange={handleLogoUpload} />
 								</label>
 							</div>
 						</div>
@@ -452,7 +397,7 @@
 			<div class="flex flex-col sm:flex-row gap-4 justify-end">
 				<button
 					type="button"
-					on:click={() => goto('/dashboard/teknologi')}
+					onclick={() => goto('/dashboard/teknologi')}
 					class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
 				>
 					Batal

@@ -243,6 +243,21 @@
 		</div>
 	</div>
 
+	<!-- Technology Types Overview -->
+	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+		<h3 class="text-lg font-semibold text-gray-900 mb-4">Overview by Type</h3>
+		<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+			{#each Object.entries(stats.byType) as [type, count]}
+				{#if count > 0}
+					<div class="text-center p-4 bg-gray-50 rounded-lg">
+						<p class="text-2xl font-bold text-gray-900">{count}</p>
+						<p class="text-sm text-gray-600">{type}</p>
+					</div>
+				{/if}
+			{/each}
+		</div>
+	</div>
+
 	<!-- Filters and Search -->
 	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
 		<div class="flex flex-col xl:flex-row gap-4">
@@ -306,7 +321,7 @@
 	<!-- Technology Grid -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
 		{#each filteredTechnologies as tech}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between mb-4">
 					<div class="flex items-center gap-3">
@@ -334,30 +349,32 @@
 					</div>
 				</div>
 				
-				<!-- Description -->
-				<p class="text-sm text-gray-600 mb-4 line-clamp-2">{tech.tech_description}</p>
-				
-				<!-- Stats -->
-				<div class="flex items-center justify-between mb-4 text-sm text-gray-500">
+				<!-- Overview Info (moved to top) -->
+				<div class="flex items-center justify-between mb-3 text-sm text-gray-500">
 					<span>Used in {tech.usage_count} projects</span>
 					<span>Added {formatDate(tech.created_at)}</span>
 				</div>
 				
+				<!-- Description -->
+				<p class="text-sm text-gray-600 mb-4 line-clamp-2 flex-grow">{tech.tech_description}</p>
+				
 				<!-- Official Link -->
-				{#if tech.official_url}
-					<a 
-						href={tech.official_url}
-						target="_blank"
-						rel="noopener noreferrer"
-						class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mb-4"
-					>
-						<ExternalLink class="w-3 h-3" />
-						Official Website
-					</a>
-				{/if}
+				<div class="mb-4 min-h-[20px] flex items-center">
+					{#if tech.official_url}
+						<a 
+							href={tech.official_url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+						>
+							<ExternalLink class="w-3 h-3" />
+							Official Website
+						</a>
+					{/if}
+				</div>
 				
 				<!-- Actions -->
-				<div class="flex items-center justify-between pt-4 border-t border-gray-200">
+				<div class="flex items-center justify-between pt-4 border-t border-gray-200 mt-auto">
 					<div class="flex items-center gap-2">
 						<button 
 							onclick={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}`}
@@ -420,21 +437,6 @@
 			</div>
 		</div>
 	{/if}
-
-	<!-- Technology Types Overview -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-8">
-		<h3 class="text-lg font-semibold text-gray-900 mb-4">Overview by Type</h3>
-		<div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-			{#each Object.entries(stats.byType) as [type, count]}
-				{#if count > 0}
-					<div class="text-center p-4 bg-gray-50 rounded-lg">
-						<p class="text-2xl font-bold text-gray-900">{count}</p>
-						<p class="text-sm text-gray-600">{type}</p>
-					</div>
-				{/if}
-			{/each}
-		</div>
-	</div>
 </div>
 
 <style>
