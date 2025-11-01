@@ -358,12 +358,12 @@
 	<title>Feedback Management - Dashboard Kahasolusi</title>
 </svelte:head>
 
-<div class="p-6 max-w-7xl mx-auto">
+<div class="p-4 lg:p-6 max-w-none mx-auto">
 	<!-- Header -->
-	<div class="mb-8">
+	<div class="mb-6">
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
-				<h1 class="text-3xl font-bold text-gray-900">Feedback Management</h1>
+				<h1 class="text-2xl font-bold text-gray-900">Feedback Management</h1>
 				<p class="text-gray-600 mt-1">Kelola feedback dan review dari client</p>
 			</div>
 			<button 
@@ -377,92 +377,92 @@
 	</div>
 
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+	<div class="grid grid-cols-1 md:grid-cols-6 gap-4 lg:gap-6 mb-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Total Feedback</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
 				</div>
-				<div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-					<MessageSquare class="w-6 h-6 text-blue-600" />
+				<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+					<MessageSquare class="w-5 h-5 text-blue-600" />
 				</div>
 			</div>
 		</div>
 		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Pending</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.pending}</p>
 				</div>
-				<div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-					<Clock class="w-6 h-6 text-yellow-600" />
+				<div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+					<Clock class="w-5 h-5 text-yellow-600" />
 				</div>
 			</div>
 		</div>
 		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Approved</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.approved}</p>
 				</div>
-				<div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-					<CheckCircle class="w-6 h-6 text-green-600" />
+				<div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+					<CheckCircle class="w-5 h-5 text-green-600" />
 				</div>
 			</div>
 		</div>
 		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Featured</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.featured}</p>
 				</div>
-				<div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-					<Star class="w-6 h-6 text-purple-600" />
+				<div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+					<Star class="w-5 h-5 text-purple-600" />
 				</div>
 			</div>
 		</div>
 		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Avg Rating</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.avgRating}</p>
 				</div>
-				<div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-					<Star class="w-6 h-6 text-orange-600" />
+				<div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+					<Star class="w-5 h-5 text-orange-600" />
 				</div>
 			</div>
 		</div>
 		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
 			<div class="flex items-center justify-between">
 				<div>
 					<p class="text-sm font-medium text-gray-600">Response Rate</p>
 					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.responseRate}%</p>
 				</div>
-				<div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-					<Reply class="w-6 h-6 text-indigo-600" />
+				<div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+					<Reply class="w-5 h-5 text-indigo-600" />
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Filters -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-		<div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
+		<div class="flex flex-wrap items-center gap-4">
 			<!-- Search -->
-			<div class="md:col-span-2">
+			<div class="flex-1 min-w-[280px]">
 				<div class="relative">
-					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 					<input
 						type="text"
-						placeholder="Cari feedback..."
+						placeholder="Cari feedback, client, atau project..."
 						bind:value={searchQuery}
-						class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+						class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
 					/>
 				</div>
 			</div>
@@ -470,7 +470,7 @@
 			<!-- Type Filter -->
 			<select 
 				bind:value={selectedType}
-				class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
 			>
 				<option value="all">Semua Type</option>
 				<option value="project_review">Project Review</option>
@@ -482,7 +482,7 @@
 			<!-- Status Filter -->
 			<select 
 				bind:value={selectedStatus}
-				class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
 			>
 				<option value="all">Semua Status</option>
 				<option value="pending">Pending</option>
@@ -493,7 +493,7 @@
 			<!-- Rating Filter -->
 			<select 
 				bind:value={selectedRating}
-				class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
 			>
 				<option value="all">Semua Rating</option>
 				<option value="5">5 Stars</option>
@@ -506,7 +506,7 @@
 			<!-- Sort -->
 			<select 
 				bind:value={sortBy}
-				class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
 			>
 				<option value="recent">Terbaru</option>
 				<option value="rating_high">Rating Tertinggi</option>
@@ -518,20 +518,20 @@
 
 	<!-- Feedback List -->
 	<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-		<div class="px-6 py-4 border-b border-gray-200">
+		<div class="px-4 py-3 border-b border-gray-200">
 			<h3 class="text-lg font-semibold text-gray-900">Feedback List ({filteredFeedbacks.length})</h3>
 		</div>
 		
 		<div class="divide-y divide-gray-200">
 			{#each filteredFeedbacks as feedback}
-				<div class="p-6 hover:bg-gray-50 transition-colors">
+				<div class="p-4 hover:bg-gray-50 transition-colors">
 					<div class="flex items-start justify-between gap-4">
 						<!-- Feedback Info -->
 						<div class="flex-1">
 							<div class="flex items-start gap-4">
 								<!-- Client Avatar -->
-								<div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-									<User class="w-6 h-6 text-blue-600" />
+								<div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+									<User class="w-5 h-5 text-blue-600" />
 								</div>
 								
 								<!-- Feedback Details -->
