@@ -15,6 +15,7 @@ import technologyRoutes from './routes/technologies.js'
 import sdmRoutes from './routes/sdm.js'
 import companyRoutes from './routes/company.js'
 import healthRoutes from './routes/health.js'
+import uploadRoutes from './routes/upload.js'
 
 const app = new Hono()
 
@@ -51,6 +52,7 @@ app.route('/api/technologies', technologyRoutes)
 app.route('/api/sdm', sdmRoutes)
 app.route('/api/company', companyRoutes)
 app.route('/api/health', healthRoutes)
+app.route('/api/upload', uploadRoutes)
 
 // Error handling
 app.onError(errorHandler)

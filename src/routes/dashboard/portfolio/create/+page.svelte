@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI } from '$lib/api.js';
 	import { 
 		ArrowLeft, 
 		Save, 
@@ -9,7 +10,8 @@
 		Plus, 
 		Calendar,
 		Link as LinkIcon,
-		Image as ImageIcon
+		Image as ImageIcon,
+		Eye
 	} from 'lucide-svelte';
 	
 	// Form data
@@ -22,45 +24,43 @@
 		project_end_date: '',
 		project_url: '',
 		image_url: '',
-		is_featured: false,
-		is_active: true,
-		categories: [],
-		technologies: []
+		is_featured: 0
 	};
 	
-	// Available options (nanti dari API)
-	let availableCategories = [
-		{ category_id: 1, category_name: 'Web Development', category_slug: 'web-development' },
-		{ category_id: 2, category_name: 'Mobile Development', category_slug: 'mobile-development' },
-		{ category_id: 3, category_name: 'E-Commerce', category_slug: 'e-commerce' },
-		{ category_id: 4, category_name: 'UI/UX Design', category_slug: 'ui-ux-design' },
-		{ category_id: 5, category_name: 'System Integration', category_slug: 'system-integration' }
-	];
+	// Available options from API
+	let availableCategories = [];
+	let availableTechnologies = [];
+	let selectedCategories = [];
+	let selectedTechnologies = [];
 	
-	let availableTechnologies = [
-		{ tech_id: 1, tech_name: 'SvelteKit', tech_type: 'Frontend Framework' },
-		{ tech_id: 2, tech_name: 'React', tech_type: 'Frontend Framework' },
-		{ tech_id: 3, tech_name: 'Vue.js', tech_type: 'Frontend Framework' },
-		{ tech_id: 4, tech_name: 'Node.js', tech_type: 'Backend Runtime' },
-		{ tech_id: 5, tech_name: 'Express.js', tech_type: 'Backend Framework' },
-		{ tech_id: 6, tech_name: 'PostgreSQL', tech_type: 'Database' },
-		{ tech_id: 7, tech_name: 'MongoDB', tech_type: 'Database' },
-		{ tech_id: 8, tech_name: 'TailwindCSS', tech_type: 'CSS Framework' },
-		{ tech_id: 9, tech_name: 'TypeScript', tech_type: 'Programming Language' },
-		{ tech_id: 10, tech_name: 'React Native', tech_type: 'Mobile Framework' }
-	];
+	let loading = false;
+	let submitting = false;
+	let redirecting = false;
+	let error = null;
+	let success = false;
+	let successMessage = '';
+
+	// Load data on mount
+	onMount(async () => {
+		try {
+			const [categoriesData, technologiesData] = await Promise.all([
+				categoriesAPI.getAll(),
+				technologiesAPI.getAll()
+			]);
+			
+			availableCategories = categoriesData;
+			availableTechnologies = technologiesData;
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to load form data:', err);
+		}
+	});
 	
 	// Form state
 	let isSubmitting = false;
 	let errors = {};
 	let imageFile = null;
 	let imagePreview = '';
-	
-	// Category and Technology selection
-	let selectedCategories = [];
-	let selectedTechnologies = [];
-	let newTechnology = '';
-	let showTechInput = false;
 	
 	// Validation
 	function validateForm() {
@@ -117,16 +117,49 @@
 	}
 	
 	// Handle image upload
-	function handleImageUpload(event) {
+	async function handleImageUpload(event) {
 		const file = event.target.files[0];
 		if (file) {
-			imageFile = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				imagePreview = e.target.result;
-				formData.image_url = e.target.result; // Temporary preview
-			};
-			reader.readAsDataURL(file);
+			// Validate file type
+			const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+			if (!allowedTypes.includes(file.type)) {
+				error = 'Tipe file tidak valid. Hanya JPEG, PNG, GIF, dan WebP yang diperbolehkan.';
+				return;
+			}
+
+			// Validate file size (max 5MB)
+			const maxSize = 5 * 1024 * 1024; // 5MB
+			if (file.size > maxSize) {
+				error = 'Ukuran file terlalu besar. Maksimal 5MB.';
+				return;
+			}
+
+			try {
+				// Show preview immediately
+				imageFile = file;
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					imagePreview = e.target.result;
+				};
+				reader.readAsDataURL(file);
+
+				// Upload to server
+				loading = true;
+				const uploadResult = await uploadAPI.uploadPortfolioImage(file);
+				
+				// Store the server path in form data
+				formData.image_url = uploadResult.path; // This will be saved to database
+				
+				loading = false;
+				console.log('Upload successful:', uploadResult);
+			} catch (err) {
+				loading = false;
+				error = `Upload gagal: ${err.message}`;
+				imagePreview = '';
+				imageFile = null;
+				formData.image_url = '';
+				console.error('Upload error:', err);
+			}
 		}
 	}
 	
@@ -150,52 +183,67 @@
 		formData.technologies = selectedTechnologies;
 	}
 	
-	function addNewTechnology() {
-		if (newTechnology.trim()) {
-			// In real app, this would create a new technology via API
-			const newTech = {
-				tech_id: Date.now(),
-				tech_name: newTechnology.trim(),
-				tech_type: 'Custom'
-			};
-			availableTechnologies = [...availableTechnologies, newTech];
-			selectedTechnologies = [...selectedTechnologies, newTech.tech_id];
-			formData.technologies = selectedTechnologies;
-			newTechnology = '';
-			showTechInput = false;
-		}
-	}
-	
 	// Form submission
-	async function handleSubmit() {
-		if (!validateForm()) {
+	async function handleSubmit(event) {
+		event.preventDefault();
+		
+		// Prevent multiple submissions
+		if (submitting) {
 			return;
 		}
 		
-		isSubmitting = true;
-		
+		if (!formData.project_name.trim()) {
+			error = 'Nama project harus diisi';
+			return;
+		}
+
+		if (selectedCategories.length === 0) {
+			error = 'Minimal pilih satu kategori';
+			return;
+		}
+
+		if (selectedTechnologies.length === 0) {
+			error = 'Minimal pilih satu teknologi';
+			return;
+		}
+
+		submitting = true;
+		error = null;
+
 		try {
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			
-			// In real app, this would send data to API
-			console.log('Portfolio data:', {
+			// Prepare data with categories and technologies
+			const submissionData = {
 				...formData,
 				categories: selectedCategories,
-				technologies: selectedTechnologies,
-				imageFile
-			});
+				technologies: selectedTechnologies
+			};
+
+			await portfolioAPI.create(submissionData);
 			
-			// Redirect to portfolio list
-			goto('/dashboard/portfolio');
-		} catch (error) {
-			console.error('Error saving portfolio:', error);
-			// Handle error
+			success = true;
+			successMessage = 'Portfolio berhasil dibuat!';
+			redirecting = true;
+			
+			// Hide success message after 3 seconds and redirect
+			setTimeout(() => {
+				success = false;
+				goto('/dashboard/portfolio');
+			}, 3000);
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to create portfolio:', err);
 		} finally {
-			isSubmitting = false;
+			submitting = false;
 		}
 	}
 	
+	// Handle image preview
+	function previewImage() {
+		if (formData.image_url) {
+			window.open(formData.image_url, '_blank');
+		}
+	}
+
 	// Get category name by ID
 	function getCategoryName(categoryId) {
 		const category = availableCategories.find(c => c.category_id === categoryId);
@@ -219,7 +267,7 @@
 		<div class="mb-8">
 			<div class="flex items-center gap-4 mb-4">
 				<button 
-					on:click={() => goto('/dashboard/portfolio')}
+					onclick={() => goto('/dashboard/portfolio')}
 					class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 				>
 					<ArrowLeft class="w-5 h-5 text-gray-600" />
@@ -231,22 +279,87 @@
 			</div>
 		</div>
 
-		<form on:submit|preventDefault={handleSubmit} class="space-y-8">
+		<!-- Success Toast Notification -->
+		{#if success}
+			<div class="fixed top-4 right-4 z-50 max-w-md">
+				<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3">
+					<svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+					</svg>
+					<span class="font-medium">{successMessage}</span>
+					<button onclick={() => success = false} class="ml-auto text-green-500 hover:text-green-700">
+						<X class="w-4 h-4" />
+					</button>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Error Message -->
+		{#if error}
+			<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+				<div class="flex">
+					<div class="flex-shrink-0">
+						<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+						</svg>
+					</div>
+					<div class="ml-3">
+						<p class="text-sm font-medium text-red-800">{error}</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Loading Overlay -->
+		{#if submitting}
+			<div 
+				class="fixed inset-0 flex items-center justify-center z-50"
+				style="background-color: rgba(0, 0, 0, 0.5);"
+			>
+				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+					<div>
+						<p class="text-lg font-medium text-gray-900">Menyimpan Portfolio...</p>
+						<p class="text-sm text-gray-500">Mohon tunggu, sedang memproses data</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Redirecting Overlay -->
+		{#if redirecting}
+			<div 
+				class="fixed inset-0 flex items-center justify-center z-50"
+				style="background-color: rgba(0, 0, 0, 0.3);"
+			>
+				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+					<div>
+						<p class="text-lg font-medium text-gray-900">Portfolio Berhasil Dibuat!</p>
+						<p class="text-sm text-gray-500">Mengalihkan ke halaman portfolio...</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<form onsubmit={handleSubmit} class="space-y-8 {submitting || redirecting ? 'pointer-events-none opacity-75' : ''}">
 			<!-- Basic Information -->
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Informasi Dasar</h2>
 				
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div class="md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="project_name" class="block text-sm font-medium text-gray-700 mb-2">
 							Nama Project <span class="text-red-500">*</span>
 						</label>
 						<input
 							type="text"
+							id="project_name"
 							bind:value={formData.project_name}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
 							placeholder="Masukkan nama project"
 							class:border-red-500={errors.project_name}
+							disabled={submitting}
 						/>
 						{#if errors.project_name}
 							<p class="text-red-500 text-sm mt-1">{errors.project_name}</p>
@@ -254,11 +367,12 @@
 					</div>
 					
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="client_name" class="block text-sm font-medium text-gray-700 mb-2">
 							Nama Client <span class="text-red-500">*</span>
 						</label>
 						<input
 							type="text"
+							id="client_name"
 							bind:value={formData.client_name}
 							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
 							placeholder="Masukkan nama client"
@@ -380,14 +494,24 @@
 									<p class="text-xs text-gray-500">PNG, JPG or GIF (MAX. 800x400px)</p>
 								</div>
 							{/if}
-							<input type="file" accept="image/*" class="hidden" on:change={handleImageUpload} />
+							<input type="file" accept="image/*" class="hidden" onchange={handleImageUpload} />
 						</label>
 					</div>
 					
 					{#if imagePreview}
 						<button
 							type="button"
-							on:click={() => {
+							onclick={async () => {
+								// Delete file from server if it was uploaded
+								if (formData.image_url && formData.image_url.startsWith('/uploads/')) {
+									try {
+										const filename = formData.image_url.split('/').pop();
+										await uploadAPI.deletePortfolioImage(filename);
+									} catch (err) {
+										console.error('Failed to delete image from server:', err);
+									}
+								}
+								
 								imagePreview = '';
 								imageFile = null;
 								formData.image_url = '';
@@ -412,7 +536,7 @@
 								<input
 									type="checkbox"
 									checked={selectedCategories.includes(category.category_id)}
-									on:change={() => toggleCategory(category.category_id)}
+									onchange={() => toggleCategory(category.category_id)}
 									class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
 								/>
 								<span class="ml-3 text-sm font-medium text-gray-700">{category.category_name}</span>
@@ -433,7 +557,7 @@
 										{getCategoryName(categoryId)}
 										<button
 											type="button"
-											on:click={() => toggleCategory(categoryId)}
+											onclick={() => toggleCategory(categoryId)}
 											class="ml-2 text-blue-600 hover:text-blue-800"
 										>
 											<X class="w-3 h-3" />
@@ -457,7 +581,7 @@
 								<input
 									type="checkbox"
 									checked={selectedTechnologies.includes(tech.tech_id)}
-									on:change={() => toggleTechnology(tech.tech_id)}
+									onchange={() => toggleTechnology(tech.tech_id)}
 									class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
 								/>
 								<div class="ml-3">
@@ -466,46 +590,6 @@
 								</div>
 							</label>
 						{/each}
-					</div>
-					
-					<!-- Add new technology -->
-					<div class="border-t pt-4">
-						{#if showTechInput}
-							<div class="flex gap-2">
-								<input
-									type="text"
-									bind:value={newTechnology}
-									placeholder="Nama teknologi baru"
-									class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-								/>
-								<button
-									type="button"
-									on:click={addNewTechnology}
-									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-								>
-									<Plus class="w-4 h-4" />
-								</button>
-								<button
-									type="button"
-									on:click={() => {
-										showTechInput = false;
-										newTechnology = '';
-									}}
-									class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-								>
-									<X class="w-4 h-4" />
-								</button>
-							</div>
-						{:else}
-							<button
-								type="button"
-								on:click={() => showTechInput = true}
-								class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50"
-							>
-								<Plus class="w-4 h-4" />
-								Tambah Teknologi Baru
-							</button>
-						{/if}
 					</div>
 					
 					{#if errors.technologies}
@@ -521,7 +605,7 @@
 										{getTechnologyName(techId)}
 										<button
 											type="button"
-											on:click={() => toggleTechnology(techId)}
+											onclick={() => toggleTechnology(techId)}
 											class="ml-2 text-green-600 hover:text-green-800"
 										>
 											<X class="w-3 h-3" />
@@ -539,25 +623,75 @@
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Pengaturan</h2>
 				
 				<div class="space-y-4">
-					<label class="flex items-center">
-						<input
-							type="checkbox"
-							bind:checked={formData.is_featured}
-							class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-						/>
-						<span class="ml-3 text-sm font-medium text-gray-700">Featured Portfolio</span>
-						<p class="ml-2 text-xs text-gray-500">(Akan ditampilkan di halaman utama)</p>
-					</label>
-					
-					<label class="flex items-center">
-						<input
-							type="checkbox"
-							bind:checked={formData.is_active}
-							class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-						/>
-						<span class="ml-3 text-sm font-medium text-gray-700">Status Active</span>
-						<p class="ml-2 text-xs text-gray-500">(Portfolio akan ditampilkan di website)</p>
-					</label>
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-3">Status Featured</label>
+						<div class="flex items-center space-x-6">
+							<label class="inline-flex items-center">
+								<input
+									type="radio"
+									bind:group={formData.is_featured}
+									value={0}
+									class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500"
+								/>
+								<span class="ml-2 text-sm text-gray-700">Tidak Featured</span>
+							</label>
+							<label class="inline-flex items-center">
+								<input
+									type="radio"
+									bind:group={formData.is_featured}
+									value={1}
+									class="form-radio h-4 w-4 text-blue-600 border-gray-300 focus:ring-2 focus:ring-blue-500"
+								/>
+								<span class="ml-2 text-sm text-gray-700">Featured</span>
+							</label>
+						</div>
+						<p class="text-xs text-gray-500 mt-1">Portfolio featured akan ditampilkan secara prioritas</p>
+					</div>
+
+					<!-- URLs Section -->
+					<div class="pt-4 border-t border-gray-200">
+						<h3 class="text-lg font-medium text-gray-900 mb-4">URLs & Media</h3>
+						
+						<div class="space-y-4">
+							<div>
+								<label for="image_url" class="block text-sm font-medium text-gray-700 mb-2">
+									Path Gambar Project
+								</label>
+								<div class="flex rounded-lg shadow-sm">
+									<input
+										type="text"
+										id="image_url"
+										bind:value={formData.image_url}
+										class="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200"
+										placeholder="/uploads/portfolio/image.jpg"
+										readonly
+									/>
+									{#if formData.image_url}
+										<button
+											type="button"
+											onclick={previewImage}
+											class="inline-flex items-center px-3 py-3 border border-l-0 border-gray-300 rounded-r-lg bg-gray-50 hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+										>
+											<Eye class="w-4 h-4" />
+										</button>
+									{/if}
+								</div>
+							</div>
+							
+							<div>
+								<label for="project_url" class="block text-sm font-medium text-gray-700 mb-2">
+									URL Project
+								</label>
+								<input
+									type="url"
+									id="project_url"
+									bind:value={formData.project_url}
+									class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200"
+									placeholder="https://project-demo.com"
+								/>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -565,21 +699,25 @@
 			<div class="flex flex-col sm:flex-row gap-4 justify-end">
 				<button
 					type="button"
-					on:click={() => goto('/dashboard/portfolio')}
+					onclick={() => goto('/dashboard/portfolio')}
 					class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+					disabled={submitting}
 				>
 					Batal
 				</button>
 				<button
 					type="submit"
-					disabled={isSubmitting}
-					class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+					disabled={submitting || redirecting || !formData.project_name.trim()}
+					class="inline-flex items-center px-6 py-3 border border-transparent text-white font-medium rounded-lg bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					{#if isSubmitting}
-						<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+					{#if submitting}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
 						Menyimpan...
+					{:else if redirecting}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+						Mengalihkan...
 					{:else}
-						<Save class="w-4 h-4" />
+						<Save class="w-4 h-4 mr-2" />
 						Simpan Portfolio
 					{/if}
 				</button>

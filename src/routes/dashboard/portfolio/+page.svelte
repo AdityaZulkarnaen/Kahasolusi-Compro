@@ -1,72 +1,99 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Plus, Search, Eye, Edit, Trash2, Calendar, Tag, ExternalLink } from 'lucide-svelte';
+	import { portfolioAPI, categoriesAPI, technologiesAPI } from '$lib/api.js';
+	import { browser } from '$app/environment';
 	
-	// Sample data - nanti akan diganti dengan fetch dari API
-	let portfolios = [
-		{
-			portfolio_id: 1,
-			project_name: "E-Commerce Platform KahaShop",
-			project_description: "Platform e-commerce modern dengan fitur lengkap untuk UMKM",
-			client_name: "PT. Digital Indonesia",
-			project_start_date: "2024-01-15",
-			project_end_date: "2024-06-30",
-			image_url: "/portfolio/kahashop.jpg",
-			project_url: "https://youtube.com",
-			is_featured: true,
-			is_active: true,
-			categories: ["Web Development", "E-Commerce"],
-			technologies: ["SvelteKit", "TailwindCSS", "Node.js"]
-		},
-		{
-			portfolio_id: 2,
-			project_name: "Mobile App KahaDelivery",
-			project_description: "Aplikasi mobile untuk layanan delivery makanan",
-			client_name: "KahaFood Corp",
-			project_start_date: "2024-03-01",
-			project_end_date: "2024-08-15",
-			image_url: "/portfolio/kahadelivery.jpg",
-			project_url: "https://youtube.com",
-			is_featured: false,
-			is_active: true,
-			categories: ["Mobile Development"],
-			technologies: ["React Native", "Firebase", "Express.js"]
-		},
-		{
-			portfolio_id: 3,
-			project_name: "Corporate Website Redesign",
-			project_description: "Redesign website corporate dengan modern UI/UX",
-			client_name: "PT. Maju Bersama",
-			project_start_date: "2024-02-10",
-			project_end_date: "2024-05-20",
-			image_url: "/portfolio/corporate.jpg",
-			project_url: "https://youtube.com",
-			is_featured: true,
-			is_active: false,
-			categories: ["Web Development", "UI/UX Design"],
-			technologies: ["Next.js", "TailwindCSS", "Framer Motion"]
-		}
-	];
+	// Get base URL for images
+	const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api' : '';
+	const BASE_URL = API_BASE_URL.replace('/api', ''); // Remove /api suffix for image URLs
+	
+	// Helper function to get full image URL
+	function getImageUrl(imagePath) {
+		if (!imagePath) return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNzUgNzVMMTI1IDEyNUw4NyA4N0w3NSAxMDBMMTI1IDE1MEwxNzUgMTAwVjc1WiIgZmlsbD0iIzlDQTNBRiIvPgo8Y2lyY2xlIGN4PSI4NyIgY3k9Ijc1IiByPSIxMiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+		if (imagePath.startsWith('http')) return imagePath;
+		return `${BASE_URL}${imagePath}`;
+	}
+	
+	// Data state
+	let portfolios = [];
+	let categories = [];
+	let technologies = [];
+	let loading = false;
+	let error = null;
 	
 	let searchQuery = '';
 	let selectedCategory = '';
 	let selectedStatus = '';
 	let selectedFeatured = '';
-	let filteredPortfolios = portfolios;
+	let filteredPortfolios = [];
+
+	// Delete modal state
+	let showDeleteModal = false;
+	let portfolioToDelete = null;
+	let deleting = false;
+
+	// Load data on component mount
+	onMount(async () => {
+		await loadInitialData();
+	});
+
+	// Load all required data
+	async function loadInitialData() {
+		loading = true;
+		error = null;
+		
+		try {
+			// Load portfolios, categories, and technologies in parallel
+			const [portfoliosData, categoriesData, technologiesData] = await Promise.all([
+				portfolioAPI.getAll(),
+				categoriesAPI.getAll(),
+				technologiesAPI.getAll()
+			]);
+			
+			portfolios = portfoliosData;
+			categories = categoriesData;
+			technologies = technologiesData;
+			
+			filterPortfolios();
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to load data:', err);
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Reload portfolios data
+	async function loadPortfolios() {
+		try {
+			portfolios = await portfolioAPI.getAll();
+			filterPortfolios();
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to load portfolios:', err);
+		}
+	}
 	
 	// Filter function
 	function filterPortfolios() {
+		if (!portfolios || portfolios.length === 0) {
+			filteredPortfolios = [];
+			return;
+		}
+
 		filteredPortfolios = portfolios.filter(portfolio => {
 			// Text search filter
 			const textMatch = !searchQuery.trim() || 
-				portfolio.project_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				portfolio.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				portfolio.project_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				portfolio.categories.some(cat => cat.toLowerCase().includes(searchQuery.toLowerCase()));
+				portfolio.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				portfolio.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				portfolio.project_description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				portfolio.categories?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				portfolio.technologies?.toLowerCase().includes(searchQuery.toLowerCase());
 			
 			// Category filter
 			const categoryMatch = !selectedCategory || 
-				portfolio.categories.some(cat => cat.toLowerCase().includes(selectedCategory.toLowerCase()));
+				portfolio.categories?.toLowerCase().includes(selectedCategory.toLowerCase());
 			
 			// Status filter
 			const statusMatch = !selectedStatus || 
@@ -81,39 +108,71 @@
 			return textMatch && categoryMatch && statusMatch && featuredMatch;
 		});
 	}
-	
-	// Handle delete
-	function handleDelete(portfolioId) {
-		if (confirm('Apakah Anda yakin ingin menghapus portfolio ini?')) {
-			portfolios = portfolios.filter(p => p.portfolio_id !== portfolioId);
-			filterPortfolios();
+
+	// Handle delete confirmation
+	function confirmDelete(portfolio) {
+		portfolioToDelete = portfolio;
+		showDeleteModal = true;
+	}
+
+	// Execute delete
+	async function executeDelete() {
+		if (!portfolioToDelete) return;
+		
+		deleting = true;
+		try {
+			await portfolioAPI.delete(portfolioToDelete.portfolio_id);
+			await loadPortfolios();
+			showDeleteModal = false;
+			portfolioToDelete = null;
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to delete portfolio:', err);
+		} finally {
+			deleting = false;
 		}
 	}
-	
-	// Toggle featured status
-	function toggleFeatured(portfolioId) {
-		portfolios = portfolios.map(p => 
-			p.portfolio_id === portfolioId 
-				? { ...p, is_featured: !p.is_featured }
-				: p
-		);
-		filterPortfolios();
+
+	// Cancel delete
+	function cancelDelete() {
+		showDeleteModal = false;
+		portfolioToDelete = null;
 	}
-	
-	// Format date
+
+	// Handle ESC key to close modal
+	function handleKeydown(event) {
+		if (event.key === 'Escape' && showDeleteModal) {
+			cancelDelete();
+		}
+	}
+
+	// Handle click outside modal
+	function handleModalClick(event) {
+		if (event.target === event.currentTarget) {
+			cancelDelete();
+		}
+	}
+
+	// Format date function
 	function formatDate(dateString) {
-		return new Date(dateString).toLocaleDateString('id-ID', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
+		if (!dateString) return 'N/A';
+		
+		try {
+			const date = new Date(dateString);
+			return date.toLocaleDateString('id-ID', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric'
+			});
+		} catch (error) {
+			return 'Invalid Date';
+		}
 	}
-	
-	onMount(() => {
+
+	// Reactive statement to update filters
+	$: if (searchQuery || selectedCategory || selectedStatus || selectedFeatured) {
 		filterPortfolios();
-	});
-	
-	// Reactive statement untuk semua filter
+	}
 	$: if (searchQuery !== undefined || selectedCategory !== undefined || selectedStatus !== undefined || selectedFeatured !== undefined) {
 		filterPortfolios();
 	}
@@ -236,10 +295,9 @@
 						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
 					>
 						<option value="">Semua Kategori</option>
-						<option value="web">Web Development</option>
-						<option value="mobile">Mobile Development</option>
-						<option value="ecommerce">E-Commerce</option>
-						<option value="ui/ux">UI/UX Design</option>
+						{#each categories as category}
+							<option value={category.category_name}>{category.category_name}</option>
+						{/each}
 					</select>
 					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
 						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,50 +346,79 @@
 					</tr>
 				</thead>
 				<tbody class="bg-white divide-y divide-gray-200">
-					{#each filteredPortfolios as portfolio}
-						<tr class="hover:bg-gray-50">
-							<td class="px-6 py-4">
-								<div class="flex items-start">
-									<div class="flex-shrink-0 h-12 w-12 relative">
-										<img 
-											class="h-12 w-12 rounded-lg object-cover border border-gray-200" 
-											src={portfolio.image_url} 
-											alt={portfolio.project_name}
-											onerror={(e) => e.target.src = '/placeholder-project.jpg'}
-										/>
-										{#if portfolio.is_featured}
-											<div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full border-2 border-white shadow-sm flex items-center justify-center" title="Featured Project">
-												<div class="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
-											</div>
-										{/if}
-									</div>
-									<div class="ml-4 flex-1 min-w-0">
-										<div class="text-sm font-medium text-gray-900 mb-1">{portfolio.project_name}</div>
-										<div class="text-sm text-gray-500 line-clamp-2 mb-2">{portfolio.project_description}</div>
-										{#if portfolio.project_url}
-											<a 
-												href={portfolio.project_url} 
-												target="_blank" 
-												rel="noopener noreferrer"
-												class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
-											>
-												<ExternalLink class="w-3 h-3" />
-												Lihat Project
-											</a>
-										{/if}
-									</div>
+					{#if loading}
+						<tr>
+							<td colspan="7" class="px-6 py-12 text-center">
+								<div class="flex items-center justify-center">
+									<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+									<span class="ml-2 text-gray-600">Memuat portfolio...</span>
 								</div>
 							</td>
+						</tr>
+					{:else if error}
+						<tr>
+							<td colspan="7" class="px-6 py-12 text-center">
+								<div class="text-red-600">
+									<p class="font-medium">Error memuat data:</p>
+									<p class="text-sm mt-1">{error}</p>
+									<button 
+										onclick={loadInitialData}
+										class="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+									>
+										Coba Lagi
+									</button>
+								</div>
+							</td>
+						</tr>
+					{:else}
+						{#each filteredPortfolios as portfolio}
+							<tr class="hover:bg-gray-50">
+								<td class="px-6 py-4">
+									<div class="flex items-start">
+										<div class="flex-shrink-0 h-12 w-12 relative">
+											<img 
+												class="h-12 w-12 rounded-lg object-cover border border-gray-200" 
+												src={getImageUrl(portfolio.image_url)} 
+												alt={portfolio.project_name}
+												onerror={(e) => e.target.src = getImageUrl(null)}
+											/>
+											{#if portfolio.is_featured}
+												<div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full border-2 border-white shadow-sm flex items-center justify-center" title="Featured Project">
+													<div class="w-1.5 h-1.5 bg-yellow-600 rounded-full"></div>
+												</div>
+											{/if}
+										</div>
+										<div class="ml-4 flex-1 min-w-0">
+											<div class="text-sm font-medium text-gray-900 mb-1">{portfolio.project_name}</div>
+											<div class="text-sm text-gray-500 line-clamp-2 mb-2">{portfolio.project_description || 'Tidak ada deskripsi'}</div>
+											{#if portfolio.project_url}
+												<a 
+													href={portfolio.project_url} 
+													target="_blank" 
+													rel="noopener noreferrer"
+													class="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
+												>
+													<ExternalLink class="w-3 h-3" />
+													Lihat Project
+												</a>
+											{/if}
+										</div>
+									</div>
+								</td>
 							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900">{portfolio.client_name}</div>
+								<div class="text-sm text-gray-900">{portfolio.client_name || 'N/A'}</div>
 							</td>
 							<td class="px-6 py-4">
-								<div class="flex flex-col gap-2">
-									{#each portfolio.categories as category}
-										<span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border border-indigo-200 w-fit">
-											{category}
-										</span>
-									{/each}
+								<div class="flex flex-wrap gap-1">
+									{#if portfolio.categories}
+										{#each portfolio.categories.split(',') as category}
+											<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+												{category.trim()}
+											</span>
+										{/each}
+									{:else}
+										<span class="text-xs text-gray-400">No categories</span>
+									{/if}
 								</div>
 							</td>
 							<td class="px-6 py-4">
@@ -340,74 +427,86 @@
 							</td>
 							<td class="px-6 py-4">
 								<div class="flex flex-wrap gap-1">
-									{#each portfolio.technologies.slice(0, 2) as tech}
-										<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-											{tech}
-										</span>
-									{/each}
-									{#if portfolio.technologies.length > 2}
-										<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-											+{portfolio.technologies.length - 2}
-										</span>
+									{#if portfolio.technologies}
+										{#each portfolio.technologies.split(',').slice(0, 3) as tech}
+											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+												{tech.trim()}
+											</span>
+										{/each}
+										{#if portfolio.technologies.split(',').length > 3}
+											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+												+{portfolio.technologies.split(',').length - 3}
+											</span>
+										{/if}
+									{:else}
+										<span class="text-xs text-gray-400">No technologies</span>
 									{/if}
 								</div>
-							</td>
-							<td class="px-6 py-4">
-								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {portfolio.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-									{portfolio.is_active ? 'Active' : 'Inactive'}
-								</span>
-							</td>
-							<td class="px-6 py-4 text-right text-sm font-medium">
-								<div class="flex items-center justify-end gap-2">
-									<a 
-										href="/dashboard/portfolio/{portfolio.portfolio_id}"
-										class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-										title="View Details"
-									>
-										<Eye class="w-4 h-4" />
-									</a>
-									<a 
-										href="/dashboard/portfolio/{portfolio.portfolio_id}/edit"
-										class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
-										title="Edit"
-									>
-										<Edit class="w-4 h-4" />
-									</a>
-									<button 
-										onclick={() => toggleFeatured(portfolio.portfolio_id)}
-										class="text-yellow-600 hover:text-yellow-900 p-2 hover:bg-yellow-50 rounded-lg transition-colors"
-										title={portfolio.is_featured ? 'Remove from Featured' : 'Add to Featured'}
-									>
-										<Tag class="w-4 h-4" />
-									</button>
-									<button 
-										onclick={() => handleDelete(portfolio.portfolio_id)}
-										class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
-										title="Delete"
-									>
-										<Trash2 class="w-4 h-4" />
-									</button>
-								</div>
-							</td>
-						</tr>
-					{/each}
+								</td>
+								<td class="px-6 py-4">
+									<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {portfolio.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+										{portfolio.is_active ? 'Active' : 'Inactive'}
+									</span>
+								</td>
+								<td class="px-6 py-4 text-right text-sm font-medium">
+									<div class="flex items-center justify-end gap-2">
+										<a 
+											href="/dashboard/portfolio/{portfolio.portfolio_id}/edit"
+											class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
+											title="Edit"
+										>
+											<Edit class="w-4 h-4" />
+										</a>
+										<button 
+											onclick={() => confirmDelete(portfolio)}
+											class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
+											title="Delete"
+										>
+											<Trash2 class="w-4 h-4" />
+										</button>
+									</div>
+								</td>
+							</tr>
+						{/each}
+					{/if}
 				</tbody>
 			</table>
 		</div>
 		
-		{#if filteredPortfolios.length === 0}
+		{#if !loading && !error && filteredPortfolios.length === 0}
 			<div class="text-center py-12">
 				<Eye class="mx-auto h-12 w-12 text-gray-400" />
-				<h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada portfolio</h3>
-				<p class="mt-1 text-sm text-gray-500">Mulai dengan menambahkan portfolio pertama Anda.</p>
+				<h3 class="mt-2 text-sm font-medium text-gray-900">
+					{portfolios.length === 0 ? 'Tidak ada portfolio' : 'Tidak ada portfolio yang sesuai filter'}
+				</h3>
+				<p class="mt-1 text-sm text-gray-500">
+					{portfolios.length === 0 
+						? 'Mulai dengan menambahkan portfolio pertama Anda.' 
+						: 'Coba ubah filter pencarian atau reset filter.'
+					}
+				</p>
 				<div class="mt-6">
-					<a 
-						href="/dashboard/portfolio/create"
-						class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-					>
-						<Plus class="w-4 h-4 mr-2" />
-						Tambah Portfolio
-					</a>
+					{#if portfolios.length === 0}
+						<a 
+							href="/dashboard/portfolio/create"
+							class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+						>
+							<Plus class="w-4 h-4 mr-2" />
+							Tambah Portfolio
+						</a>
+					{:else}
+						<button
+							onclick={() => {
+								searchQuery = '';
+								selectedCategory = '';
+								selectedStatus = '';
+								selectedFeatured = '';
+							}}
+							class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+						>
+							Reset Filter
+						</button>
+					{/if}
 				</div>
 			</div>
 		{/if}
@@ -423,6 +522,108 @@
 		</div>
 	</div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+{#if showDeleteModal && portfolioToDelete}
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+		onclick={handleModalClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
+		<div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
+			<!-- Modal Header -->
+			<div class="flex items-center justify-between p-6 border-b border-gray-200">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+						<Trash2 class="w-5 h-5 text-red-600" />
+					</div>
+					<div>
+						<h3 id="modal-title" class="text-lg font-semibold text-gray-900">Konfirmasi Hapus</h3>
+						<p class="text-sm text-gray-500">Tindakan ini tidak dapat dibatalkan</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Body -->
+			<div class="p-6">
+				<div class="mb-4">
+					<p class="text-gray-700 mb-3">
+						Apakah Anda yakin ingin menghapus portfolio ini?
+					</p>
+					<div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
+						<div class="flex items-center gap-3">
+							{#if portfolioToDelete.image_url}
+								<img 
+									src={getImageUrl(portfolioToDelete.image_url)} 
+									alt={portfolioToDelete.project_name}
+									class="w-12 h-12 object-cover rounded-lg"
+									onerror={(e) => e.target.src = getImageUrl(null)}
+								/>
+							{:else}
+								<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+									<Eye class="w-6 h-6 text-gray-400" />
+								</div>
+							{/if}
+							<div class="flex-1 min-w-0">
+								<h4 class="font-medium text-gray-900 truncate">
+									{portfolioToDelete.project_name}
+								</h4>
+								<p class="text-sm text-gray-500 truncate">
+									{portfolioToDelete.client_name}
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+					<div class="flex items-start gap-2">
+						<svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+						</svg>
+						<div>
+							<p class="text-sm font-medium text-yellow-800">Peringatan!</p>
+							<p class="text-sm text-yellow-700">
+								Data portfolio dan file gambar yang terkait akan dihapus secara permanen.
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Footer -->
+			<div class="flex gap-3 px-6 py-4 bg-gray-50 rounded-b-xl">
+				<button
+					type="button"
+					onclick={cancelDelete}
+					class="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+					disabled={deleting}
+				>
+					Batal
+				</button>
+				<button
+					type="button"
+					onclick={executeDelete}
+					disabled={deleting}
+					class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				>
+					{#if deleting}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+						Menghapus...
+					{:else}
+						<Trash2 class="w-4 h-4" />
+						Hapus Portfolio
+					{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.line-clamp-2 {
