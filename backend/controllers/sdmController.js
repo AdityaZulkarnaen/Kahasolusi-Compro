@@ -4,11 +4,16 @@ export class SDMController {
   
   static async getAll(c) {
     try {
+      console.log('SDM Controller: getAll called')
+      
+      // Test dengan service call
       const sdmList = await SDMService.getAll()
-      return c.json(sdmList)
+      console.log('SDM Controller: data retrieved:', sdmList ? sdmList.length : 0, 'records')
+      return c.json(sdmList || [])
+      
     } catch (error) {
       console.error('Error fetching SDM:', error)
-      return c.json({ error: 'Failed to fetch SDM data' }, 500)
+      return c.json({ error: 'Failed to fetch SDM data', details: error.message }, 500)
     }
   }
 
@@ -35,9 +40,9 @@ export class SDMController {
     try {
       const data = await c.req.json()
       
-      if (!data.full_name || !data.position) {
+      if (!data.member_name || !data.position) {
         return c.json({ 
-          error: 'Missing required fields: full_name, position' 
+          error: 'Missing required fields: member_name, position' 
         }, 400)
       }
 
@@ -61,9 +66,9 @@ export class SDMController {
 
       const data = await c.req.json()
       
-      if (!data.full_name || !data.position) {
+      if (!data.member_name || !data.position) {
         return c.json({ 
-          error: 'Missing required fields: full_name, position' 
+          error: 'Missing required fields: member_name, position' 
         }, 400)
       }
 

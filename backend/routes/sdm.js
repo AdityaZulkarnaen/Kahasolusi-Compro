@@ -6,11 +6,11 @@ const sdmRoutes = new Hono()
 // GET /api/sdm - Get all SDM
 sdmRoutes.get('/', SDMController.getAll)
 
-// GET /api/sdm/:id - Get SDM by ID
-sdmRoutes.get('/:id', SDMController.getById)
-
 // POST /api/sdm - Create new SDM
 sdmRoutes.post('/', SDMController.create)
+
+// GET /api/sdm/:id - Get SDM by ID (harus setelah routes spesifik)
+sdmRoutes.get('/:id', SDMController.getById)
 
 // PUT /api/sdm/:id - Update SDM
 sdmRoutes.put('/:id', SDMController.update)

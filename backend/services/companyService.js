@@ -3,13 +3,14 @@ import { getDatabase } from '../config/database.js'
 export class CompanyService {
   
   static async getAll() {
-    const db = getDatabase()
-    return new Promise((resolve, reject) => {
-      db.all('SELECT * FROM company_profile ORDER BY created_at DESC', (err, rows) => {
-        if (err) reject(err)
-        else resolve(rows)
-      })
-    })
+    try {
+      const db = getDatabase()
+      const rows = await db.all('SELECT * FROM company_profile ORDER BY created_at DESC')
+      return rows || []
+    } catch (error) {
+      console.error('Company Service error:', error)
+      throw error
+    }
   }
 
   static async getById(id) {
