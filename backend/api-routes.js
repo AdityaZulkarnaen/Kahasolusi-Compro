@@ -101,6 +101,32 @@ export async function createPortfolio(data) {
   return result.lastID;
 }
 
+export async function updatePortfolio(id, data) {
+  if (!db) {
+    throw new Error('Database not initialized. Call initDB() first.');
+  }
+  
+  const result = await db.run(`
+    UPDATE portfolio 
+    SET project_name = ?, project_description = ?, case_study = ?, image_url = ?, project_url = ?, client_name = ?, project_start_date = ?, project_end_date = ?, is_featured = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?
+    WHERE portfolio_id = ?
+  `, [
+    data.project_name,
+    data.project_description,
+    data.case_study,
+    data.image_url,
+    data.project_url,
+    data.client_name,
+    data.project_start_date,
+    data.project_end_date,
+    data.is_featured || 0,
+    data.updated_by || 1,
+    id
+  ]);
+  
+  return result;
+}
+
 export async function deletePortfolio(id) {
   if (!db) {
     throw new Error('Database not initialized. Call initDB() first.');
