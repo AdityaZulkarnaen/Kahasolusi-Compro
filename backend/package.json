@@ -1,0 +1,16 @@
+{
+  "name": "kahasolusi-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "init-db": "node init-db.js"
+  },
+  "dependencies": {
+    "hono": "^4.6.3",
+    "@hono/node-server": "^1.19.6",
+    "sqlite3": "^5.1.7",
+    "sqlite": "^5.1.1"
+  }
+}
