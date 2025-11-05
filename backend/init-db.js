@@ -414,8 +414,8 @@ for (const [name, email, message] of testData) {
   )
 }
 
-console.log('✅ Sample data inserted successfully!')
-console.log(`📁 Database created at: ${dbPath}`)
-console.log('🚀 Database schema updated to Kahasolusi Company Profile ERD!')
+console.log('Sample data inserted successfully!')
+console.log(`Database created at: ${dbPath}`)
+console.log('Database schema updated to Kahasolusi Company Profile ERD!')
 
 await db.close()

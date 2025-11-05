@@ -353,3 +353,20 @@ export async function updateSystemSetting(key, value, updatedBy = 1) {
     WHERE setting_key = ?
   `, [value, updatedBy, key]);
 }
+
+// ===== HEALTH CHECK API =====
+export async function getPortfolioCount() {
+  if (!db) {
+    throw new Error('Database not initialized. Call initDB() first.');
+  }
+  const result = await db.get(`SELECT COUNT(*) as count FROM portfolio WHERE is_active = 1`);
+  return result.count;
+}
+
+export async function getTechnologyCount() {
+  if (!db) {
+    throw new Error('Database not initialized. Call initDB() first.');
+  }
+  const result = await db.get(`SELECT COUNT(*) as count FROM technologies WHERE is_active = 1`);
+  return result.count;
+}
