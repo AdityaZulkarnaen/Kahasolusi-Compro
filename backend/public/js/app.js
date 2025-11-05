@@ -570,11 +570,12 @@ async function deleteSDM(member_id) {
 }
 
 // Company Management
-let editingCompanyId = null;
-
 document.addEventListener('DOMContentLoaded', function() {
     const companyForm = document.getElementById('companyForm');
     if (companyForm) {
+        // Auto-load company profile saat halaman dimuat
+        loadCompanyProfile();
+        
         companyForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -591,14 +592,18 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             
             try {
+                const companyId = document.getElementById('company_id').value;
                 let response;
-                if (editingCompanyId) {
-                    response = await fetch(`/api/company/${editingCompanyId}`, {
+                
+                if (companyId) {
+                    // Update existing company profile
+                    response = await fetch(`/api/company/${companyId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
                     });
                 } else {
+                    // Create new company profile if none exists
                     response = await fetch('/api/company', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -608,12 +613,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const result = await response.json();
                 if (response.ok) {
-                    showMessage(result.message || 'Company info saved successfully!', 'success');
-                    document.getElementById('companyForm').reset();
-                    editingCompanyId = null;
-                    loadCompany();
+                    showMessage('Company profile updated successfully!', 'success');
+                    loadCompanyProfile(); // Reload to show updated data
                 } else {
-                    showMessage(result.error || 'Failed to save company info', 'error');
+                    showMessage(result.error || 'Failed to update company profile', 'error');
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
@@ -622,48 +625,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-async function loadCompany() {
-    showMessage('Loading company data...', 'loading');
+async function loadCompanyProfile() {
+    const statusDiv = document.getElementById('companyProfileStatus');
     try {
+        statusDiv.innerHTML = '<div class="loading">Loading company profile...</div>';
+        
         const response = await fetch('/api/company');
         const companies = await response.json();
         
-        const container = document.getElementById('companyList');
-        if (companies.length === 0) {
-            container.innerHTML = '<div class="card">No company data found.</div>';
-        } else {
-            container.innerHTML = companies.map(company => `
-                <div class="card">
-                    <h3>${company.company_name}</h3>
-                    <p><strong>Description:</strong> ${company.description || 'N/A'}</p>
-                    <p><strong>Address:</strong> ${company.company_address || 'N/A'}</p>
-                    <p><strong>Phone:</strong> ${company.phone || 'N/A'}</p>
-                    <p><strong>Email:</strong> ${company.email || 'N/A'}</p>
-                    <p><strong>LinkedIn:</strong> ${company.linkedin_url ? `<a href="${company.linkedin_url}" target="_blank">${company.linkedin_url}</a>` : 'N/A'}</p>
-                    <p><strong>Logo:</strong> ${company.logo_url ? `<a href="${company.logo_url}" target="_blank">View Logo</a>` : 'N/A'}</p>
-                    <p><strong>Vision:</strong> ${company.vision || 'N/A'}</p>
-                    <p><strong>Mission:</strong> ${company.mission || 'N/A'}</p>
-                    <p><strong>Created:</strong> ${new Date(company.created_at).toLocaleDateString()}</p>
-                    <div class="actions">
-                        <button onclick="editCompany(${company.profile_id})" class="btn-secondary">Edit</button>
-                        <button onclick="deleteCompany(${company.profile_id})" class="btn-danger">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        showMessage(`Loaded ${companies.length} company records`, 'success');
-    } catch (error) {
-        showMessage('Error loading company: ' + error.message, 'error');
-    }
-}
-
-async function editCompany(id) {
-    try {
-        const response = await fetch(`/api/company/${id}`);
-        const company = await response.json();
-        
-        if (response.ok) {
-            // Fill form with company data
+        if (companies.length > 0) {
+            // Load first company profile into form
+            const company = companies[0];
             document.getElementById('company_id').value = company.profile_id || '';
             document.getElementById('company_name').value = company.company_name || '';
             document.getElementById('description').value = company.description || '';
@@ -675,31 +647,14 @@ async function editCompany(id) {
             document.getElementById('vision').value = company.vision || '';
             document.getElementById('mission').value = company.mission || '';
             
-            editingCompanyId = id;
-            showMessage('Editing company - modify form and submit to update', 'success');
+            statusDiv.innerHTML = '<div class="success">Company profile loaded successfully</div>';
         } else {
-            showMessage(company.error || 'Failed to load company for editing', 'error');
+            // No company profile exists yet
+            document.getElementById('companyForm').reset();
+            statusDiv.innerHTML = '<div class="info">No company profile found. Fill the form to create one.</div>';
         }
     } catch (error) {
-        showMessage('Error loading company: ' + error.message, 'error');
-    }
-}
-
-async function deleteCompany(id) {
-    if (!confirm('Are you sure you want to delete this company?')) return;
-    
-    try {
-        const response = await fetch(`/api/company/${id}`, { method: 'DELETE' });
-        const result = await response.json();
-        
-        if (response.ok) {
-            showMessage(result.message || 'Company deleted successfully!', 'success');
-            loadCompany();
-        } else {
-            showMessage(result.error || 'Failed to delete company', 'error');
-        }
-    } catch (error) {
-        showMessage('Error deleting company: ' + error.message, 'error');
+        statusDiv.innerHTML = '<div class="error">Error loading company profile: ' + error.message + '</div>';
     }
 }
 

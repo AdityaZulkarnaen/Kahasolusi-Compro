@@ -94,6 +94,23 @@
         .btn-danger:hover { background: #c82333; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-warning:hover { background: #e0a800; }
+        .status-message { 
+            padding: 12px 20px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            font-weight: 600;
+            display: none;
+        }
+        .status-message.success { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        .status-message.error { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
         .card { 
             border: 2px solid #e9ecef; 
             padding: 20px; 
@@ -383,9 +400,10 @@
     
     <!-- Company Tab -->
     <div id="company-tab" class="tab-content">
-        <h2>Company Management</h2>
+        <h2>Company Profile</h2>
         <div class="form-section">
-            <h3>Add/Update Company Info</h3>
+            <h3>Company Information</h3>
+            <div id="companyProfileStatus" class="status-message"></div>
             <form id="companyForm">
                 <input type="hidden" id="company_id">
                 <div class="form-group">
@@ -427,15 +445,11 @@
                     <textarea id="mission" rows="2"></textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">Save Company Info</button>
-                    <button type="reset" class="btn-secondary">Reset</button>
+                    <button type="submit" class="btn-primary">Update Company Profile</button>
+                    <button type="button" onclick="loadCompanyProfile()" class="btn-secondary">Reload Data</button>
                 </div>
             </form>
         </div>
-        <div class="actions">
-            <button onclick="loadCompany()" class="btn-success">Load Company Info</button>
-        </div>
-        <div id="companyList"></div>
     </div>
     
     <!-- Health Tab -->
