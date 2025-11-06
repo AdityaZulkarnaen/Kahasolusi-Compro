@@ -244,5 +244,35 @@ export const uploadAPI = {
         return await apiRequest(`/upload/technology/${filename}`, {
             method: 'DELETE'
         });
+    },
+
+    // Upload SDM member photo
+    async uploadSDMImage(file) {
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch(`${API_BASE_URL}/upload/sdm`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Upload failed:', error);
+            throw error;
+        }
+    },
+
+    // Delete SDM member photo
+    async deleteSDMImage(filename) {
+        return await apiRequest(`/upload/sdm/${filename}`, {
+            method: 'DELETE'
+        });
     }
 };

@@ -1,78 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Plus, Search, Eye, Edit, Trash2, User, MapPin, Calendar, Award } from 'lucide-svelte';
+	import { Plus, Search, Eye, Edit, Trash2, User, MapPin, Calendar, Award, Loader2 } from 'lucide-svelte';
+	import { sdmAPI } from '$lib/api.js';
 	
-	// Sample data for team members
-	let teamMembers = [
-		{
-			member_id: 1,
-			member_name: 'Ahmad Rizki Pratama',
-			position: 'Full Stack Developer',
-			bio: 'Experienced developer with 5+ years in web development. Passionate about creating scalable applications and mentoring junior developers.',
-			photo_url: '/team/ahmad.jpg',
-			skills: 'JavaScript, React, Node.js, PostgreSQL, Docker',
-			certifications: 'AWS Certified Solutions Architect, MongoDB Certified Developer',
-			specializations: 'Frontend Development, API Development, Database Design',
-			years_experience: 5,
-			linkedin_url: 'https://linkedin.com/in/ahmad-rizki',
-			github_url: 'https://github.com/ahmadrizki',
-			is_active: true,
-			sort_order: 1,
-			created_at: '2024-01-15',
-			projects_count: 12
-		},
-		{
-			member_id: 2,
-			member_name: 'Sarah Maharani',
-			position: 'UI/UX Designer',
-			bio: 'Creative designer focused on user-centered design principles. Experienced in creating intuitive and beautiful digital experiences.',
-			photo_url: '/team/sarah.jpg',
-			skills: 'Figma, Adobe XD, Sketch, Prototyping, User Research',
-			certifications: 'Google UX Design Certificate, Adobe Certified Expert',
-			specializations: 'Mobile App Design, Web Design, Design Systems',
-			years_experience: 4,
-			linkedin_url: 'https://linkedin.com/in/sarah-maharani',
-			github_url: '',
-			is_active: true,
-			sort_order: 2,
-			created_at: '2024-01-10',
-			projects_count: 8
-		},
-		{
-			member_id: 3,
-			member_name: 'Budi Santoso',
-			position: 'Backend Developer',
-			bio: 'Specialized in building robust backend systems and APIs. Strong background in system architecture and performance optimization.',
-			photo_url: '/team/budi.jpg',
-			skills: 'Python, Django, FastAPI, Redis, Kubernetes',
-			certifications: 'Docker Certified Associate, Kubernetes Application Developer',
-			specializations: 'Microservices, API Development, DevOps',
-			years_experience: 6,
-			linkedin_url: 'https://linkedin.com/in/budi-santoso',
-			github_url: 'https://github.com/budisantoso',
-			is_active: true,
-			sort_order: 3,
-			created_at: '2024-01-05',
-			projects_count: 15
-		},
-		{
-			member_id: 4,
-			member_name: 'Lisa Permata',
-			position: 'Project Manager',
-			bio: 'Experienced project manager with strong leadership skills. Specializes in agile methodologies and team coordination.',
-			photo_url: '/team/lisa.jpg',
-			skills: 'Project Management, Scrum, Agile, JIRA, Slack',
-			certifications: 'PMP Certified, Scrum Master Certified',
-			specializations: 'Agile Project Management, Team Leadership, Client Relations',
-			years_experience: 7,
-			linkedin_url: 'https://linkedin.com/in/lisa-permata',
-			github_url: '',
-			is_active: true,
-			sort_order: 4,
-			created_at: '2023-12-20',
-			projects_count: 20
-		}
-	];
+	// Data and state management
+	let teamMembers = [];
+	let isLoading = true;
+	let error = null;
 	
 	// Positions for filtering
 	let positions = [
@@ -89,7 +23,37 @@
 	let searchQuery = '';
 	let selectedPosition = '';
 	let sortBy = 'name'; // name, experience, projects
-	let filteredMembers = teamMembers;
+	let filteredMembers = [];
+	
+	// Modal states
+	let showDeleteModal = false;
+	let memberToDelete = null;
+	let isDeleting = false;
+	let showSuccessModal = false;
+	let successMessage = '';
+	
+	// Load data on component mount
+	onMount(async () => {
+		await loadSDMData();
+	});
+	
+	// Load SDM data from API
+	async function loadSDMData() {
+		try {
+			isLoading = true;
+			error = null;
+			const response = await sdmAPI.getAll();
+			teamMembers = response || [];
+			filterAndSortMembers();
+		} catch (err) {
+			console.error('Error loading SDM data:', err);
+			error = 'Gagal memuat data SDM. Silakan coba lagi.';
+			teamMembers = [];
+			filteredMembers = [];
+		} finally {
+			isLoading = false;
+		}
+	}
 	
 	// Filter and sort functions
 	function filterAndSortMembers() {
@@ -127,28 +91,68 @@
 		filteredMembers = filtered;
 	}
 	
-	// Handle delete
-	function handleDelete(memberId) {
+	// Handle delete - show confirmation modal
+	function confirmDelete(memberId) {
 		const member = teamMembers.find(m => m.member_id === memberId);
-		if (member && member.projects_count > 0) {
-			alert(`Tidak dapat menghapus ${member.member_name} karena sedang terlibat dalam ${member.projects_count} project.`);
-			return;
-		}
+		if (!member) return;
 		
-		if (confirm('Apakah Anda yakin ingin menghapus anggota tim ini?')) {
-			teamMembers = teamMembers.filter(m => m.member_id !== memberId);
-			filterAndSortMembers();
+		memberToDelete = member;
+		showDeleteModal = true;
+	}
+	
+	// Execute delete after confirmation
+	async function executeDelete() {
+		if (!memberToDelete) return;
+		
+		try {
+			isDeleting = true;
+			await sdmAPI.delete(memberToDelete.member_id);
+			
+			// Show success message
+			successMessage = `${memberToDelete.member_name} berhasil dihapus dari tim.`;
+			showSuccessModal = true;
+			
+			// Reload data
+			await loadSDMData();
+		} catch (error) {
+			console.error('Error deleting SDM:', error);
+			alert('Gagal menghapus anggota tim. Silakan coba lagi.');
+		} finally {
+			isDeleting = false;
+			showDeleteModal = false;
+			memberToDelete = null;
 		}
 	}
 	
+	// Cancel delete
+	function cancelDelete() {
+		showDeleteModal = false;
+		memberToDelete = null;
+	}
+	
+	// Close success modal
+	function closeSuccessModal() {
+		showSuccessModal = false;
+		successMessage = '';
+	}
+	
 	// Toggle active status
-	function toggleActive(memberId) {
-		teamMembers = teamMembers.map(m => 
-			m.member_id === memberId 
-				? { ...m, is_active: !m.is_active }
-				: m
-		);
-		filterAndSortMembers();
+	async function toggleActive(memberId) {
+		const member = teamMembers.find(m => m.member_id === memberId);
+		if (!member) return;
+		
+		try {
+			const updatedData = {
+				...member,
+				is_active: !member.is_active
+			};
+			
+			await sdmAPI.update(memberId, updatedData);
+			await loadSDMData(); // Reload data after update
+		} catch (error) {
+			console.error('Error updating SDM status:', error);
+			alert('Gagal mengubah status anggota tim.');
+		}
 	}
 	
 	// Format date
@@ -168,23 +172,39 @@
 		return 'bg-yellow-100 text-yellow-800';
 	}
 	
+	// Get proper photo URL
+	function getPhotoUrl(photoUrl) {
+		if (!photoUrl) return null;
+		// If it's already a full URL, return as is
+		if (photoUrl.startsWith('http')) return photoUrl;
+		
+		// Get base URL from environment or default
+		const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+		
+		// If it starts with /uploads/, add the base URL
+		if (photoUrl.startsWith('/uploads/')) {
+			return `${baseUrl}${photoUrl}`;
+		}
+		// Otherwise, assume it's an old path and add the full uploads path
+		return `${baseUrl}/uploads/sdm/${photoUrl}`;
+	}
+	
 	// Get stats
 	$: stats = {
 		total: teamMembers.length,
 		active: teamMembers.filter(m => m.is_active).length,
-		totalExperience: teamMembers.reduce((sum, m) => sum + m.years_experience, 0),
-		totalProjects: teamMembers.reduce((sum, m) => sum + m.projects_count, 0),
-		avgExperience: Math.round(teamMembers.reduce((sum, m) => sum + m.years_experience, 0) / teamMembers.length * 10) / 10,
+		totalExperience: teamMembers.reduce((sum, m) => sum + (m.years_experience || 0), 0),
+		totalProjects: teamMembers.reduce((sum, m) => sum + (m.projects_count || 0), 0),
+		avgExperience: teamMembers.length > 0 
+			? Math.round(teamMembers.reduce((sum, m) => sum + (m.years_experience || 0), 0) / teamMembers.length * 10) / 10 
+			: 0,
 		byPosition: positions.reduce((acc, pos) => {
 			acc[pos] = teamMembers.filter(m => m.position === pos).length;
 			return acc;
 		}, {})
 	};
 	
-	onMount(() => {
-		filterAndSortMembers();
-	});
-	
+	// Remove the old onMount since we added it earlier
 	// Reactive statements
 	$: if (searchQuery !== undefined || selectedPosition !== undefined || sortBy !== undefined) {
 		filterAndSortMembers();
@@ -196,6 +216,38 @@
 </svelte:head>
 
 <div class="p-4 lg:p-6 max-w-none mx-auto">
+	<!-- Loading State -->
+	{#if isLoading}
+		<div class="flex items-center justify-center min-h-64">
+			<div class="text-center">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+				<p class="text-gray-600">Memuat data SDM...</p>
+			</div>
+		</div>
+	{:else if error}
+		<!-- Error State -->
+		<div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					<svg class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-red-800">Error</h3>
+					<p class="text-sm text-red-700 mt-1">{error}</p>
+				</div>
+				<div class="ml-auto">
+					<button
+						onclick={() => loadSDMData()}
+						class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 transition-colors"
+					>
+						Coba Lagi
+					</button>
+				</div>
+			</div>
+		</div>
+	{:else}
 	<!-- Header Section -->
 	<div class="mb-6">
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -351,7 +403,7 @@
 							<div class="w-16 h-16 bg-gray-100 rounded-full overflow-hidden">
 								{#if member.photo_url}
 									<img 
-										src={member.photo_url} 
+										src={getPhotoUrl(member.photo_url)} 
 										alt={member.member_name}
 										class="w-full h-full object-cover"
 										onerror={(e) => e.target.style.display = 'none'}
@@ -480,7 +532,7 @@
 								{member.is_active ? 'Deactivate' : 'Activate'}
 							</button>
 							<button 
-								onclick={() => handleDelete(member.member_id)}
+								onclick={() => confirmDelete(member.member_id)}
 								class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
 								title="Delete"
 								disabled={member.projects_count > 0}
@@ -519,7 +571,123 @@
 			</div>
 		</div>
 	{/if}
+{/if}
 </div>
+
+<!-- Delete Confirmation Modal -->
+{#if showDeleteModal && memberToDelete}
+	<div 
+		class="fixed inset-0 flex items-center justify-center p-4 z-50"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+	>
+		<div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto">
+			<div class="p-6">
+				<!-- Header -->
+				<div class="flex items-center gap-4 mb-4">
+					<div class="flex-shrink-0">
+						<div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+							<Trash2 class="w-6 h-6 text-red-600" />
+						</div>
+					</div>
+					<div>
+						<h3 class="text-lg font-semibold text-gray-900">Hapus Anggota Tim</h3>
+						<p class="text-sm text-gray-600">Tindakan ini tidak dapat dibatalkan</p>
+					</div>
+				</div>
+				
+				<!-- Member Info -->
+				<div class="bg-gray-50 rounded-lg p-4 mb-6">
+					<div class="flex items-center gap-3">
+						{#if memberToDelete.photo_url}
+							<img 
+								src={getPhotoUrl(memberToDelete.photo_url)} 
+								alt={memberToDelete.member_name}
+								class="w-12 h-12 rounded-lg object-cover"
+							/>
+						{:else}
+							<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+								<User class="w-6 h-6 text-gray-400" />
+							</div>
+						{/if}
+						<div>
+							<p class="font-medium text-gray-900">{memberToDelete.member_name}</p>
+							<p class="text-sm text-gray-600">{memberToDelete.position}</p>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Warning Message -->
+				<div class="mb-6">
+					<p class="text-gray-700">
+						Apakah Anda yakin ingin menghapus <strong>{memberToDelete.member_name}</strong> dari tim? 
+						Data anggota tim ini akan dihapus secara permanen dan tidak dapat dikembalikan.
+					</p>
+				</div>
+				
+				<!-- Action Buttons -->
+				<div class="flex gap-3">
+					<button
+						onclick={cancelDelete}
+						class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+						disabled={isDeleting}
+					>
+						Batal
+					</button>
+					<button
+						onclick={executeDelete}
+						disabled={isDeleting}
+						class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+					>
+						{#if isDeleting}
+							<Loader2 class="w-4 h-4 animate-spin" />
+							Menghapus...
+						{:else}
+							<Trash2 class="w-4 h-4" />
+							Hapus
+						{/if}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Success Modal -->
+{#if showSuccessModal}
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+	>
+		<div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto">
+			<div class="p-6">
+				<!-- Success Icon -->
+				<div class="flex justify-center mb-4">
+					<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+						<svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						</svg>
+					</div>
+				</div>
+				
+				<!-- Success Message -->
+				<div class="text-center mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-2">Berhasil!</h3>
+					<p class="text-gray-600">{successMessage}</p>
+				</div>
+				
+				<!-- Close Button -->
+				<div class="flex justify-center">
+					<button
+						onclick={closeSuccessModal}
+						class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+					>
+						OK
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.line-clamp-3 {
