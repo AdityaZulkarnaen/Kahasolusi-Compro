@@ -1,21 +1,23 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Save, Building, MapPin, Phone, Mail, Globe, Upload, X, Eye } from 'lucide-svelte';
+	import { browser } from '$app/environment';
+	import { Save, Building, MapPin, Phone, Mail, Globe, Upload, X, Eye, Loader2 } from 'lucide-svelte';
+	import { companyAPI, uploadAPI } from '$lib/api.js';
 	
 	// Company profile data based on ERD table
 	let companyData = {
 		profile_id: 1,
-		company_name: 'PT. Kaha Solusi Teknologi',
-		company_address: 'Jl. Teknologi No. 123, Jakarta Selatan 12345, Indonesia',
-		logo_url: '/images/logo-kahasolusi.png',
-		vision: 'Menjadi perusahaan teknologi terdepan di Indonesia yang memberikan solusi inovatif dan berkualitas tinggi untuk memajukan transformasi digital di berbagai sektor industri.',
-		mission: 'Mengembangkan solusi teknologi yang inovatif dan berkelanjutan. Memberikan layanan berkualitas tinggi dengan fokus pada kepuasan klien. Membangun tim profesional yang kompeten dan berdedikasi. Berkontribusi dalam kemajuan teknologi informasi di Indonesia.',
-		description: 'PT. Kaha Solusi Teknologi adalah perusahaan teknologi yang berdedikasi untuk memberikan solusi inovatif dalam pengembangan perangkat lunak dan sistem informasi. Dengan pengalaman bertahun-tahun di industri, kami telah melayani berbagai klien dari startup hingga perusahaan besar.',
-		phone: '+62 21 1234 5678',
-		email: 'info@kahasolusi.com',
-		linkedin_url: 'https://linkedin.com/company/kahasolusi',
-		created_at: '2024-01-15T10:00:00Z',
-		updated_at: '2024-01-25T15:30:00Z',
+		company_name: '',
+		company_address: '',
+		logo_url: '',
+		vision: '',
+		mission: '',
+		description: '',
+		phone: '',
+		email: '',
+		linkedin_url: '',
+		created_at: '',
+		updated_at: '',
 		created_by: 1,
 		updated_by: 1
 	};
@@ -23,15 +25,66 @@
 	// Form validation
 	let errors = {};
 	let isSubmitting = false;
+	let isLoading = true;
+	let error = null;
+	let showSuccessModal = false;
 	let logoFile = null;
 	let logoPreview = null;
 	
-	// Initialize logo preview
-	onMount(() => {
-		if (companyData.logo_url) {
-			logoPreview = companyData.logo_url;
-		}
+	// Load company data on mount
+	onMount(async () => {
+		await loadCompanyData();
 	});
+	
+	async function loadCompanyData() {
+		// Only run in browser, not during SSR
+		if (!browser) return;
+		
+		try {
+			console.log('Loading company data...');
+			isLoading = true;
+			error = null;
+			
+			const companies = await companyAPI.get();
+			console.log('Received company data:', companies);
+			
+			// Get first company (should be only one)
+			const company = companies && companies.length > 0 ? companies[0] : null;
+			
+			if (company) {
+				companyData = { ...company };
+				
+				// Set logo preview if exists
+				if (company.logo_url) {
+					logoPreview = getLogoUrl(company.logo_url);
+				}
+			} else {
+				error = 'Data company tidak ditemukan';
+			}
+		} catch (err) {
+			console.error('Error loading company data:', err);
+			error = 'Gagal memuat data company';
+		} finally {
+			isLoading = false;
+		}
+	}
+	
+	// Get proper logo URL
+	function getLogoUrl(logoUrl) {
+		if (!logoUrl) return null;
+		// If it's already a full URL, return as is
+		if (logoUrl.startsWith('http')) return logoUrl;
+		
+		// Get base URL from environment or default
+		const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+		
+		// If it starts with /uploads/, add the base URL
+		if (logoUrl.startsWith('/uploads/')) {
+			return `${baseUrl}${logoUrl}`;
+		}
+		// Otherwise, assume it's an old path and add the full uploads path
+		return `${baseUrl}/uploads/company/${logoUrl}`;
+	}
 	
 	// Handle logo upload
 	function handleLogoUpload(event) {
@@ -51,7 +104,6 @@
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				logoPreview = e.target.result;
-				companyData.logo_url = e.target.result;
 			};
 			reader.readAsDataURL(file);
 		}
@@ -60,8 +112,42 @@
 	// Remove logo
 	function removeLogo() {
 		logoFile = null;
-		logoPreview = null;
-		companyData.logo_url = '';
+		logoPreview = companyData.logo_url ? getLogoUrl(companyData.logo_url) : null;
+		// Reset file input
+		const fileInput = document.querySelector('input[type="file"]');
+		if (fileInput) fileInput.value = '';
+	}
+	
+	// Remove logo permanently 
+	async function removeLogoPermanently() {
+		if (confirm('Yakin ingin menghapus logo ini secara permanen?')) {
+			try {
+				// Delete from server if exists
+				if (companyData.logo_url) {
+					const filename = companyData.logo_url.split('/').pop();
+					await uploadAPI.deleteCompanyLogo(filename);
+				}
+				
+				// Update database to remove logo URL
+				const updateData = { ...companyData, logo_url: null };
+				await companyAPI.updateCompany(updateData);
+				
+				// Update local state
+				companyData.logo_url = null;
+				originalLogoUrl = null;
+				logoFile = null;
+				logoPreview = null;
+				
+				// Reset file input
+				const fileInput = document.querySelector('input[type="file"]');
+				if (fileInput) fileInput.value = '';
+				
+				alert('Logo berhasil dihapus');
+			} catch (error) {
+				console.error('Error removing logo:', error);
+				alert('Gagal menghapus logo');
+			}
+		}
 	}
 	
 	// Validate field
@@ -103,7 +189,9 @@
 	}
 	
 	// Handle form submission
-	async function handleSubmit() {
+	async function handleSubmit(event) {
+		event.preventDefault();
+		
 		if (!validateForm()) {
 			alert('Mohon perbaiki kesalahan pada form');
 			return;
@@ -112,21 +200,52 @@
 		isSubmitting = true;
 		
 		try {
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1500));
+			let submitData = { ...companyData };
+			const originalLogoUrl = companyData.logo_url;
 			
-			// Update timestamp
-			companyData.updated_at = new Date().toISOString();
-			companyData.updated_by = 1; // Current admin ID
+			// Handle logo upload if new file is selected
+			if (logoFile) {
+				try {
+					const uploadResponse = await uploadAPI.uploadCompanyLogo(logoFile);
+					submitData.logo_url = uploadResponse.path;
+					
+					// Delete old logo if it exists and is different
+					if (originalLogoUrl && originalLogoUrl !== submitData.logo_url) {
+						try {
+							const filename = originalLogoUrl.split('/').pop();
+							await uploadAPI.deleteCompanyLogo(filename);
+						} catch (deleteError) {
+							console.warn('Failed to delete old logo:', deleteError);
+						}
+					}
+				} catch (uploadError) {
+					console.error('Logo upload failed:', uploadError);
+					alert('Gagal mengupload logo. Silakan coba lagi.');
+					return;
+				}
+			}
 			
-			alert('Profil perusahaan berhasil diperbarui!');
+			// Update company via API
+			const response = await companyAPI.update(submitData);
+			
+			console.log('Company updated successfully:', response);
+			
+			// Show success modal
+			showSuccessModal = true;
 			
 		} catch (error) {
-			console.error('Error saving company profile:', error);
+			console.error('Error updating company:', error);
 			alert('Terjadi kesalahan saat menyimpan profil perusahaan');
 		} finally {
 			isSubmitting = false;
 		}
+	}
+	
+	// Close success modal
+	function closeSuccessModal() {
+		showSuccessModal = false;
+		// Reload data to get updated info
+		loadCompanyData();
 	}
 	
 	// Format date
@@ -136,7 +255,8 @@
 			month: 'long',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit'
+			minute: '2-digit',
+			timeZone: 'Asia/Jakarta'
 		});
 	}
 </script>
@@ -146,8 +266,56 @@
 </svelte:head>
 
 <div class="p-4 lg:p-6 max-w-none mx-auto">
-	<!-- Header Section -->
-	<div class="mb-6">
+	<!-- Loading State -->
+	{#if isLoading && !isSubmitting}
+		<div class="flex items-center justify-center min-h-64">
+			<div class="text-center">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+				<p class="text-gray-600">Memuat data company...</p>
+			</div>
+		</div>
+	{:else if error}
+		<!-- Error State -->
+		<div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					<svg class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-red-800">Error</h3>
+					<p class="text-sm text-red-700 mt-1">{error}</p>
+				</div>
+			</div>
+		</div>
+		<div class="text-center">
+			<button
+				onclick={() => window.location.reload()}
+				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+			>
+				Muat Ulang
+			</button>
+		</div>
+	{:else}
+		<!-- Submitting Overlay -->
+		{#if isSubmitting}
+			<div 
+				class="fixed inset-0 flex items-center justify-center z-50"
+				style="background-color: rgba(0, 0, 0, 0.3);"
+			>
+				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+					<div>
+						<p class="text-lg font-medium text-gray-900">Menyimpan Profil Company...</p>
+						<p class="text-sm text-gray-500">Mohon tunggu, sedang memproses data</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Header Section -->
+		<div class="mb-6">
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
 				<h1 class="text-3xl font-bold text-gray-900">Company Profile</h1>
@@ -320,10 +488,22 @@
 							type="button"
 							onclick={removeLogo}
 							class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+							title="Batalkan pemilihan logo"
 						>
 							<X class="w-4 h-4" />
 						</button>
 					</div>
+					
+					<!-- Additional permanent delete button for existing logos -->
+					{#if companyData.logo_url && !logoFile}
+						<button
+							type="button"
+							onclick={removeLogoPermanently}
+							class="text-sm text-red-600 hover:text-red-800 underline"
+						>
+							Hapus logo permanen
+						</button>
+					{/if}
 				{:else}
 					<div class="w-32 h-32 bg-gray-100 rounded-lg flex items-center justify-center border-4 border-gray-200">
 						<Building class="w-16 h-16 text-gray-400" />
@@ -404,4 +584,42 @@
 			</div>
 		</div>
 	</form>
+{/if}
 </div>
+
+<!-- Success Modal -->
+{#if showSuccessModal}
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+	>
+		<div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto">
+			<div class="p-6">
+				<!-- Success Icon -->
+				<div class="flex justify-center mb-4">
+					<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+						<svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						</svg>
+					</div>
+				</div>
+				
+				<!-- Success Message -->
+				<div class="text-center mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-2">Berhasil!</h3>
+					<p class="text-gray-600">Profil company berhasil diperbarui.</p>
+				</div>
+				
+				<!-- Close Button -->
+				<div class="flex justify-center">
+					<button
+						onclick={closeSuccessModal}
+						class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+					>
+						OK
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}

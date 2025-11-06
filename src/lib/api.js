@@ -170,7 +170,8 @@ export const companyAPI = {
     },
 
     async update(companyData) {
-        return await apiRequest('/company', {
+        const id = companyData.profile_id || 1; // Default to 1 if no ID
+        return await apiRequest(`/company/${id}`, {
             method: 'PUT',
             body: JSON.stringify(companyData)
         });
@@ -272,6 +273,36 @@ export const uploadAPI = {
     // Delete SDM member photo
     async deleteSDMImage(filename) {
         return await apiRequest(`/upload/sdm/${filename}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // Upload company logo
+    async uploadCompanyLogo(file) {
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch(`${API_BASE_URL}/upload/company`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Company logo upload failed:', error);
+            throw error;
+        }
+    },
+
+    // Delete company logo
+    async deleteCompanyLogo(filename) {
+        return await apiRequest(`/upload/company/${filename}`, {
             method: 'DELETE'
         });
     }

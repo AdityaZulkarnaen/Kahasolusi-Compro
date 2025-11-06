@@ -160,7 +160,8 @@
 		return new Date(dateString).toLocaleDateString('id-ID', {
 			year: 'numeric',
 			month: 'long',
-			day: 'numeric'
+			day: 'numeric',
+			timeZone: 'Asia/Jakarta'
 		});
 	}
 	
