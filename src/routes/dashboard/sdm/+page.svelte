@@ -511,13 +511,6 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
 							<button 
-								onclick={() => window.location.href = `/dashboard/sdm/${member.member_id}`}
-								class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-								title="View Details"
-							>
-								<Eye class="w-4 h-4" />
-							</button>
-							<button 
 								onclick={() => window.location.href = `/dashboard/sdm/${member.member_id}/edit`}
 								class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
 								title="Edit"
