@@ -307,3 +307,46 @@ export const uploadAPI = {
         });
     }
 };
+
+// Multimedia API
+export const multimediaAPI = {
+    // Get all multimedia
+    async get() {
+        return await apiRequest('/multimedia');
+    },
+
+    // Get multimedia by ID
+    async getById(id) {
+        return await apiRequest(`/multimedia/${id}`);
+    },
+
+    // Create new multimedia
+    async create(multimedia) {
+        return await apiRequest('/multimedia', {
+            method: 'POST',
+            body: JSON.stringify(multimedia)
+        });
+    },
+
+    // Update multimedia
+    async update(id, multimedia) {
+        return await apiRequest(`/multimedia/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(multimedia)
+        });
+    },
+
+    // Delete multimedia
+    async delete(id) {
+        return await apiRequest(`/multimedia/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // Toggle active status
+    async toggleActive(id) {
+        return await apiRequest(`/multimedia/${id}/toggle`, {
+            method: 'PATCH'
+        });
+    }
+};
