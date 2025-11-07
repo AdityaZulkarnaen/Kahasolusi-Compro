@@ -1,12 +1,26 @@
 <script>
 	// Team Card Component
+	import { createEventDispatcher } from 'svelte';
 	import PersonIcon from '$lib/assets/images/Person.png';
+	
 	export let name = 'Steve';
 	export let position = 'Co-founder';
 	export let image = PersonIcon;
+	export let member = null;
+
+	const dispatch = createEventDispatcher();
+
+	function handleClick() {
+		console.log('TeamCard clicked!', member);
+		dispatch('click', member);
+	}
 </script>
 
-<div class="flex flex-col items-center">
+<button
+	class="flex flex-col items-center cursor-pointer transition-transform hover:scale-105 bg-transparent border-none p-0 w-full"
+	on:click={handleClick}
+	type="button"
+>
 	<!-- Profile Image Container -->
 	<div class="relative w-72 h-80">
 		<!-- Background Circle -->
@@ -32,7 +46,7 @@
 			<p class="text-sm text-center">{position}</p>
 		</div>
 	</div>
-</div>
+</button>
 
 <style>
 	/* Add any additional styling here */

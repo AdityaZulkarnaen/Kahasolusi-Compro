@@ -6,6 +6,7 @@
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import { projects, getProjectsByCategory } from '$lib/data/projects.js';
+    import { feedbackAPI } from '$lib/api.js';
     
     // Filter state
     let selectedFilter = 'pemerintah';
@@ -13,6 +14,18 @@
     // Pagination state
     let currentPage = 1;
     const itemsPerPage = 8;
+    
+    // Feedback form state
+    let feedbackForm = {
+        visitor_name: '',
+        visitor_email: '',
+        company_name: '',
+        message: '',
+        hide_name: false
+    };
+    let submitting = false;
+    let submitSuccess = false;
+    let submitError = '';
     
     // Testimonial state
     let currentTestimonialSet = 0;
@@ -115,17 +128,84 @@
     function setTestimonialSet(index) {
         currentTestimonialSet = index;
     }
+
+    // Handle form submission
+    async function handleSubmit(event) {
+        event.preventDefault();
+        
+        // Validate form
+        if (!feedbackForm.visitor_name || !feedbackForm.visitor_email || !feedbackForm.message) {
+            submitError = 'Mohon lengkapi semua field yang wajib diisi.';
+            submitSuccess = false;
+            return;
+        }
+
+        // Simple email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(feedbackForm.visitor_email)) {
+            submitError = 'Format email tidak valid.';
+            submitSuccess = false;
+            return;
+        }
+
+        submitting = true;
+        submitError = '';
+        submitSuccess = false;
+
+        try {
+            // Prepare data for API
+            const feedbackData = {
+                visitor_name: feedbackForm.hide_name ? 'Anonymous' : feedbackForm.visitor_name.trim(),
+                visitor_email: feedbackForm.visitor_email.trim(),
+                company_name: feedbackForm.company_name.trim() || null,
+                message: feedbackForm.message.trim(),
+                is_displayed: 1, // Always display, name is already anonymized if needed
+                is_read: 0 // Default unread
+            };
+
+            // Submit to API
+            const result = await feedbackAPI.create(feedbackData);
+
+            if (result && result.data) {
+                submitSuccess = true;
+                submitError = '';
+                
+                // Reset form
+                feedbackForm = {
+                    visitor_name: '',
+                    visitor_email: '',
+                    company_name: '',
+                    message: '',
+                    hide_name: false
+                };
+
+                // Scroll to success message
+                setTimeout(() => {
+                    const successElement = document.getElementById('feedback-success');
+                    if (successElement) {
+                        successElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            submitError = error.message || 'Terjadi kesalahan saat mengirim feedback. Silakan coba lagi.';
+            submitSuccess = false;
+        } finally {
+            submitting = false;
+        }
+    }
 </script>
 
 <!-- Portfolio Container -->
 <div class="relative bg-white min-h-screen">
-    <section class="relative pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+    <section class="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto text-center">
             <div class="mb-16">
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-normal text-gray-900 mb-4 font-family-sans inline-block relative">
+                <h1 class="text-4xl md:text-5xl font-medium font-family-sans text-gray-900 mb-4">
                     Portfolio Proyek.
-                    <div class="absolute -bottom-6 left-0 w-full h-[2px] bg-gray-900"></div>
                 </h1>
+                <div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
             </div>
             
             <!-- Indonesia Map -->
@@ -342,17 +422,45 @@
                 
                 <!-- Right Column - Contact Form -->
                 <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-                    <form class="space-y-6">
+                    <!-- Success Message -->
+                    {#if submitSuccess}
+                        <div id="feedback-success" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3" in:fade>
+                            <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-green-800 font-family-sans">Terima kasih atas ulasan Anda!</p>
+                                <p class="text-xs text-green-700 font-family-sans mt-1">Feedback Anda sangat berarti bagi kami untuk terus memberikan layanan terbaik.</p>
+                            </div>
+                        </div>
+                    {/if}
+
+                    <!-- Error Message -->
+                    {#if submitError}
+                        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3" in:fade>
+                            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-red-800 font-family-sans">{submitError}</p>
+                            </div>
+                        </div>
+                    {/if}
+
+                    <form on:submit={handleSubmit} class="space-y-6">
                         <!-- Name Fields Row -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
-                                    Nama Lengkap
+                                    Nama Lengkap <span class="text-red-500">*</span>
                                 </label>
                                 <input 
                                     type="text" 
+                                    bind:value={feedbackForm.visitor_name}
                                     placeholder="John Doe"
-                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                                    required
+                                    disabled={submitting}
+                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                             <div>
@@ -361,8 +469,10 @@
                                 </label>
                                 <input 
                                     type="text" 
+                                    bind:value={feedbackForm.company_name}
                                     placeholder="Kahasolusi"
-                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                                    disabled={submitting}
+                                    class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
@@ -370,24 +480,30 @@
                         <!-- Email Field -->
                         <div>
                             <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
-                                Email
+                                Email <span class="text-red-500">*</span>
                             </label>
                             <input 
                                 type="email" 
+                                bind:value={feedbackForm.visitor_email}
                                 placeholder="JohnDoe@Kahasolusi.com"
-                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200"
+                                required
+                                disabled={submitting}
+                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                         </div>
                         
                         <!-- Message Field -->
                         <div>
                             <label class="block text-sm font-medium text-gray-900 font-family-sans mb-2">
-                                Ulasan
+                                Ulasan <span class="text-red-500">*</span>
                             </label>
                             <textarea 
                                 rows="4"
+                                bind:value={feedbackForm.message}
                                 placeholder="Berikan ulasan Anda dan bantu kami berkembang untuk memberikan pelayan terbaik bagi mitra"
-                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 resize-vertical"
+                                required
+                                disabled={submitting}
+                                class="w-full px-4 py-3 bg-gray-50 border-0 rounded-lg font-family-sans text-sm placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-[#176684] focus:outline-none transition-all duration-200 resize-vertical disabled:opacity-50 disabled:cursor-not-allowed"
                             ></textarea>
                         </div>
                         
@@ -396,7 +512,9 @@
                             <input 
                                 type="checkbox" 
                                 id="privacy"
-                                class="mt-1 w-4 h-4 text-[#176684] bg-gray-50 border-0 rounded focus:ring-[#176684] focus:ring-2"
+                                bind:checked={feedbackForm.hide_name}
+                                disabled={submitting}
+                                class="mt-1 w-4 h-4 text-[#176684] bg-gray-50 border-0 rounded focus:ring-[#176684] focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <label for="privacy" class="leading-relaxed">
                                 Sembunyikan nama pada ulasan
@@ -406,9 +524,18 @@
                         <!-- Submit Button -->
                         <button 
                             type="submit"
-                            class="w-full bg-[#176684] text-white py-3 px-6 rounded-lg font-medium font-family-sans hover:bg-[#145561] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                            disabled={submitting}
+                            class="w-full bg-[#176684] text-white py-3 px-6 rounded-lg font-medium font-family-sans hover:bg-[#145561] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
                         >
-                            Kirim Ulasan
+                            {#if submitting}
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Mengirim...
+                            {:else}
+                                Kirim Ulasan
+                            {/if}
                         </button>
                     </form>
                 </div>

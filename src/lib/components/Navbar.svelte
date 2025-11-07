@@ -107,11 +107,12 @@
 
 			<!-- Action Buttons -->
 			<div class="hidden lg:flex gap-3 xl:gap-4 items-center flex-shrink-0">
-				<button
-					class="bg-[#D0E6F3] text-[#176684] px-4 xl:px-6 py-2 rounded-full text-xs xl:text-sm font-family-sans font-medium hover:bg-white hover:text-[#176684] transition-all whitespace-nowrap"
+				<a
+					href="/login"
+					class="bg-[#D0E6F3] text-[#176684] px-4 xl:px-6 py-2 rounded-full text-xs xl:text-sm font-family-sans font-medium hover:bg-white hover:text-[#176684] transition-all whitespace-nowrap no-underline"
 				>
 					Sign In
-				</button>
+				</a>
 				<div class="w-[2px] h-6 {Strip} transition-colors duration-300"></div>
 				<button
 					class="bg-[#176684] font-family-sans text-white px-4 xl:px-6 py-2 rounded-full text-xs xl:text-sm hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/40 transition-all whitespace-nowrap"
@@ -188,11 +189,12 @@
 				>
 				
 				<div class="flex flex-col gap-3 mt-4 px-2">
-					<button
-						class="bg-[#D0E6F3] text-[#176684] font-family-sans font-medium px-6 py-2.5 rounded-full text-sm hover:bg-white hover:text-[#176684] transition-all w-full"
+					<a
+						href="/login"
+						class="bg-[#D0E6F3] text-[#176684] font-family-sans font-medium px-6 py-2.5 rounded-full text-sm hover:bg-white hover:text-[#176684] transition-all w-full text-center no-underline"
 					>
 						Sign In
-					</button>
+					</a>
 					<button
 						class="bg-[#176684] font-family-sans text-white px-6 py-2.5 rounded-full text-sm hover:shadow-lg hover:shadow-cyan-500/40 transition-all w-full"
 					>

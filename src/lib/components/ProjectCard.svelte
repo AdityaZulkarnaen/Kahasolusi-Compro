@@ -1,6 +1,7 @@
 <script>
 	import { ArrowRight } from 'lucide-svelte';
 	import ProjectExampleImg from '$lib/assets/images/project_example.png';
+	import ProjectDetailModal from './ProjectDetailModal.svelte';
 
 	let {
 		project = {
@@ -12,6 +13,16 @@
 			link: '#'
 		}
 	} = $props();
+
+	let showModal = $state(false);
+
+	function openModal() {
+		showModal = true;
+	}
+
+	function closeModal() {
+		showModal = false;
+	}
 </script>
 
 <div
@@ -44,16 +55,19 @@
 
 		<!-- External Link -->
 		<div>
-			<a
-				href={project.link}
-				class="flex items-center gap-1 text-[#176684] hover:text-[#0d4a5c] transition-colors text-sm font-medium font-family-sans underline"
+			<button
+				onclick={openModal}
+				class="flex items-center gap-1 text-[#176684] hover:text-[#0d4a5c] transition-colors text-sm font-medium font-family-sans underline cursor-pointer"
 			>
 				<span>Lihat selengkapnya</span>
 				<ArrowRight class="w-4 h-4" />
-			</a>
+			</button>
 		</div>
 	</div>
 </div>
+
+<!-- Project Detail Modal -->
+<ProjectDetailModal isOpen={showModal} {project} onClose={closeModal} />
 
 <style>
 	.line-clamp-4 {
