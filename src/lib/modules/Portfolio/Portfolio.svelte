@@ -119,13 +119,13 @@
 
 <!-- Portfolio Container -->
 <div class="relative bg-white min-h-screen">
-    <section class="relative pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+    <section class="relative pt-32 pb-16 px-4 sm:px-6 lg:px-8">
         <div class="max-w-7xl mx-auto text-center">
             <div class="mb-16">
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-normal text-gray-900 mb-4 font-family-sans inline-block relative">
+                <h1 class="text-4xl md:text-5xl font-medium font-family-sans text-gray-900 mb-4">
                     Portfolio Proyek.
-                    <div class="absolute -bottom-6 left-0 w-full h-[2px] bg-gray-900"></div>
                 </h1>
+                <div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
             </div>
             
             <!-- Indonesia Map -->
