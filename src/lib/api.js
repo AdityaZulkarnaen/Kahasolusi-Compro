@@ -350,3 +350,39 @@ export const multimediaAPI = {
         });
     }
 };
+
+// Contact CTA API functions
+export const contactCTAAPI = {
+    // Get all contact CTAs
+    async get() {
+        return await apiRequest('/contact-cta');
+    },
+
+    // Get contact CTA by ID
+    async getById(id) {
+        return await apiRequest(`/contact-cta/${id}`);
+    },
+
+    // Create new contact CTA
+    async create(contactCTA) {
+        return await apiRequest('/contact-cta', {
+            method: 'POST',
+            body: JSON.stringify(contactCTA)
+        });
+    },
+
+    // Update contact CTA
+    async update(id, contactCTA) {
+        return await apiRequest(`/contact-cta/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(contactCTA)
+        });
+    },
+
+    // Delete contact CTA
+    async delete(id) {
+        return await apiRequest(`/contact-cta/${id}`, {
+            method: 'DELETE'
+        });
+    }
+};
