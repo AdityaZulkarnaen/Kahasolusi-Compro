@@ -1,100 +1,13 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Plus, Search, Eye, Edit, Trash2, Image as ImageIcon, Video, FileText, Globe, Code, Play, Calendar, Filter, Grid, List, ToggleLeft, ToggleRight, X } from 'lucide-svelte';
+	import { browser } from '$app/environment';
+	import { Plus, Search, Eye, Edit, Trash2, Image as ImageIcon, Video, FileText, Globe, Code, Play, Calendar, Filter, Grid, List, X, Loader2 } from 'lucide-svelte';
+	import { multimediaAPI } from '$lib/api.js';
 	
-	// Multimedia data based on ERD table
-	let multimedia = [
-		{
-			media_id: 1,
-			media_type: 'image',
-			media_title: 'Hero Homepage Banner',
-			media_description: 'Professional hero image for homepage banner showcasing modern office workspace',
-			media_url: '/images/hero-homepage.jpg',
-			embed_code: '',
-			thumbnail_url: '/images/thumbnails/hero-homepage-thumb.jpg',
-			is_active: true,
-			sort_order: 1,
-			created_at: '2024-01-20T10:00:00Z',
-			updated_at: '2024-01-20T10:00:00Z',
-			created_by: 1,
-			updated_by: 1
-		},
-		{
-			media_id: 2,
-			media_type: 'video',
-			media_title: 'Company Profile Video',
-			media_description: 'Corporate video highlighting our services, team, and company culture',
-			media_url: '/videos/company-profile.mp4',
-			embed_code: '<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>',
-			thumbnail_url: '/images/thumbnails/company-video-thumb.jpg',
-			is_active: true,
-			sort_order: 2,
-			created_at: '2024-01-18T14:30:00Z',
-			updated_at: '2024-01-19T09:15:00Z',
-			created_by: 1,
-			updated_by: 1
-		},
-		{
-			media_id: 3,
-			media_type: 'image',
-			media_title: 'Portfolio Gallery - E-commerce Project',
-			media_description: 'Screenshot of completed e-commerce website project showcasing modern design',
-			media_url: '/images/portfolio/ecommerce-project.jpg',
-			embed_code: '',
-			thumbnail_url: '/images/thumbnails/ecommerce-thumb.jpg',
-			is_active: true,
-			sort_order: 3,
-			created_at: '2024-01-15T16:45:00Z',
-			updated_at: '2024-01-15T16:45:00Z',
-			created_by: 2,
-			updated_by: 2
-		},
-		{
-			media_id: 4,
-			media_type: 'document',
-			media_title: 'Company Brochure 2024',
-			media_description: 'Comprehensive company brochure featuring services, portfolio, and team information',
-			media_url: '/documents/company-brochure-2024.pdf',
-			embed_code: '',
-			thumbnail_url: '/images/thumbnails/brochure-thumb.jpg',
-			is_active: true,
-			sort_order: 4,
-			created_at: '2024-01-08T11:20:00Z',
-			updated_at: '2024-01-12T13:45:00Z',
-			created_by: 1,
-			updated_by: 1
-		},
-		{
-			media_id: 5,
-			media_type: 'video',
-			media_title: 'Technology Stack Overview',
-			media_description: 'Video presentation of our technology stack and development process',
-			media_url: '',
-			embed_code: '<iframe width="560" height="315" src="https://www.youtube.com/embed/abc123def456" frameborder="0" allowfullscreen></iframe>',
-			thumbnail_url: '/images/thumbnails/tech-stack-thumb.jpg',
-			is_active: false,
-			sort_order: 5,
-			created_at: '2024-01-05T09:30:00Z',
-			updated_at: '2024-01-05T09:30:00Z',
-			created_by: 2,
-			updated_by: 2
-		},
-		{
-			media_id: 6,
-			media_type: 'image',
-			media_title: 'Team Photo 2024',
-			media_description: 'Professional team photo for about page and marketing materials',
-			media_url: '/images/team/team-photo-2024.jpg',
-			embed_code: '',
-			thumbnail_url: '/images/thumbnails/team-thumb.jpg',
-			is_active: true,
-			sort_order: 6,
-			created_at: '2024-01-10T15:00:00Z',
-			updated_at: '2024-01-10T15:00:00Z',
-			created_by: 1,
-			updated_by: 1
-		}
-	];
+	// Data and state management
+	let multimedia = [];
+	let isLoading = true;
+	let error = null;
 	
 	// Filter and search state
 	let searchQuery = '';
@@ -104,10 +17,8 @@
 	let viewMode = 'grid'; // grid, list
 	let filteredMultimedia = multimedia;
 	
-	// Form state for create/edit
+	// Form state for create
 	let showCreateForm = false;
-	let showEditForm = false;
-	let editingMedia = null;
 	let isSubmitting = false;
 	let errors = {};
 	
@@ -120,12 +31,102 @@
 		embed_code: '',
 		thumbnail_url: '',
 		is_active: true,
-		sort_order: multimedia.length + 1
+		sort_order: 1
 	};
+	
+	// UI State
+	let showPreviewModal = false;
+	let selectedMedia = null;
+	let showSuccessModal = false;
+	
+	// Delete modal state
+	let showDeleteModal = false;
+	let mediaToDelete = null;
+	let deleting = false;
+	
+	// Load multimedia data on mount
+	onMount(async () => {
+		await loadMultimediaData();
+	});
+	
+	async function loadMultimediaData() {
+		// Only run in browser, not during SSR
+		if (!browser) return;
+		
+		try {
+			console.log('Loading multimedia data...');
+			isLoading = true;
+			error = null;
+			
+			const data = await multimediaAPI.get();
+			console.log('Received multimedia data:', data);
+			
+			multimedia = data || [];
+			filteredMultimedia = multimedia;
+		} catch (err) {
+			console.error('Error loading multimedia data:', err);
+			error = 'Gagal memuat data multimedia';
+		} finally {
+			isLoading = false;
+		}
+	}
+	
+	// Handle delete confirmation
+	function confirmDelete(media) {
+		mediaToDelete = media;
+		showDeleteModal = true;
+	}
+
+	// Execute delete
+	async function executeDelete() {
+		if (!mediaToDelete) return;
+		
+		deleting = true;
+		try {
+			await multimediaAPI.delete(mediaToDelete.media_id);
+			await loadMultimediaData();
+			showDeleteModal = false;
+			mediaToDelete = null;
+			showSuccessModal = true;
+		} catch (error) {
+			console.error('Error deleting multimedia:', error);
+			alert('Gagal menghapus media');
+		} finally {
+			deleting = false;
+		}
+	}
+
+	// Cancel delete
+	function cancelDelete() {
+		showDeleteModal = false;
+		mediaToDelete = null;
+	}
+
+	// Handle ESC key to close modal
+	function handleKeydown(event) {
+		if (event.key === 'Escape' && showDeleteModal) {
+			cancelDelete();
+		}
+	}
+
+	// Handle click outside modal
+	function handleModalClick(event) {
+		if (event.target === event.currentTarget) {
+			cancelDelete();
+		}
+	}
+	
+	// Close success modal
+	function closeSuccessModal() {
+		showSuccessModal = false;
+	}
 	
 	// Filter and sort functions
 	function filterAndSortMultimedia() {
 		let filtered = multimedia;
+		console.log('Filtering multimedia - total items:', multimedia.length);
+		console.log('Selected status:', selectedStatus);
+		console.log('Sample multimedia items:', multimedia.slice(0, 2));
 		
 		// Search filter
 		if (searchQuery.trim()) {
@@ -145,7 +146,13 @@
 		// Status filter
 		if (selectedStatus !== 'all') {
 			const isActive = selectedStatus === 'active';
-			filtered = filtered.filter(media => media.is_active === isActive);
+			console.log('Filtering by status:', isActive);
+			const beforeFilter = filtered.length;
+			filtered = filtered.filter(media => {
+				console.log(`Media ${media.media_title}: is_active = ${media.is_active} (type: ${typeof media.is_active}), comparing with ${isActive}`);
+				return media.is_active === isActive;
+			});
+			console.log(`Status filter: ${beforeFilter} items -> ${filtered.length} items`);
 		}
 		
 		// Sorting
@@ -175,7 +182,8 @@
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit'
+			minute: '2-digit',
+			timeZone: 'Asia/Jakarta'
 		});
 	}
 	
@@ -213,12 +221,6 @@
 		showCreateForm = true;
 	}
 	
-	function openEditForm(media) {
-		editingMedia = { ...media };
-		errors = {};
-		showEditForm = true;
-	}
-	
 	function closeCreateForm() {
 		showCreateForm = false;
 		newMediaData = {
@@ -231,12 +233,6 @@
 			is_active: true,
 			sort_order: multimedia.length + 1
 		};
-		errors = {};
-	}
-	
-	function closeEditForm() {
-		showEditForm = false;
-		editingMedia = null;
 		errors = {};
 	}
 	
@@ -306,75 +302,6 @@
 		}
 	}
 	
-	async function handleEditSubmit() {
-		const validationErrors = validateMediaData(editingMedia);
-		if (Object.keys(validationErrors).length > 0) {
-			errors = validationErrors;
-			return;
-		}
-		
-		isSubmitting = true;
-		
-		try {
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			
-			editingMedia.updated_at = new Date().toISOString();
-			editingMedia.updated_by = 1;
-			
-			multimedia = multimedia.map(m => 
-				m.media_id === editingMedia.media_id ? editingMedia : m
-			);
-			
-			filterAndSortMultimedia();
-			closeEditForm();
-			
-			alert('Media berhasil diperbarui!');
-			
-		} catch (error) {
-			console.error('Error updating media:', error);
-			alert('Terjadi kesalahan saat memperbarui media');
-		} finally {
-			isSubmitting = false;
-		}
-	}
-	
-	async function handleDelete(mediaId) {
-		if (!confirm('Apakah Anda yakin ingin menghapus media ini?')) {
-			return;
-		}
-		
-		try {
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 500));
-			
-			multimedia = multimedia.filter(m => m.media_id !== mediaId);
-			filterAndSortMultimedia();
-			
-			alert('Media berhasil dihapus!');
-			
-		} catch (error) {
-			console.error('Error deleting media:', error);
-			alert('Terjadi kesalahan saat menghapus media');
-		}
-	}
-	
-	async function toggleStatus(mediaId) {
-		try {
-			multimedia = multimedia.map(m => 
-				m.media_id === mediaId 
-					? { ...m, is_active: !m.is_active, updated_at: new Date().toISOString(), updated_by: 1 }
-					: m
-			);
-			
-			filterAndSortMultimedia();
-			
-		} catch (error) {
-			console.error('Error toggling status:', error);
-			alert('Terjadi kesalahan saat mengubah status');
-		}
-	}
-	
 	// Reactive statements
 	$: if (searchQuery || selectedType || selectedStatus || sortBy) {
 		filterAndSortMultimedia();
@@ -418,13 +345,13 @@
 						Grid View
 					{/if}
 				</button>
-				<button 
-					onclick={() => window.location.href = '/dashboard/multimedia/create'}
+				<a 
+					href="/dashboard/multimedia/create"
 					class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors gap-2"
 				>
 					<Plus class="w-4 h-4" />
 					Tambah Media
-				</button>
+				</a>
 			</div>
 		</div>
 	</div>
@@ -510,37 +437,94 @@
 
 			<!-- Filters -->
 			<div class="flex flex-wrap gap-2 items-center">
-				<select 
-					bind:value={selectedType}
-					class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
-				>
-					<option value="all">Semua Tipe</option>
-					<option value="image">Image</option>
-					<option value="video">Video</option>
-					<option value="document">Document</option>
-				</select>
+				<!-- Type Filter -->
+				<div class="relative">
+					<select 
+						bind:value={selectedType}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
+					>
+						<option value="all">Semua Tipe</option>
+						<option value="image">Image</option>
+						<option value="video">Video</option>
+						<option value="document">Document</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
 
-				<select 
-					bind:value={selectedStatus}
-					class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-				>
-					<option value="all">Semua Status</option>
-					<option value="active">Aktif</option>
-					<option value="inactive">Tidak Aktif</option>
-				</select>
+				<!-- Status Filter -->
+				<div class="relative">
+					<select 
+						bind:value={selectedStatus}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
+					>
+						<option value="all">Semua Status</option>
+						<option value="active">Aktif</option>
+						<option value="inactive">Tidak Aktif</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
 
-				<select 
-					bind:value={sortBy}
-					class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-				>
-					<option value="sort_order">Urutan</option>
-					<option value="recent">Terbaru</option>
-					<option value="title">Judul A-Z</option>
-					<option value="type">Tipe</option>
-				</select>
+				<!-- Sort Filter -->
+				<div class="relative">
+					<select 
+						bind:value={sortBy}
+						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
+					>
+						<option value="sort_order">Urutan</option>
+						<option value="recent">Terbaru</option>
+						<option value="title">Judul A-Z</option>
+						<option value="type">Tipe</option>
+					</select>
+					<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+						<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
+
+	<!-- Loading State -->
+	{#if isLoading}
+		<div class="flex items-center justify-center min-h-64">
+			<div class="text-center">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+				<p class="text-gray-600">Memuat data multimedia...</p>
+			</div>
+		</div>
+	{:else if error}
+		<!-- Error State -->
+		<div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					<svg class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-red-800">Error</h3>
+					<p class="text-sm text-red-700 mt-1">{error}</p>
+				</div>
+			</div>
+		</div>
+		<div class="text-center">
+			<button
+				onclick={() => loadMultimediaData()}
+				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+			>
+				Muat Ulang
+			</button>
+		</div>
+	{:else}
 
 	<!-- Multimedia Grid/List -->
 	<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -648,26 +632,15 @@
 												View
 											</a>
 										{/if}
-										<button 
-											onclick={() => openEditForm(media)}
+										<a 
+											href="/dashboard/multimedia/{media.media_id}/edit"
 											class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors gap-1"
 										>
 											<Edit class="w-4 h-4" />
 											Edit
-										</button>
+										</a>
 										<button 
-											onclick={() => toggleStatus(media.media_id)}
-											class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium {media.is_active ? 'text-red-700 bg-red-100 hover:bg-red-200' : 'text-green-700 bg-green-100 hover:bg-green-200'} rounded-lg transition-colors"
-											title={media.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-										>
-											{#if media.is_active}
-												<ToggleRight class="w-4 h-4" />
-											{:else}
-												<ToggleLeft class="w-4 h-4" />
-											{/if}
-										</button>
-										<button 
-											onclick={() => handleDelete(media.media_id)}
+											onclick={() => confirmDelete(media)}
 											class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-lg hover:bg-red-200 transition-colors"
 											title="Hapus"
 										>
@@ -747,26 +720,15 @@
 												<Eye class="w-4 h-4" />
 											</a>
 										{/if}
-										<button 
-											onclick={() => openEditForm(media)}
+										<a 
+											href="/dashboard/multimedia/{media.media_id}/edit"
 											class="text-blue-600 hover:text-blue-900"
 											title="Edit"
 										>
 											<Edit class="w-4 h-4" />
-										</button>
+										</a>
 										<button 
-											onclick={() => toggleStatus(media.media_id)}
-											class="{media.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}"
-											title={media.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-										>
-											{#if media.is_active}
-												<ToggleRight class="w-4 h-4" />
-											{:else}
-												<ToggleLeft class="w-4 h-4" />
-											{/if}
-										</button>
-										<button 
-											onclick={() => handleDelete(media.media_id)}
+											onclick={() => confirmDelete(media)}
 											class="text-red-600 hover:text-red-900"
 											title="Hapus"
 										>
@@ -789,6 +751,7 @@
 			</div>
 		{/if}
 	</div>
+{/if}
 </div>
 
 <!-- Create Media Modal -->
@@ -960,170 +923,140 @@
 	</div>
 {/if}
 
-<!-- Edit Media Modal -->
-{#if showEditForm && editingMedia}
-	<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-		<div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+<!-- Delete Confirmation Modal -->
+{#if showDeleteModal && mediaToDelete}
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+		onclick={handleModalClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
+		<div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
+			<!-- Modal Header -->
+			<div class="flex items-center justify-between p-6 border-b border-gray-200">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+						<Trash2 class="w-5 h-5 text-red-600" />
+					</div>
+					<div>
+						<h3 id="modal-title" class="text-lg font-semibold text-gray-900">Konfirmasi Hapus</h3>
+						<p class="text-sm text-gray-500">Tindakan ini tidak dapat dibatalkan</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Body -->
 			<div class="p-6">
-				<div class="flex items-center justify-between mb-6">
-					<h3 class="text-lg font-semibold text-gray-900">Edit Media</h3>
-					<button onclick={closeEditForm} class="text-gray-400 hover:text-gray-600">
-						<X class="w-6 h-6" />
-					</button>
+				<div class="mb-4">
+					<p class="text-gray-700 mb-3">
+						Apakah Anda yakin ingin menghapus media ini?
+					</p>
+					<div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
+						<div class="flex items-center gap-3">
+							{#if mediaToDelete.thumbnail_url}
+								<img 
+									src={mediaToDelete.thumbnail_url} 
+									alt={mediaToDelete.media_title}
+									class="w-12 h-12 object-cover rounded-lg"
+									loading="lazy"
+								/>
+							{:else}
+								<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+									<svelte:component this={getTypeIcon(mediaToDelete.media_type)} class="w-6 h-6 text-gray-400" />
+								</div>
+							{/if}
+							<div class="flex-1 min-w-0">
+								<h4 class="font-medium text-gray-900 truncate">
+									{mediaToDelete.media_title}
+								</h4>
+								<p class="text-sm text-gray-500 truncate">
+									{mediaToDelete.media_type} • ID: {mediaToDelete.media_id}
+								</p>
+							</div>
+						</div>
+					</div>
 				</div>
 				
-				<form onsubmit={handleEditSubmit} class="space-y-6">
-					<!-- Media Type -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
-							Tipe Media <span class="text-red-500">*</span>
-						</label>
-						<select 
-							bind:value={editingMedia.media_type}
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-						>
-							<option value="image">Image</option>
-							<option value="video">Video</option>
-							<option value="document">Document</option>
-						</select>
-					</div>
-					
-					<!-- Media Title -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
-							Judul Media <span class="text-red-500">*</span>
-						</label>
-						<input
-							type="text"
-							bind:value={editingMedia.media_title}
-							placeholder="Masukkan judul media"
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-							class:border-red-500={errors.media_title}
-						/>
-						{#if errors.media_title}
-							<p class="text-red-500 text-sm mt-1">{errors.media_title}</p>
-						{/if}
-					</div>
-					
-					<!-- Media Description -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
-							Deskripsi <span class="text-red-500">*</span>
-						</label>
-						<textarea
-							bind:value={editingMedia.media_description}
-							rows="3"
-							placeholder="Deskripsi media"
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-							class:border-red-500={errors.media_description}
-						></textarea>
-						{#if errors.media_description}
-							<p class="text-red-500 text-sm mt-1">{errors.media_description}</p>
-						{/if}
-					</div>
-					
-					<!-- Media URL -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
-							Media URL {editingMedia.media_type !== 'video' ? '*' : ''}
-						</label>
-						<input
-							type="url"
-							bind:value={editingMedia.media_url}
-							placeholder="https://example.com/media-file"
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-							class:border-red-500={errors.media_url}
-						/>
-						{#if errors.media_url}
-							<p class="text-red-500 text-sm mt-1">{errors.media_url}</p>
-						{/if}
-					</div>
-					
-					<!-- Embed Code (for videos) -->
-					{#if editingMedia.media_type === 'video'}
+				<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+					<div class="flex items-start gap-2">
+						<svg class="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+						</svg>
 						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-2">
-								Embed Code {!editingMedia.media_url ? '*' : ''}
-							</label>
-							<textarea
-								bind:value={editingMedia.embed_code}
-								rows="4"
-								placeholder="<iframe src='...' width='560' height='315'></iframe>"
-								class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none font-mono text-sm"
-								class:border-red-500={errors.embed_code}
-							></textarea>
-							{#if errors.embed_code}
-								<p class="text-red-500 text-sm mt-1">{errors.embed_code}</p>
-							{/if}
+							<p class="text-sm font-medium text-yellow-800">Peringatan!</p>
+							<p class="text-sm text-yellow-700">
+								Data media dan file yang terkait akan dihapus secara permanen.
+							</p>
 						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Footer -->
+			<div class="flex gap-3 px-6 py-4 bg-gray-50 rounded-b-xl">
+				<button
+					type="button"
+					onclick={cancelDelete}
+					class="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+					disabled={deleting}
+				>
+					Batal
+				</button>
+				<button
+					type="button"
+					onclick={executeDelete}
+					disabled={deleting}
+					class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				>
+					{#if deleting}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+						Menghapus...
+					{:else}
+						<Trash2 class="w-4 h-4" />
+						Hapus Media
 					{/if}
-					
-					<!-- Thumbnail URL -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
-							Thumbnail URL
-						</label>
-						<input
-							type="url"
-							bind:value={editingMedia.thumbnail_url}
-							placeholder="https://example.com/thumbnail.jpg"
-							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-							class:border-red-500={errors.thumbnail_url}
-						/>
-						{#if errors.thumbnail_url}
-							<p class="text-red-500 text-sm mt-1">{errors.thumbnail_url}</p>
-						{/if}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- Success Modal -->
+{#if showSuccessModal}
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+	>
+		<div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto">
+			<div class="p-6">
+				<!-- Success Icon -->
+				<div class="flex justify-center mb-4">
+					<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+						<svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						</svg>
 					</div>
-					
-					<!-- Settings -->
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-2">
-								Urutan Tampil
-							</label>
-							<input
-								type="number"
-								bind:value={editingMedia.sort_order}
-								min="1"
-								class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-							/>
-						</div>
-						
-						<div class="flex items-center">
-							<label class="flex items-center cursor-pointer">
-								<input
-									type="checkbox"
-									bind:checked={editingMedia.is_active}
-									class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-								/>
-								<span class="ml-2 text-sm font-medium text-gray-700">Media Aktif</span>
-							</label>
-						</div>
-					</div>
-					
-					<!-- Submit Buttons -->
-					<div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
-						<button
-							type="button"
-							onclick={closeEditForm}
-							class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-						>
-							Batal
-						</button>
-						<button
-							type="submit"
-							disabled={isSubmitting}
-							class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-						>
-							{#if isSubmitting}
-								<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-								Menyimpan...
-							{:else}
-								Simpan Perubahan
-							{/if}
-						</button>
-					</div>
-				</form>
+				</div>
+				
+				<!-- Success Message -->
+				<div class="text-center mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-2">Berhasil!</h3>
+					<p class="text-gray-600">Operasi multimedia berhasil dilakukan.</p>
+				</div>
+				
+				<!-- Close Button -->
+				<div class="flex justify-center">
+					<button
+						onclick={closeSuccessModal}
+						class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+					>
+						OK
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>

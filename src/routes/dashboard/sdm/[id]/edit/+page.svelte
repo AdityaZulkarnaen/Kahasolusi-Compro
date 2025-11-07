@@ -1,7 +1,13 @@
 <script>
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { Plus, ArrowLeft, Upload, X, User, Loader2 } from 'lucide-svelte';
+	import { browser } from '$app/environment';
+	import { Plus, ArrowLeft, Upload, X, User, Loader2, Edit } from 'lucide-svelte';
 	import { sdmAPI, uploadAPI } from '$lib/api.js';
+	
+	// Get the member ID from the URL
+	$: memberId = $page.params.id;
 	
 	// Form data structure based on ERD
 	let formData = {
@@ -38,15 +44,64 @@
 	// Form state
 	let errors = {};
 	let isSubmitting = false;
+	let isLoading = true;
+	let error = null;
 	let showCustomPosition = false;
 	let customPosition = '';
-	let redirecting = false;
-	let success = false;
-	let successMessage = '';
+	let showSuccessModal = false;
 	
 	// File upload
 	let photoFile = null;
 	let photoPreview = null;
+	
+	// Load member data on mount
+	onMount(async () => {
+		await loadMemberData();
+	});
+	
+	async function loadMemberData() {
+		// Only run in browser, not during SSR
+		if (!browser) return;
+		
+		try {
+			console.log('Loading member data for ID:', memberId);
+			
+			// Check if memberId is valid
+			if (!memberId || memberId === 'undefined' || isNaN(Number(memberId))) {
+				console.error('Invalid member ID:', memberId);
+				error = 'ID anggota tim tidak valid';
+				isLoading = false;
+				return;
+			}
+			
+			isLoading = true;
+			error = null;
+			const member = await sdmAPI.getById(memberId);
+			console.log('Received member data:', member);
+			
+			if (member) {
+				formData = { ...member };
+				
+				// Check if position is custom (not in predefined positions)
+				if (!positions.includes(member.position)) {
+					showCustomPosition = true;
+					customPosition = member.position;
+				}
+				
+				// Set photo preview if exists
+				if (member.photo_url) {
+					photoPreview = getPhotoUrl(member.photo_url);
+				}
+			} else {
+				error = 'Data anggota tim tidak ditemukan';
+			}
+		} catch (err) {
+			console.error('Error loading member data:', err);
+			error = 'Gagal memuat data anggota tim';
+		} finally {
+			isLoading = false;
+		}
+	}
 	
 	// Validation function
 	function validateForm() {
@@ -110,12 +165,6 @@
 		}
 	}
 	
-	function removePhoto() {
-		photoFile = null;
-		photoPreview = null;
-		formData.photo_url = '';
-	}
-	
 	// Handle custom position
 	function handlePositionChange() {
 		if (formData.position === 'custom') {
@@ -143,12 +192,23 @@
 		
 		try {
 			let submitData = { ...formData };
+			const originalPhotoUrl = formData.photo_url;
 			
-			// Handle photo upload first if photoFile exists
+			// Handle photo upload if new file is selected
 			if (photoFile) {
 				try {
 					const uploadResponse = await uploadAPI.uploadSDMImage(photoFile);
 					submitData.photo_url = uploadResponse.path;
+					
+					// Delete old photo if it exists and is different
+					if (originalPhotoUrl && originalPhotoUrl !== submitData.photo_url) {
+						try {
+							const filename = originalPhotoUrl.split('/').pop();
+							await uploadAPI.deleteSDMImage(filename);
+						} catch (deleteError) {
+							console.warn('Failed to delete old photo:', deleteError);
+						}
+					}
 				} catch (uploadError) {
 					console.error('Photo upload failed:', uploadError);
 					alert('Gagal mengupload foto. Silakan coba lagi.');
@@ -159,36 +219,93 @@
 			// Convert years_experience to number
 			submitData.years_experience = parseInt(submitData.years_experience) || 0;
 			
-			// Create SDM via API
-			const response = await sdmAPI.create(submitData);
+			// Update SDM via API
+			const response = await sdmAPI.update(memberId, submitData);
 			
-			console.log('SDM created successfully:', response);
+			console.log('SDM updated successfully:', response);
 			
-			success = true;
-			successMessage = 'Anggota tim berhasil ditambahkan!';
-			redirecting = true;
-			
-			// Hide success message after 3 seconds and redirect
-			setTimeout(() => {
-				success = false;
-				goto('/dashboard/sdm');
-			}, 3000);
+			// Show success modal
+			showSuccessModal = true;
 		} catch (error) {
-			console.error('Error creating SDM:', error);
-			alert('Gagal menambahkan anggota tim. Silakan coba lagi.');
+			console.error('Error updating SDM:', error);
+			alert('Gagal memperbarui data anggota tim. Silakan coba lagi.');
 		} finally {
 			isSubmitting = false;
 		}
 	}
+	
+	// Get proper photo URL
+	function getPhotoUrl(photoUrl) {
+		if (!photoUrl) return null;
+		// If it's already a full URL, return as is
+		if (photoUrl.startsWith('http')) return photoUrl;
+		
+		// Get base URL from environment or default
+		const baseUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+		
+		// If it starts with /uploads/, add the base URL
+		if (photoUrl.startsWith('/uploads/')) {
+			return `${baseUrl}${photoUrl}`;
+		}
+		// Otherwise, assume it's an old path and add the full uploads path
+		return `${baseUrl}/uploads/sdm/${photoUrl}`;
+	}
+	
+	// Close success modal and redirect
+	function closeSuccessModal() {
+		showSuccessModal = false;
+		goto('/dashboard/sdm');
+	}
+	
+	// Update removePhoto function for edit mode
+	function removePhoto() {
+		photoFile = null;
+		photoPreview = formData.photo_url ? getPhotoUrl(formData.photo_url) : null;
+		// Reset file input
+		const fileInput = document.querySelector('input[type="file"]');
+		if (fileInput) fileInput.value = '';
+	}
 </script>
 
 <svelte:head>
-	<title>Tambah Anggota Tim - Dashboard Kahasolusi</title>
+	<title>Edit Anggota Tim - Dashboard Kahasolusi</title>
 </svelte:head>
 
 <div class="p-4 lg:p-6 max-w-none mx-auto">
-	<!-- Header -->
-	<div class="max-w-4xl mx-auto">
+	<!-- Loading State -->
+	{#if isLoading && !isSubmitting}
+		<div class="flex items-center justify-center min-h-64">
+			<div class="text-center">
+				<Loader2 class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+				<p class="text-gray-600">Memuat data anggota tim...</p>
+			</div>
+		</div>
+	{:else if error}
+		<!-- Error State -->
+		<div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+			<div class="flex items-center">
+				<div class="flex-shrink-0">
+					<svg class="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+					</svg>
+				</div>
+				<div class="ml-3">
+					<h3 class="text-sm font-medium text-red-800">Error</h3>
+					<p class="text-sm text-red-700 mt-1">{error}</p>
+				</div>
+			</div>
+		</div>
+		<div class="text-center">
+			<button
+				onclick={() => goto('/dashboard/sdm')}
+				class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+			>
+				Kembali ke Dashboard SDM
+			</button>
+		</div>
+	{:else}
+		<!-- Header -->
+		<div class="max-w-4xl mx-auto">
 		<div class="mb-8">
 			<div class="flex items-center gap-4 mb-4">
 				<button 
@@ -198,8 +315,8 @@
 					<ArrowLeft class="w-5 h-5 text-gray-500" />
 				</button>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900">Tambah Anggota Tim</h1>
-					<p class="text-gray-600 mt-1">Tambahkan anggota tim baru ke dalam database SDM</p>
+					<h1 class="text-3xl font-bold text-gray-900">Edit Anggota Tim</h1>
+					<p class="text-gray-600 mt-1">Perbarui informasi anggota tim</p>
 				</div>
 			</div>
 		</div>
@@ -220,23 +337,7 @@
 			</div>
 		{/if}
 
-		<!-- Redirecting Overlay -->
-		{#if redirecting}
-			<div 
-				class="fixed inset-0 flex items-center justify-center z-50"
-				style="background-color: rgba(0, 0, 0, 0.3);"
-			>
-				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
-					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-					<div>
-						<p class="text-lg font-medium text-gray-900">Anggota Tim Berhasil Ditambahkan!</p>
-						<p class="text-sm text-gray-500">Mengalihkan ke halaman SDM...</p>
-					</div>
-				</div>
-			</div>
-		{/if}
-
-		<form onsubmit={handleSubmit} class="space-y-8 {isSubmitting || redirecting ? 'pointer-events-none opacity-75' : ''}">
+		<form onsubmit={handleSubmit} class="space-y-8 {isSubmitting ? 'pointer-events-none opacity-75' : ''}">
 			<!-- Basic Information -->
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Informasi Dasar</h2>
@@ -531,12 +632,50 @@
 							<Loader2 class="w-4 h-4 animate-spin" />
 							Menyimpan...
 						{:else}
-							<Plus class="w-4 h-4" />
-							Simpan Anggota Tim
+							<Edit class="w-4 h-4" />
+							Simpan Perubahan
 						{/if}
 					</button>
 				</div>
 			</div>
 		</form>
 	</div>
+{/if}
 </div>
+
+<!-- Success Modal -->
+{#if showSuccessModal}
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+	>
+		<div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto">
+			<div class="p-6">
+				<!-- Success Icon -->
+				<div class="flex justify-center mb-4">
+					<div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+						<svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+						</svg>
+					</div>
+				</div>
+				
+				<!-- Success Message -->
+				<div class="text-center mb-6">
+					<h3 class="text-lg font-semibold text-gray-900 mb-2">Berhasil!</h3>
+					<p class="text-gray-600">Data anggota tim berhasil diperbarui.</p>
+				</div>
+				
+				<!-- Close Button -->
+				<div class="flex justify-center">
+					<button
+						onclick={closeSuccessModal}
+						class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+					>
+						OK
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}

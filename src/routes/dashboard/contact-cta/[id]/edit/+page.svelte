@@ -1,7 +1,12 @@
 <script>
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { contactCTAAPI } from '$lib/api.js';
-	import { Phone, Mail, MessageSquare, ExternalLink, ArrowLeft, Save } from 'lucide-svelte';
+	import { Phone, Mail, MessageSquare, ExternalLink, ArrowLeft, Save, Loader2 } from 'lucide-svelte';
+	
+	// Get ID from URL params
+	$: id = $page.params.id;
 	
 	// Form data - based on ERD CONTACT_CTA table
 	let formData = {
@@ -16,6 +21,8 @@
 	
 	let errors = {};
 	let isSubmitting = false;
+	let isLoading = true;
+	let loadError = null;
 	
 	// CTA types for dropdown
 	const ctaTypes = [
@@ -24,6 +31,36 @@
 		{ value: 'Phone', label: 'Phone', icon: Phone },
 		{ value: 'Form', label: 'Form', icon: ExternalLink }
 	];
+	
+	// Load existing data
+	onMount(async () => {
+		await loadCTAData();
+	});
+	
+	async function loadCTAData() {
+		try {
+			isLoading = true;
+			loadError = null;
+			
+			const data = await contactCTAAPI.getById(id);
+			
+			// Populate form with existing data
+			formData = {
+				cta_type: data.cta_type,
+				cta_title: data.cta_title,
+				cta_url: data.cta_url,
+				contact: data.contact || '',
+				cta_description: data.cta_description,
+				is_active: data.is_active,
+				sort_order: data.sort_order
+			};
+		} catch (error) {
+			console.error('Error loading contact CTA:', error);
+			loadError = 'Gagal memuat data contact CTA';
+		} finally {
+			isLoading = false;
+		}
+	}
 	
 	// Validation function
 	function validateForm() {
@@ -117,11 +154,11 @@
 		errors = {};
 		
 		try {
-			await contactCTAAPI.create(formData);
+			await contactCTAAPI.update(id, formData);
 			goto('/dashboard/contact-cta');
 		} catch (error) {
-			console.error('Error creating contact CTA:', error);
-			alert('Terjadi kesalahan saat menambahkan contact CTA');
+			console.error('Error updating contact CTA:', error);
+			alert('Terjadi kesalahan saat mengupdate contact CTA');
 		} finally {
 			isSubmitting = false;
 		}
@@ -129,7 +166,7 @@
 </script>
 
 <svelte:head>
-	<title>Tambah Contact CTA - Dashboard Kahasolusi</title>
+	<title>Edit Contact CTA - Dashboard Kahasolusi</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">
@@ -144,14 +181,34 @@
 					<ArrowLeft class="w-5 h-5 text-gray-600" />
 				</button>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900">Tambah Contact CTA Baru</h1>
-					<p class="text-gray-600 mt-1">Buat contact dan call-to-action baru untuk komunikasi dengan klien</p>
+					<h1 class="text-3xl font-bold text-gray-900">Edit Contact CTA</h1>
+					<p class="text-gray-600 mt-1">Update informasi contact dan call-to-action</p>
 				</div>
 			</div>
 		</div>
 
-		<!-- Form -->
-		<form onsubmit={handleSubmit} class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+		{#if isLoading}
+			<!-- Loading State -->
+			<div class="flex items-center justify-center min-h-[400px]">
+				<div class="text-center">
+					<Loader2 class="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+					<p class="text-gray-600 text-lg font-medium">Memuat data contact CTA...</p>
+				</div>
+			</div>
+		{:else if loadError}
+			<!-- Error State -->
+			<div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+				<p class="text-red-600 font-medium mb-4">{loadError}</p>
+				<button 
+					onclick={() => goto('/dashboard/contact-cta')}
+					class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+				>
+					Kembali ke Daftar
+				</button>
+			</div>
+		{:else}
+			<!-- Form -->
+			<form onsubmit={handleSubmit} class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
 				<!-- CTA Type -->
 				<div>
 					<label for="cta_type" class="block text-sm font-medium text-gray-700 mb-2">
@@ -318,10 +375,14 @@
 					>
 						{#if isSubmitting}
 							<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+							Menyimpan...
+						{:else}
+							<Save class="w-4 h-4" />
+							Update Contact CTA
 						{/if}
-						Simpan Contact CTA
 					</button>
 				</div>
 			</form>
+		{/if}
 	</div>
 </div>

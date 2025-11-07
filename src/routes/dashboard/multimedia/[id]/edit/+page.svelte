@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { multimediaAPI } from '$lib/api.js';
 	import { 
 		ArrowLeft, 
@@ -13,8 +14,12 @@
 		Video,
 		FileText,
 		Code,
-		Globe
+		Globe,
+		Loader2
 	} from 'lucide-svelte';
+	
+	// Get multimedia ID from URL params
+	$: multimediaId = $page.params.id;
 	
 	// Form data based on ERD table
 	let formData = {
@@ -29,12 +34,45 @@
 	};
 	
 	// Form state
+	let loading = true;
 	let isSubmitting = false;
 	let errors = {};
 	let success = false;
 	let successMessage = '';
 	let redirecting = false;
 	let error = null;
+	
+	// Load multimedia data on mount
+	onMount(async () => {
+		if (multimediaId) {
+			await loadMultimediaData();
+		}
+	});
+	
+	async function loadMultimediaData() {
+		try {
+			loading = true;
+			const data = await multimediaAPI.getById(multimediaId);
+			
+			if (data) {
+				formData = {
+					media_type: data.media_type || 'image',
+					media_title: data.media_title || '',
+					media_description: data.media_description || '',
+					media_url: data.media_url || '',
+					embed_code: data.embed_code || '',
+					thumbnail_url: data.thumbnail_url || '',
+					is_active: Boolean(data.is_active),
+					sort_order: data.sort_order || 1
+				};
+			}
+		} catch (err) {
+			error = 'Gagal memuat data media: ' + (err.message || 'Terjadi kesalahan');
+			console.error('Error loading multimedia:', err);
+		} finally {
+			loading = false;
+		}
+	}
 	
 	// Validation
 	function validateForm() {
@@ -103,10 +141,10 @@
 		error = null;
 		
 		try {
-			await multimediaAPI.create(formData);
+			await multimediaAPI.update(multimediaId, formData);
 			
 			success = true;
-			successMessage = 'Media berhasil dibuat!';
+			successMessage = 'Media berhasil diperbarui!';
 			redirecting = true;
 			
 			// Hide success message after 3 seconds and redirect
@@ -115,8 +153,8 @@
 				goto('/dashboard/multimedia');
 			}, 3000);
 		} catch (err) {
-			error = err.message || 'Terjadi kesalahan saat menyimpan media';
-			console.error('Error saving media:', err);
+			error = err.message || 'Terjadi kesalahan saat memperbarui media';
+			console.error('Error updating media:', err);
 		} finally {
 			isSubmitting = false;
 		}
@@ -128,7 +166,7 @@
 </script>
 
 <svelte:head>
-	<title>Tambah Media Baru - Dashboard Kahasolusi</title>
+	<title>Edit Media - Dashboard Kahasolusi</title>
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50">
@@ -143,11 +181,21 @@
 					<ArrowLeft class="w-5 h-5 text-gray-600" />
 				</button>
 				<div>
-					<h1 class="text-3xl font-bold text-gray-900">Tambah Media Baru</h1>
-					<p class="text-gray-600 mt-1">Tambahkan konten multimedia untuk website dan platform digital</p>
+					<h1 class="text-3xl font-bold text-gray-900">Edit Media</h1>
+					<p class="text-gray-600 mt-1">Perbarui informasi konten multimedia</p>
 				</div>
 			</div>
 		</div>
+
+		<!-- Loading State -->
+		{#if loading}
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+				<div class="flex items-center justify-center gap-3">
+					<Loader2 class="w-6 h-6 animate-spin text-blue-600" />
+					<span class="text-gray-600">Memuat data media...</span>
+				</div>
+			</div>
+		{:else}
 
 		<!-- Success Toast Notification -->
 		{#if success}
@@ -189,7 +237,7 @@
 				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
 					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
 					<div>
-						<p class="text-lg font-medium text-gray-900">Menyimpan Media...</p>
+						<p class="text-lg font-medium text-gray-900">Memperbarui Media...</p>
 						<p class="text-sm text-gray-500">Mohon tunggu, sedang memproses data</p>
 					</div>
 				</div>
@@ -205,7 +253,7 @@
 				<div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-xl">
 					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
 					<div>
-						<p class="text-lg font-medium text-gray-900">Media Berhasil Dibuat!</p>
+						<p class="text-lg font-medium text-gray-900">Media Berhasil Diperbarui!</p>
 						<p class="text-sm text-gray-500">Mengalihkan ke halaman multimedia...</p>
 					</div>
 				</div>
@@ -246,10 +294,11 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Media Title -->
 					<div class="md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="media_title" class="block text-sm font-medium text-gray-700 mb-2">
 							Judul Media <span class="text-red-500">*</span>
 						</label>
 						<input
+							id="media_title"
 							type="text"
 							bind:value={formData.media_title}
 							placeholder="Masukkan judul media"
@@ -263,10 +312,11 @@
 
 					<!-- Media Description -->
 					<div class="md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="media_description" class="block text-sm font-medium text-gray-700 mb-2">
 							Deskripsi <span class="text-red-500">*</span>
 						</label>
 						<textarea
+							id="media_description"
 							bind:value={formData.media_description}
 							rows="4"
 							placeholder="Deskripsi detail tentang media ini"
@@ -287,7 +337,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Media URL -->
 					<div class="md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="media_url" class="block text-sm font-medium text-gray-700 mb-2">
 							Media URL {formData.media_type !== 'video' ? '*' : ''}
 						</label>
 						<div class="relative">
@@ -295,6 +345,7 @@
 								<LinkIcon class="h-5 w-5 text-gray-400" />
 							</div>
 							<input
+								id="media_url"
 								type="url"
 								bind:value={formData.media_url}
 								placeholder="https://example.com/media-file"
@@ -313,7 +364,7 @@
 					<!-- Embed Code (for videos) -->
 					{#if formData.media_type === 'video'}
 						<div class="md:col-span-2">
-							<label class="block text-sm font-medium text-gray-700 mb-2">
+							<label for="embed_code" class="block text-sm font-medium text-gray-700 mb-2">
 								Embed Code {!formData.media_url ? '*' : ''}
 							</label>
 							<div class="relative">
@@ -321,6 +372,7 @@
 									<Code class="h-5 w-5 text-gray-400" />
 								</div>
 								<textarea
+									id="embed_code"
 									bind:value={formData.embed_code}
 									rows="5"
 									placeholder="<iframe src='...' width='560' height='315'></iframe>"
@@ -337,7 +389,7 @@
 
 					<!-- Thumbnail URL -->
 					<div class="md:col-span-2">
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="thumbnail_url" class="block text-sm font-medium text-gray-700 mb-2">
 							Thumbnail URL
 						</label>
 						<div class="relative">
@@ -345,6 +397,7 @@
 								<ImageIcon class="h-5 w-5 text-gray-400" />
 							</div>
 							<input
+								id="thumbnail_url"
 								type="url"
 								bind:value={formData.thumbnail_url}
 								placeholder="https://example.com/thumbnail.jpg"
@@ -367,10 +420,11 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Sort Order -->
 					<div>
-						<label class="block text-sm font-medium text-gray-700 mb-2">
+						<label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">
 							Urutan Tampil
 						</label>
 						<input
+							id="sort_order"
 							type="number"
 							bind:value={formData.sort_order}
 							min="1"
@@ -389,6 +443,7 @@
 						</label>
 						<label class="flex items-center cursor-pointer bg-gray-50 rounded-lg p-3">
 							<input
+								id="is_active"
 								type="checkbox"
 								bind:checked={formData.is_active}
 								class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -434,14 +489,16 @@
 					>
 						{#if isSubmitting}
 							<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-							Menyimpan...
+							Memperbarui...
 						{:else}
 							<Save class="w-4 h-4" />
-							Simpan Media
+							Perbarui Media
 						{/if}
 					</button>
 				</div>
 			</div>
 		</form>
+
+		{/if}
 	</div>
 </div>

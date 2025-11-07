@@ -7,38 +7,98 @@
 		FileText, 
 		Search
 	} from 'lucide-svelte';
+	import { sdmAPI, portfolioAPI, technologiesAPI, multimediaAPI } from '$lib/api.js';
 	
-	// Data dummy untuk stats cards
-	const statsCards = [
+	let { data } = $props();
+	
+	// Get user initials from username
+	function getUserInitials(username) {
+		if (!username) return 'U';
+		
+		const words = username.trim().split(' ');
+		if (words.length === 1) {
+			return username.substring(0, 2).toUpperCase();
+		}
+		return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+	}
+	
+	// Stats data (using $state for reactivity in runes mode)
+	let stats = $state({
+		sdm: 0,
+		portfolio: 0,
+		technologies: 0,
+		multimedia: 0
+	});
+	let loading = $state(true);
+	
+	// Stats cards configuration (using $derived for runes mode)
+	let statsCards = $derived([
 		{
 			title: 'SDM',
-			value: '12',
+			value: stats.sdm.toString(),
 			icon: Users,
 			bgColor: 'bg-purple-50',
 			iconBg: 'bg-purple-500'
 		},
 		{
 			title: 'Portofolio Proyek',
-			value: '20',
+			value: stats.portfolio.toString(),
 			icon: FolderOpen,
 			bgColor: 'bg-orange-50',
 			iconBg: 'bg-orange-500'
 		},
 		{
 			title: 'Tech Stack',
-			value: '25',
+			value: stats.technologies.toString(),
 			icon: Code, 
 			bgColor: 'bg-green-50',
 			iconBg: 'bg-green-500'
 		},
 		{
 			title: 'File Media',
-			value: '55',
+			value: stats.multimedia.toString(),
 			icon: FileText,
 			bgColor: 'bg-red-50',
 			iconBg: 'bg-red-500'
 		}
-	];
+	]);
+	
+	// Load dashboard statistics
+	onMount(async () => {
+		await loadStats();
+	});
+	
+	async function loadStats() {
+		loading = true;
+		try {
+			// Fetch all data in parallel
+			const [sdmData, portfolioData, techData, multimediaData] = await Promise.all([
+				sdmAPI.getAll().catch(() => []),
+				portfolioAPI.getAll().catch(() => []),
+				technologiesAPI.getAll().catch(() => []),
+				multimediaAPI.get().catch(() => [])
+			]);
+			
+			console.log('Dashboard stats:', {
+				sdm: sdmData,
+				portfolio: portfolioData,
+				tech: techData,
+				multimedia: multimediaData
+			});
+			
+			// Update stats - all APIs return arrays directly
+			stats = {
+				sdm: Array.isArray(sdmData) ? sdmData.length : 0,
+				portfolio: Array.isArray(portfolioData) ? portfolioData.length : 0,
+				technologies: Array.isArray(techData) ? techData.length : 0,
+				multimedia: Array.isArray(multimediaData) ? multimediaData.length : 0
+			};
+		} catch (error) {
+			console.error('Failed to load dashboard stats:', error);
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -73,10 +133,10 @@
 			<!-- User Profile -->
 			<div class="flex items-center gap-3">
 				<div class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500 rounded-full flex items-center justify-center">
-					<span class="text-white font-medium text-sm">LH</span>
+					<span class="text-white font-medium text-sm">{getUserInitials(data?.user?.username || 'User')}</span>
 				</div>
 				<div class="text-right hidden sm:block">
-					<p class="font-medium text-gray-800">Lilis Haria</p>
+					<p class="font-medium text-gray-800">{data?.user?.username || 'User'}</p>
 					<p class="text-sm text-gray-500">Admin</p>
 				</div>
 			</div>
@@ -88,19 +148,35 @@
 <div class="p-6">
 	<!-- Stats Cards -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-		{#each statsCards as card}
-			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-				<div class="flex items-center justify-between">
-					<div>
-						<p class="text-gray-600 text-sm font-medium mb-1">{card.title}</p>
-						<p class="text-3xl font-bold text-gray-800">{card.value}</p>
-					</div>
-					<div class="w-12 h-12 {card.iconBg} rounded-xl flex items-center justify-center">
-						<svelte:component this={card.icon} class="text-white w-6 h-6" />
+		{#if loading}
+			<!-- Loading skeleton -->
+			{#each Array(4) as _}
+				<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse">
+					<div class="flex items-center justify-between">
+						<div class="flex-1">
+							<div class="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+							<div class="h-8 bg-gray-200 rounded w-16"></div>
+						</div>
+						<div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
 					</div>
 				</div>
-			</div>
-		{/each}
+			{/each}
+		{:else}
+			<!-- Stats cards -->
+			{#each statsCards as card}
+				<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+					<div class="flex items-center justify-between">
+						<div>
+							<p class="text-gray-600 text-sm font-medium mb-1">{card.title}</p>
+							<p class="text-3xl font-bold text-gray-800">{card.value}</p>
+						</div>
+						<div class="w-12 h-12 {card.iconBg} rounded-xl flex items-center justify-center">
+							<svelte:component this={card.icon} class="text-white w-6 h-6" />
+						</div>
+					</div>
+				</div>
+			{/each}
+		{/if}
 	</div>
 
 	<!-- Analytics Content Grid -->

@@ -14,8 +14,12 @@ import categoryRoutes from './routes/categories.js'
 import technologyRoutes from './routes/technologies.js'
 import sdmRoutes from './routes/sdm.js'
 import companyRoutes from './routes/company.js'
+import multimediaRoutes from './routes/multimedia.js'
+import contactCTARoutes from './routes/contact-cta.js'
+import feedbackRoutes from './routes/feedback.js'
 import healthRoutes from './routes/health.js'
 import uploadRoutes from './routes/upload.js'
+import authRoutes from './routes/auth.js'
 
 const app = new Hono()
 
@@ -46,11 +50,15 @@ app.get('/', (c) => {
 })
 
 // API Routes
+app.route('/api/auth', authRoutes)
 app.route('/api/portfolio', portfolioRoutes)
 app.route('/api/categories', categoryRoutes)
 app.route('/api/technologies', technologyRoutes)
 app.route('/api/sdm', sdmRoutes)
 app.route('/api/company', companyRoutes)
+app.route('/api/multimedia', multimediaRoutes)
+app.route('/api/contact-cta', contactCTARoutes)
+app.route('/api/feedback', feedbackRoutes)
 app.route('/api/health', healthRoutes)
 app.route('/api/upload', uploadRoutes)
 

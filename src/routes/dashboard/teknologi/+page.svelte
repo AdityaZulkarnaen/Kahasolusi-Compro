@@ -313,7 +313,8 @@
 			return date.toLocaleDateString('id-ID', {
 				year: 'numeric',
 				month: 'short',
-				day: 'numeric'
+				day: 'numeric',
+				timeZone: 'Asia/Jakarta'
 			});
 		} catch (error) {
 			return 'Invalid Date';

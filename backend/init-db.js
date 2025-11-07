@@ -414,6 +414,23 @@ for (const [name, email, message] of testData) {
   )
 }
 
+// Insert sample multimedia data
+const multimediaData = [
+  ['image', 'Hero Homepage Banner', 'Professional hero image for homepage banner showcasing modern office workspace', '/images/hero-homepage.jpg', '', '/images/thumbnails/hero-homepage-thumb.jpg', 1, 1, 1, 1],
+  ['video', 'Company Profile Video', 'Corporate video highlighting our services, team, and company culture', '/videos/company-profile.mp4', '<iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>', '/images/thumbnails/company-video-thumb.jpg', 1, 2, 1, 1],
+  ['image', 'Portfolio Gallery - E-commerce Project', 'Screenshot of completed e-commerce website project showcasing modern design', '/images/portfolio/ecommerce-project.jpg', '', '/images/thumbnails/ecommerce-thumb.jpg', 1, 3, 1, 1],
+  ['document', 'Company Brochure 2024', 'Comprehensive company brochure featuring services, portfolio, and team information', '/documents/company-brochure-2024.pdf', '', '/images/thumbnails/brochure-thumb.jpg', 1, 4, 1, 1],
+  ['video', 'Technology Stack Overview', 'Video presentation of our technology stack and development process', '', '<iframe width="560" height="315" src="https://www.youtube.com/embed/abc123def456" frameborder="0" allowfullscreen></iframe>', '/images/thumbnails/tech-stack-thumb.jpg', 0, 5, 1, 1],
+  ['image', 'Team Photo 2024', 'Professional team photo for about page and marketing materials', '/images/team/team-photo-2024.jpg', '', '/images/thumbnails/team-thumb.jpg', 1, 6, 1, 1]
+];
+
+for (const [media_type, media_title, media_description, media_url, embed_code, thumbnail_url, is_active, sort_order, created_by, updated_by] of multimediaData) {
+  await db.run(
+    `INSERT INTO multimedia (media_type, media_title, media_description, media_url, embed_code, thumbnail_url, is_active, sort_order, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [media_type, media_title, media_description, media_url, embed_code, thumbnail_url, is_active, sort_order, created_by, updated_by]
+  )
+}
+
 console.log('Sample data inserted successfully!')
 console.log(`Database created at: ${dbPath}`)
 console.log('Database schema updated to Kahasolusi Company Profile ERD!')

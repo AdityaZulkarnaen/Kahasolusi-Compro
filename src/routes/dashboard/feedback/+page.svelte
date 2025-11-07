@@ -1,138 +1,42 @@
 <script>
 	import { onMount } from 'svelte';
-	import { MessageSquare, Star, ThumbsUp, ThumbsDown, Eye, Trash2, Reply, Filter, Calendar, User, Mail, CheckCircle, XCircle, Clock, Search, Download } from 'lucide-svelte';
+	import { feedbackAPI } from '$lib/api.js';
+	import { MessageSquare, Eye, EyeOff, Trash2, Filter, Calendar, User, Mail, CheckCircle, XCircle, Clock, Search, Download, Monitor, Mail as MailIcon } from 'lucide-svelte';
 	
 	// Feedback data
-	let feedbacks = [
-		{
-			feedback_id: 1,
-			client_name: 'Budi Santoso',
-			client_email: 'budi.santoso@email.com',
-			client_company: 'PT. Digital Nusantara',
-			project_name: 'E-Commerce Platform',
-			rating: 5,
-			feedback_title: 'Pelayanan Luar Biasa!',
-			feedback_message: 'Tim Kaha Solution sangat profesional dan responsive. Project e-commerce kami selesai tepat waktu dengan kualitas yang sangat memuaskan. Highly recommended!',
-			feedback_type: 'project_review', // project_review, general_feedback, complaint, suggestion
-			status: 'approved', // pending, approved, rejected
-			is_featured: true,
-			is_public: true,
-			created_at: '2024-01-25',
-			updated_at: '2024-01-25',
-			admin_response: 'Terima kasih atas kepercayaan Anda kepada Kaha Solution. Kami senang dapat membantu mewujudkan project e-commerce yang sukses.',
-			responded_by: 'Admin',
-			responded_at: '2024-01-26'
-		},
-		{
-			feedback_id: 2,
-			client_name: 'Sarah Wijaya',
-			client_email: 'sarah.wijaya@startup.id',
-			client_company: 'StartupTech Indonesia',
-			project_name: 'Mobile App Development',
-			rating: 4,
-			feedback_title: 'Hasil Bagus, Komunikasi Bisa Diperbaiki',
-			feedback_message: 'Aplikasi mobile yang dibuat sudah sesuai dengan requirement. Namun komunikasi selama development masih bisa diperbaiki untuk update progress yang lebih regular.',
-			feedback_type: 'project_review',
-			status: 'approved',
-			is_featured: false,
-			is_public: true,
-			created_at: '2024-01-22',
-			updated_at: '2024-01-23',
-			admin_response: 'Terima kasih atas feedback konstruktifnya. Kami akan meningkatkan komunikasi untuk project selanjutnya.',
-			responded_by: 'Project Manager',
-			responded_at: '2024-01-23'
-		},
-		{
-			feedback_id: 3,
-			client_name: 'Ahmad Rahman',
-			client_email: 'ahmad.rahman@company.com',
-			client_company: 'CV. Maju Berkembang',
-			project_name: null,
-			rating: 5,
-			feedback_title: 'Konsultasi Gratis Sangat Membantu',
-			feedback_message: 'Tim technical consultant memberikan insight yang sangat valuable untuk digital transformation perusahaan kami. Penjelasan detail dan mudah dipahami.',
-			feedback_type: 'general_feedback',
-			status: 'approved',
-			is_featured: true,
-			is_public: true,
-			created_at: '2024-01-20',
-			updated_at: '2024-01-20',
-			admin_response: null,
-			responded_by: null,
-			responded_at: null
-		},
-		{
-			feedback_id: 4,
-			client_name: 'Lisa Permata',
-			client_email: 'lisa.permata@ecommerce.co.id',
-			client_company: 'Permata E-Commerce',
-			project_name: 'Website Maintenance',
-			rating: 2,
-			feedback_title: 'Response Time Support Lambat',
-			feedback_message: 'Website maintenance sudah ok, tapi ketika ada issue urgent, response time support team terlalu lambat. Harapannya bisa lebih cepat tanggap.',
-			feedback_type: 'complaint',
-			status: 'pending',
-			is_featured: false,
-			is_public: false,
-			created_at: '2024-01-18',
-			updated_at: '2024-01-18',
-			admin_response: null,
-			responded_by: null,
-			responded_at: null
-		},
-		{
-			feedback_id: 5,
-			client_name: 'Dwi Handoko',
-			client_email: 'dwi.handoko@tech.id',
-			client_company: 'Tech Innovation Hub',
-			project_name: null,
-			rating: 4,
-			feedback_title: 'Saran Penambahan Layanan AI/ML',
-			feedback_message: 'Kaha Solution sudah bagus di web dan mobile development. Saran saya untuk menambah layanan AI/ML development karena banyak client yang mulai membutuhkan.',
-			feedback_type: 'suggestion',
-			status: 'approved',
-			is_featured: false,
-			is_public: true,
-			created_at: '2024-01-15',
-			updated_at: '2024-01-19',
-			admin_response: 'Terima kasih atas sarannya. Tim kami sedang mengembangkan capabilities AI/ML dan akan segera meluncurkan layanan tersebut.',
-			responded_by: 'CEO',
-			responded_at: '2024-01-19'
-		},
-		{
-			feedback_id: 6,
-			client_name: 'Rina Sari',
-			client_email: 'rina.sari@marketing.com',
-			client_company: 'Digital Marketing Pro',
-			project_name: 'Landing Page Optimization',
-			rating: 5,
-			feedback_title: 'Conversion Rate Meningkat 40%!',
-			feedback_message: 'Setelah landing page dioptimasi oleh Kaha Solution, conversion rate kami meningkat dari 2.5% menjadi 3.5%. ROI dari investment ini sangat worth it!',
-			feedback_type: 'project_review',
-			status: 'approved',
-			is_featured: true,
-			is_public: true,
-			created_at: '2024-01-12',
-			updated_at: '2024-01-12',
-			admin_response: 'Senang mendengar hasil yang positif! Tim kami akan terus membantu optimasi untuk hasil yang lebih baik lagi.',
-			responded_by: 'Marketing Team',
-			responded_at: '2024-01-13'
-		}
-	];
+	let feedbacks = [];
+	let loading = true;
+	let error = null;
 	
 	// Filter states
 	let searchQuery = '';
-	let selectedType = 'all';
-	let selectedStatus = 'all';
-	let selectedRating = 'all';
-	let sortBy = 'recent'; // recent, rating_high, rating_low, name
-	let filteredFeedbacks = feedbacks;
+	let selectedDisplayStatus = 'all'; // all, displayed, hidden
+	let selectedReadStatus = 'all'; // all, read, unread
+	let sortBy = 'recent'; // recent, oldest, name
+	let filteredFeedbacks = [];
 	
 	// Modal states
 	let selectedFeedback = null;
 	let isDetailModalOpen = false;
-	let isResponseModalOpen = false;
-	let adminResponse = '';
+	let showDeleteModal = false;
+	let feedbackToDelete = null;
+	let deleting = false;
+	
+	// Load feedback from API
+	async function loadFeedbacks() {
+		try {
+			loading = true;
+			error = null;
+			const response = await feedbackAPI.get();
+			feedbacks = response.data || [];
+			filterAndSortFeedbacks();
+		} catch (err) {
+			error = err.message || 'Gagal memuat data feedback';
+			console.error('Failed to load feedbacks:', err);
+		} finally {
+			loading = false;
+		}
+	}
 	
 	// Filter and sort functions
 	function filterAndSortFeedbacks() {
@@ -142,41 +46,32 @@
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase();
 			filtered = filtered.filter(feedback => 
-				feedback.client_name.toLowerCase().includes(query) ||
-				feedback.client_email.toLowerCase().includes(query) ||
-				feedback.client_company.toLowerCase().includes(query) ||
-				feedback.feedback_title.toLowerCase().includes(query) ||
-				feedback.feedback_message.toLowerCase().includes(query) ||
-				(feedback.project_name && feedback.project_name.toLowerCase().includes(query))
+				feedback.visitor_name.toLowerCase().includes(query) ||
+				feedback.visitor_email.toLowerCase().includes(query) ||
+				feedback.message.toLowerCase().includes(query) ||
+				(feedback.company_name && feedback.company_name.toLowerCase().includes(query))
 			);
 		}
 		
-		// Type filter
-		if (selectedType !== 'all') {
-			filtered = filtered.filter(feedback => feedback.feedback_type === selectedType);
+		// Display status filter
+		if (selectedDisplayStatus !== 'all') {
+			const isDisplayed = selectedDisplayStatus === 'displayed' ? 1 : 0;
+			filtered = filtered.filter(feedback => feedback.is_displayed === isDisplayed);
 		}
 		
-		// Status filter
-		if (selectedStatus !== 'all') {
-			filtered = filtered.filter(feedback => feedback.status === selectedStatus);
-		}
-		
-		// Rating filter
-		if (selectedRating !== 'all') {
-			const rating = parseInt(selectedRating);
-			filtered = filtered.filter(feedback => feedback.rating === rating);
+		// Read status filter
+		if (selectedReadStatus !== 'all') {
+			const isRead = selectedReadStatus === 'read' ? 1 : 0;
+			filtered = filtered.filter(feedback => feedback.is_read === isRead);
 		}
 		
 		// Sorting
 		switch (sortBy) {
-			case 'rating_high':
-				filtered.sort((a, b) => b.rating - a.rating);
-				break;
-			case 'rating_low':
-				filtered.sort((a, b) => a.rating - b.rating);
+			case 'oldest':
+				filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 				break;
 			case 'name':
-				filtered.sort((a, b) => a.client_name.localeCompare(b.client_name));
+				filtered.sort((a, b) => a.visitor_name.localeCompare(b.visitor_name));
 				break;
 			case 'recent':
 			default:
@@ -187,138 +82,135 @@
 		filteredFeedbacks = filtered;
 	}
 	
-	// Utility functions
-	function formatDate(dateString) {
-		return new Date(dateString).toLocaleDateString('id-ID', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric'
-		});
+	// Reactive statement to trigger filtering
+	$: if (searchQuery || selectedDisplayStatus || selectedReadStatus || sortBy || feedbacks) {
+		filterAndSortFeedbacks();
 	}
 	
-	function getTypeColor(type) {
-		switch (type) {
-			case 'project_review': return 'bg-blue-100 text-blue-800';
-			case 'general_feedback': return 'bg-green-100 text-green-800';
-			case 'complaint': return 'bg-red-100 text-red-800';
-			case 'suggestion': return 'bg-purple-100 text-purple-800';
-			default: return 'bg-gray-100 text-gray-800';
+	// Toggle display status
+	async function toggleDisplay(feedbackId) {
+		try {
+			const feedback = feedbacks.find(f => f.feedback_id === feedbackId);
+			if (!feedback) return;
+			
+			const newStatus = feedback.is_displayed === 1 ? 0 : 1;
+			await feedbackAPI.update(feedbackId, { is_displayed: newStatus });
+			
+			feedbacks = feedbacks.map(f => 
+				f.feedback_id === feedbackId 
+					? { ...f, is_displayed: newStatus }
+					: f
+			);
+			filterAndSortFeedbacks();
+		} catch (err) {
+			alert('Gagal mengubah status tampilan: ' + err.message);
 		}
 	}
 	
-	function getStatusColor(status) {
-		switch (status) {
-			case 'approved': return 'bg-green-100 text-green-800';
-			case 'pending': return 'bg-yellow-100 text-yellow-800';
-			case 'rejected': return 'bg-red-100 text-red-800';
-			default: return 'bg-gray-100 text-gray-800';
+	// Mark as read/unread
+	async function toggleRead(feedbackId) {
+		try {
+			const feedback = feedbacks.find(f => f.feedback_id === feedbackId);
+			if (!feedback) return;
+			
+			const newStatus = feedback.is_read === 1 ? 0 : 1;
+			await feedbackAPI.update(feedbackId, { is_read: newStatus });
+			
+			feedbacks = feedbacks.map(f => 
+				f.feedback_id === feedbackId 
+					? { ...f, is_read: newStatus }
+					: f
+			);
+			filterAndSortFeedbacks();
+		} catch (err) {
+			alert('Gagal mengubah status baca: ' + err.message);
 		}
 	}
 	
-	function getTypeLabel(type) {
-		const labels = {
-			'project_review': 'Project Review',
-			'general_feedback': 'General Feedback',
-			'complaint': 'Complaint',
-			'suggestion': 'Suggestion'
-		};
-		return labels[type] || type;
+	// Delete feedback - show confirmation modal
+	function confirmDelete(feedback) {
+		feedbackToDelete = feedback;
+		showDeleteModal = true;
 	}
 	
-	function getRatingStars(rating) {
-		return Array.from({ length: 5 }, (_, i) => i < rating);
+	// Execute delete
+	async function executeDelete() {
+		if (!feedbackToDelete) return;
+		
+		deleting = true;
+		try {
+			await feedbackAPI.delete(feedbackToDelete.feedback_id);
+			feedbacks = feedbacks.filter(f => f.feedback_id !== feedbackToDelete.feedback_id);
+			filterAndSortFeedbacks();
+			showDeleteModal = false;
+			feedbackToDelete = null;
+			
+			// Close detail modal if open and deleting the viewed feedback
+			if (isDetailModalOpen && selectedFeedback?.feedback_id === feedbackToDelete.feedback_id) {
+				isDetailModalOpen = false;
+				selectedFeedback = null;
+			}
+		} catch (err) {
+			alert('Gagal menghapus feedback: ' + err.message);
+		} finally {
+			deleting = false;
+		}
 	}
 	
-	// CRUD operations
-	function openDetailModal(feedback) {
+	// Cancel delete
+	function cancelDelete() {
+		showDeleteModal = false;
+		feedbackToDelete = null;
+	}
+	
+	// View detail
+	function viewDetail(feedback) {
 		selectedFeedback = feedback;
 		isDetailModalOpen = true;
+		
+		// Mark as read when viewing
+		if (feedback.is_read === 0) {
+			toggleRead(feedback.feedback_id);
+		}
 	}
 	
 	function closeDetailModal() {
-		selectedFeedback = null;
 		isDetailModalOpen = false;
-	}
-	
-	function openResponseModal(feedback) {
-		selectedFeedback = feedback;
-		adminResponse = feedback.admin_response || '';
-		isResponseModalOpen = true;
-	}
-	
-	function closeResponseModal() {
 		selectedFeedback = null;
-		adminResponse = '';
-		isResponseModalOpen = false;
 	}
 	
-	function submitResponse() {
-		if (selectedFeedback && adminResponse.trim()) {
-			feedbacks = feedbacks.map(feedback => 
-				feedback.feedback_id === selectedFeedback.feedback_id 
-					? { 
-						...feedback, 
-						admin_response: adminResponse,
-						responded_by: 'Admin',
-						responded_at: new Date().toISOString().split('T')[0],
-						updated_at: new Date().toISOString().split('T')[0]
-					}
-					: feedback
-			);
-			closeResponseModal();
-			filterAndSortFeedbacks();
-			alert('Response berhasil disimpan!');
+	// Handle ESC key to close modals
+	function handleKeydown(event) {
+		if (event.key === 'Escape') {
+			if (showDeleteModal) {
+				cancelDelete();
+			}
 		}
 	}
 	
-	function updateStatus(feedbackId, newStatus) {
-		feedbacks = feedbacks.map(feedback => 
-			feedback.feedback_id === feedbackId 
-				? { ...feedback, status: newStatus, updated_at: new Date().toISOString().split('T')[0] }
-				: feedback
-		);
-		filterAndSortFeedbacks();
-	}
-	
-	function toggleFeatured(feedbackId) {
-		feedbacks = feedbacks.map(feedback => 
-			feedback.feedback_id === feedbackId 
-				? { ...feedback, is_featured: !feedback.is_featured, updated_at: new Date().toISOString().split('T')[0] }
-				: feedback
-		);
-		filterAndSortFeedbacks();
-	}
-	
-	function togglePublic(feedbackId) {
-		feedbacks = feedbacks.map(feedback => 
-			feedback.feedback_id === feedbackId 
-				? { ...feedback, is_public: !feedback.is_public, updated_at: new Date().toISOString().split('T')[0] }
-				: feedback
-		);
-		filterAndSortFeedbacks();
-	}
-	
-	function deleteFeedback(feedbackId) {
-		if (confirm('Apakah Anda yakin ingin menghapus feedback ini?')) {
-			feedbacks = feedbacks.filter(feedback => feedback.feedback_id !== feedbackId);
-			filterAndSortFeedbacks();
+	// Handle click outside modal
+	function handleModalClick(event) {
+		if (event.target === event.currentTarget) {
+			if (showDeleteModal) {
+				cancelDelete();
+			}
 		}
 	}
 	
+	// Export data
 	function exportData() {
 		const csvContent = [
-			['ID', 'Client Name', 'Email', 'Company', 'Project', 'Rating', 'Type', 'Status', 'Title', 'Message', 'Created At'].join(','),
+			['ID', 'Visitor Name', 'Email', 'Company', 'Message', 'IP Address', 'User Agent', 'Displayed', 'Read', 'Created At'].join(','),
 			...filteredFeedbacks.map(f => [
 				f.feedback_id,
-				f.client_name,
-				f.client_email,
-				f.client_company,
-				f.project_name || '',
-				f.rating,
-				f.feedback_type,
-				f.status,
-				f.feedback_title,
-				`"${f.feedback_message.replace(/"/g, '""')}"`,
+				f.visitor_name,
+				f.visitor_email,
+				f.company_name || '',
+				`"${f.message.replace(/"/g, '""')}"`,
+				f.ip_address || '',
+				`"${(f.user_agent || '').replace(/"/g, '""')}"`,
+				f.is_displayed ? 'Yes' : 'No',
+				f.is_read ? 'Yes' : 'No',
 				f.created_at
 			].join(','))
 		].join('\n');
@@ -327,31 +219,40 @@
 		const url = window.URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = 'feedback_export.csv';
+		a.download = `feedback_export_${new Date().toISOString().split('T')[0]}.csv`;
 		a.click();
 		window.URL.revokeObjectURL(url);
+	}
+	
+	// Utility functions
+	function formatDate(dateString) {
+		return new Date(dateString).toLocaleDateString('id-ID', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			timeZone: 'Asia/Jakarta'
+		});
+	}
+	
+	function getShortMessage(message, maxLength = 100) {
+		if (!message) return '';
+		return message.length > maxLength ? message.substring(0, maxLength) + '...' : message;
 	}
 	
 	// Get stats
 	$: stats = {
 		total: feedbacks.length,
-		pending: feedbacks.filter(f => f.status === 'pending').length,
-		approved: feedbacks.filter(f => f.status === 'approved').length,
-		featured: feedbacks.filter(f => f.is_featured).length,
-		avgRating: feedbacks.length > 0 ? 
-			(feedbacks.reduce((sum, f) => sum + f.rating, 0) / feedbacks.length).toFixed(1) : 0,
-		responseRate: feedbacks.length > 0 ? 
-			((feedbacks.filter(f => f.admin_response).length / feedbacks.length) * 100).toFixed(1) : 0
+		displayed: feedbacks.filter(f => f.is_displayed === 1).length,
+		hidden: feedbacks.filter(f => f.is_displayed === 0).length,
+		unread: feedbacks.filter(f => f.is_read === 0).length,
+		read: feedbacks.filter(f => f.is_read === 1).length
 	};
 	
 	onMount(() => {
-		filterAndSortFeedbacks();
+		loadFeedbacks();
 	});
-	
-	// Reactive statements
-	$: if (searchQuery !== undefined || selectedType !== undefined || selectedStatus !== undefined || selectedRating !== undefined || sortBy !== undefined) {
-		filterAndSortFeedbacks();
-	}
 </script>
 
 <svelte:head>
@@ -364,10 +265,10 @@
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900">Feedback Management</h1>
-				<p class="text-gray-600 mt-1">Kelola feedback dan review dari client</p>
+				<p class="text-gray-600 mt-1">Kelola feedback dari pengunjung website</p>
 			</div>
 			<button 
-				on:click={exportData}
+				onclick={exportData}
 				class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors gap-2"
 			>
 				<Download class="w-4 h-4" />
@@ -376,467 +277,553 @@
 		</div>
 	</div>
 
-	<!-- Stats Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-6 gap-4 lg:gap-6 mb-6">
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Total Feedback</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-				</div>
-				<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-					<MessageSquare class="w-5 h-5 text-blue-600" />
-				</div>
+	<!-- Loading State -->
+	{#if loading}
+		<div class="flex items-center justify-center py-12">
+			<div class="text-center">
+				<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+				<p class="text-gray-600">Memuat data feedback...</p>
 			</div>
 		</div>
-		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Pending</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.pending}</p>
-				</div>
-				<div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-					<Clock class="w-5 h-5 text-yellow-600" />
+	{:else if error}
+		<!-- Error State -->
+		<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+			<p class="font-medium">Error: {error}</p>
+			<button 
+				onclick={loadFeedbacks}
+				class="mt-2 text-sm underline hover:no-underline"
+			>
+				Coba lagi
+			</button>
+		</div>
+	{:else}
+		<!-- Stats Cards -->
+		<div class="grid grid-cols-1 md:grid-cols-5 gap-4 lg:gap-6 mb-6">
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-600">Total Feedback</p>
+						<p class="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+					</div>
+					<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+						<MessageSquare class="w-5 h-5 text-blue-600" />
+					</div>
 				</div>
 			</div>
-		</div>
-		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Approved</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.approved}</p>
-				</div>
-				<div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-					<CheckCircle class="w-5 h-5 text-green-600" />
-				</div>
-			</div>
-		</div>
-		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Featured</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.featured}</p>
-				</div>
-				<div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-					<Star class="w-5 h-5 text-purple-600" />
-				</div>
-			</div>
-		</div>
-		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Avg Rating</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.avgRating}</p>
-				</div>
-				<div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-					<Star class="w-5 h-5 text-orange-600" />
-				</div>
-			</div>
-		</div>
-		
-		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-			<div class="flex items-center justify-between">
-				<div>
-					<p class="text-sm font-medium text-gray-600">Response Rate</p>
-					<p class="text-2xl font-bold text-gray-900 mt-1">{stats.responseRate}%</p>
-				</div>
-				<div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-					<Reply class="w-5 h-5 text-indigo-600" />
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<!-- Filters -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
-		<div class="flex flex-wrap items-center gap-4">
-			<!-- Search -->
-			<div class="flex-1 min-w-[280px]">
-				<div class="relative">
-					<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-					<input
-						type="text"
-						placeholder="Cari feedback, client, atau project..."
-						bind:value={searchQuery}
-						class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-					/>
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-600">Ditampilkan</p>
+						<p class="text-2xl font-bold text-green-600 mt-1">{stats.displayed}</p>
+					</div>
+					<div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+						<Eye class="w-5 h-5 text-green-600" />
+					</div>
 				</div>
 			</div>
-			
-			<!-- Type Filter -->
-			<select 
-				bind:value={selectedType}
-				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-			>
-				<option value="all">Semua Type</option>
-				<option value="project_review">Project Review</option>
-				<option value="general_feedback">General Feedback</option>
-				<option value="complaint">Complaint</option>
-				<option value="suggestion">Suggestion</option>
-			</select>
-			
-			<!-- Status Filter -->
-			<select 
-				bind:value={selectedStatus}
-				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-			>
-				<option value="all">Semua Status</option>
-				<option value="pending">Pending</option>
-				<option value="approved">Approved</option>
-				<option value="rejected">Rejected</option>
-			</select>
-			
-			<!-- Rating Filter -->
-			<select 
-				bind:value={selectedRating}
-				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-			>
-				<option value="all">Semua Rating</option>
-				<option value="5">5 Stars</option>
-				<option value="4">4 Stars</option>
-				<option value="3">3 Stars</option>
-				<option value="2">2 Stars</option>
-				<option value="1">1 Star</option>
-			</select>
-			
-			<!-- Sort -->
-			<select 
-				bind:value={sortBy}
-				class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
-			>
-				<option value="recent">Terbaru</option>
-				<option value="rating_high">Rating Tertinggi</option>
-				<option value="rating_low">Rating Terendah</option>
-				<option value="name">Nama Client</option>
-			</select>
-		</div>
-	</div>
 
-	<!-- Feedback List -->
-	<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-		<div class="px-4 py-3 border-b border-gray-200">
-			<h3 class="text-lg font-semibold text-gray-900">Feedback List ({filteredFeedbacks.length})</h3>
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-600">Disembunyikan</p>
+						<p class="text-2xl font-bold text-gray-600 mt-1">{stats.hidden}</p>
+					</div>
+					<div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+						<EyeOff class="w-5 h-5 text-gray-600" />
+					</div>
+				</div>
+			</div>
+
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-600">Belum Dibaca</p>
+						<p class="text-2xl font-bold text-orange-600 mt-1">{stats.unread}</p>
+					</div>
+					<div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+						<MailIcon class="w-5 h-5 text-orange-600" />
+					</div>
+				</div>
+			</div>
+
+			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-gray-600">Sudah Dibaca</p>
+						<p class="text-2xl font-bold text-blue-600 mt-1">{stats.read}</p>
+					</div>
+					<div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+						<CheckCircle class="w-5 h-5 text-blue-600" />
+					</div>
+				</div>
+			</div>
 		</div>
-		
-		<div class="divide-y divide-gray-200">
-			{#each filteredFeedbacks as feedback}
-				<div class="p-4 hover:bg-gray-50 transition-colors">
-					<div class="flex items-start justify-between gap-4">
-						<!-- Feedback Info -->
-						<div class="flex-1">
-							<div class="flex items-start gap-4">
-								<!-- Client Avatar -->
-								<div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-									<User class="w-5 h-5 text-blue-600" />
-								</div>
-								
-								<!-- Feedback Details -->
-								<div class="flex-1 space-y-3">
-									<!-- Header -->
-									<div class="flex items-start justify-between">
-										<div>
-											<h4 class="text-lg font-semibold text-gray-900">{feedback.feedback_title}</h4>
-											<div class="flex items-center gap-2 mt-1">
-												<span class="text-sm font-medium text-gray-700">{feedback.client_name}</span>
-												<span class="text-sm text-gray-500">•</span>
-												<span class="text-sm text-gray-500">{feedback.client_company}</span>
-												{#if feedback.project_name}
-													<span class="text-sm text-gray-500">•</span>
-													<span class="text-sm text-blue-600">{feedback.project_name}</span>
-												{/if}
-											</div>
-										</div>
-										
-										<!-- Rating -->
-										<div class="flex items-center gap-1">
-											{#each getRatingStars(feedback.rating) as filled}
-												<Star class="w-4 h-4 {filled ? 'text-yellow-400 fill-current' : 'text-gray-300'}" />
-											{/each}
-											<span class="text-sm text-gray-600 ml-1">({feedback.rating})</span>
-										</div>
-									</div>
-									
-									<!-- Message -->
-									<p class="text-gray-700 line-clamp-2">{feedback.feedback_message}</p>
-									
-									<!-- Tags -->
-									<div class="flex flex-wrap gap-2">
-										<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getTypeColor(feedback.feedback_type)}">
-											{getTypeLabel(feedback.feedback_type)}
-										</span>
-										<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(feedback.status)}">
-											{feedback.status}
-										</span>
-										{#if feedback.is_featured}
-											<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-												Featured
-											</span>
-										{/if}
-										{#if feedback.is_public}
-											<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-												Public
-											</span>
-										{/if}
-									</div>
-									
-									<!-- Response Status -->
-									{#if feedback.admin_response}
-										<div class="flex items-center gap-2 text-sm text-green-600">
-											<Reply class="w-4 h-4" />
-											<span>Responded by {feedback.responded_by} on {formatDate(feedback.responded_at)}</span>
-										</div>
-									{:else}
-										<div class="flex items-center gap-2 text-sm text-gray-500">
-											<Clock class="w-4 h-4" />
-											<span>No response yet</span>
-										</div>
-									{/if}
-									
-									<!-- Meta -->
-									<div class="flex items-center gap-4 text-sm text-gray-500">
-										<div class="flex items-center gap-1">
-											<Calendar class="w-4 h-4" />
-											<span>{formatDate(feedback.created_at)}</span>
-										</div>
-										<div class="flex items-center gap-1">
-											<Mail class="w-4 h-4" />
-											<span>{feedback.client_email}</span>
-										</div>
-									</div>
-								</div>
-							</div>
+
+		<!-- Filters and Search -->
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6 mb-6">
+			<div class="flex flex-col xl:flex-row gap-4">
+				<!-- Search Bar -->
+				<div class="flex-1 min-w-0">
+					<div class="relative">
+						<Search class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+						<input
+							type="text"
+							bind:value={searchQuery}
+							placeholder="Cari feedback berdasarkan nama, email, perusahaan, atau pesan..."
+							class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+						/>
+					</div>
+				</div>
+
+				<!-- Filter Buttons -->
+				<div class="flex flex-wrap gap-2">
+					<!-- Display Status Filter -->
+					<div class="relative">
+						<select 
+							bind:value={selectedDisplayStatus}
+							class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[180px]"
+						>
+							<option value="all">Semua Status Tampilan</option>
+							<option value="displayed">Ditampilkan</option>
+							<option value="hidden">Disembunyikan</option>
+						</select>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+							<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
 						</div>
-						
-						<!-- Actions -->
-						<div class="flex flex-col gap-2">
-							<button 
-								on:click={() => openDetailModal(feedback)}
-								class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-								title="View Details"
-							>
-								<Eye class="w-4 h-4" />
-							</button>
-							
-							{#if !feedback.admin_response}
-								<button 
-									on:click={() => openResponseModal(feedback)}
-									class="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded-lg transition-colors"
-									title="Add Response"
-								>
-									<Reply class="w-4 h-4" />
-								</button>
-							{/if}
-							
-							{#if feedback.status === 'pending'}
-								<button 
-									on:click={() => updateStatus(feedback.feedback_id, 'approved')}
-									class="text-green-600 hover:text-green-900 p-2 hover:bg-green-50 rounded-lg transition-colors"
-									title="Approve"
-								>
-									<CheckCircle class="w-4 h-4" />
-								</button>
-								<button 
-									on:click={() => updateStatus(feedback.feedback_id, 'rejected')}
-									class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
-									title="Reject"
-								>
-									<XCircle class="w-4 h-4" />
-								</button>
-							{/if}
-							
-							<button 
-								on:click={() => toggleFeatured(feedback.feedback_id)}
-								class="text-yellow-600 hover:text-yellow-900 p-2 hover:bg-yellow-50 rounded-lg transition-colors"
-								title={feedback.is_featured ? 'Remove from Featured' : 'Add to Featured'}
-							>
-								<Star class="w-4 h-4 {feedback.is_featured ? 'fill-current' : ''}" />
-							</button>
-							
-							<button 
-								on:click={() => deleteFeedback(feedback.feedback_id)}
-								class="text-red-600 hover:text-red-900 p-2 hover:bg-red-50 rounded-lg transition-colors"
-								title="Delete"
-							>
-								<Trash2 class="w-4 h-4" />
-							</button>
+					</div>
+
+					<!-- Read Status Filter -->
+					<div class="relative">
+						<select 
+							bind:value={selectedReadStatus}
+							class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
+						>
+							<option value="all">Semua Status Baca</option>
+							<option value="read">Sudah Dibaca</option>
+							<option value="unread">Belum Dibaca</option>
+						</select>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+							<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+						</div>
+					</div>
+
+					<!-- Sort Filter -->
+					<div class="relative">
+						<select 
+							bind:value={sortBy}
+							class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[140px]"
+						>
+							<option value="recent">Terbaru</option>
+							<option value="oldest">Terlama</option>
+							<option value="name">Nama A-Z</option>
+						</select>
+						<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+							<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
 						</div>
 					</div>
 				</div>
-			{/each}
-		</div>
-		
-		{#if filteredFeedbacks.length === 0}
-			<div class="text-center py-12">
-				<MessageSquare class="mx-auto h-12 w-12 text-gray-400" />
-				<h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada feedback</h3>
-				<p class="mt-1 text-sm text-gray-500">
-					{searchQuery ? 'Tidak ada feedback yang sesuai dengan pencarian.' : 'Belum ada feedback dari client.'}
-				</p>
 			</div>
-		{/if}
-	</div>
+		</div>
+
+		<!-- Feedback Table -->
+		<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+			{#if filteredFeedbacks.length === 0}
+				<div class="text-center py-12 px-4">
+					<MessageSquare class="w-12 h-12 text-gray-400 mx-auto mb-3" />
+					<p class="text-gray-600 font-medium">Tidak ada feedback yang ditemukan</p>
+					<p class="text-sm text-gray-500 mt-1">Coba ubah filter atau kata kunci pencarian Anda</p>
+				</div>
+			{:else}
+				<div class="overflow-x-auto">
+					<table class="w-full">
+						<thead class="bg-gray-50 border-b border-gray-200">
+							<tr>
+								<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+									Visitor
+								</th>
+								<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+									Pesan
+								</th>
+								<th class="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+									Tanggal
+								</th>
+								<th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+									Status
+								</th>
+								<th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+									Aksi
+								</th>
+							</tr>
+						</thead>
+						<tbody class="bg-white divide-y divide-gray-200">
+							{#each filteredFeedbacks as feedback (feedback.feedback_id)}
+								<tr class="hover:bg-gray-50 transition-colors {feedback.is_read === 0 ? 'bg-blue-50' : ''}">
+									<!-- Visitor Info -->
+									<td class="px-4 py-4">
+										<div class="flex items-start gap-3">
+											<div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+												<User class="w-5 h-5 text-blue-600" />
+											</div>
+											<div class="min-w-0">
+												<p class="font-medium text-gray-900 truncate">{feedback.visitor_name}</p>
+												<p class="text-sm text-gray-600 truncate">{feedback.visitor_email}</p>
+												{#if feedback.company_name}
+													<p class="text-xs text-gray-500 truncate mt-0.5">{feedback.company_name}</p>
+												{/if}
+												{#if feedback.is_read === 0}
+													<span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded">
+														<MailIcon class="w-3 h-3" />
+														Baru
+													</span>
+												{/if}
+											</div>
+										</div>
+									</td>
+
+									<!-- Message -->
+									<td class="px-4 py-4">
+										<p class="text-sm text-gray-900 line-clamp-2">
+											{getShortMessage(feedback.message, 150)}
+										</p>
+										<button
+											onclick={() => viewDetail(feedback)}
+											class="text-sm text-blue-600 hover:text-blue-700 mt-1 hover:underline"
+										>
+											Lihat detail
+										</button>
+									</td>
+
+									<!-- Date -->
+									<td class="px-4 py-4">
+										<div class="flex items-center gap-2 text-sm text-gray-600">
+											<Calendar class="w-4 h-4" />
+											{formatDate(feedback.created_at)}
+										</div>
+									</td>
+
+									<!-- Status -->
+									<td class="px-4 py-4">
+										<div class="flex flex-col items-center gap-2">
+											<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium {feedback.is_displayed === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+												{#if feedback.is_displayed === 1}
+													<Eye class="w-3 h-3" />
+													Tampil
+												{:else}
+													<EyeOff class="w-3 h-3" />
+													Sembunyi
+												{/if}
+											</span>
+										</div>
+									</td>
+
+									<!-- Actions -->
+									<td class="px-4 py-4">
+										<div class="flex items-center justify-center gap-2">
+											<!-- Toggle Display -->
+											<button
+												onclick={() => toggleDisplay(feedback.feedback_id)}
+												class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+												title={feedback.is_displayed === 1 ? 'Sembunyikan' : 'Tampilkan'}
+											>
+												{#if feedback.is_displayed === 1}
+													<EyeOff class="w-4 h-4 text-gray-600" />
+												{:else}
+													<Eye class="w-4 h-4 text-green-600" />
+												{/if}
+											</button>
+
+											<!-- Toggle Read -->
+											<button
+												onclick={() => toggleRead(feedback.feedback_id)}
+												class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+												title={feedback.is_read === 1 ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'}
+											>
+												{#if feedback.is_read === 1}
+													<XCircle class="w-4 h-4 text-gray-600" />
+												{:else}
+													<CheckCircle class="w-4 h-4 text-blue-600" />
+												{/if}
+											</button>
+
+											<!-- Delete -->
+											<button
+												onclick={() => confirmDelete(feedback)}
+												class="p-2 hover:bg-red-50 rounded-lg transition-colors"
+												title="Hapus"
+											>
+												<Trash2 class="w-4 h-4 text-red-600" />
+											</button>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Result Count -->
+				<div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+					<p class="text-sm text-gray-600">
+						Menampilkan <span class="font-medium">{filteredFeedbacks.length}</span> dari <span class="font-medium">{feedbacks.length}</span> feedback
+					</p>
+				</div>
+			{/if}
+		</div>
+	{/if}
 </div>
 
 <!-- Detail Modal -->
 {#if isDetailModalOpen && selectedFeedback}
-	<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-		<div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-			<div class="mt-3">
-				<!-- Modal Header -->
-				<div class="flex items-center justify-between mb-6">
-					<h3 class="text-lg font-medium text-gray-900">Detail Feedback</h3>
-					<button 
-						on:click={closeDetailModal}
-						class="text-gray-400 hover:text-gray-600"
-					>
-						<span class="sr-only">Close</span>
-						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</button>
-				</div>
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4" 
+		style="background-color: rgba(0, 0, 0, 0.3);"
+		onclick={closeDetailModal}
+	>
+		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div 
+			class="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" 
+			onclick={(e) => e.stopPropagation()}
+		>
+			<!-- Modal Header -->
+			<div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+				<h3 class="text-xl font-bold text-gray-900">Detail Feedback</h3>
+				<button 
+					onclick={closeDetailModal}
+					class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+				>
+					<XCircle class="w-5 h-5 text-gray-600" />
+				</button>
+			</div>
 
-				<!-- Modal Content -->
-				<div class="space-y-6">
-					<!-- Client Info -->
-					<div class="bg-gray-50 rounded-lg p-4">
-						<h4 class="font-medium text-gray-900 mb-2">Informasi Client</h4>
-						<div class="grid grid-cols-2 gap-4 text-sm">
-							<div>
-								<span class="text-gray-600">Nama:</span>
-								<span class="font-medium text-gray-900 ml-2">{selectedFeedback.client_name}</span>
-							</div>
-							<div>
-								<span class="text-gray-600">Email:</span>
-								<span class="font-medium text-gray-900 ml-2">{selectedFeedback.client_email}</span>
-							</div>
-							<div>
-								<span class="text-gray-600">Perusahaan:</span>
-								<span class="font-medium text-gray-900 ml-2">{selectedFeedback.client_company}</span>
-							</div>
-							{#if selectedFeedback.project_name}
-								<div>
-									<span class="text-gray-600">Project:</span>
-									<span class="font-medium text-gray-900 ml-2">{selectedFeedback.project_name}</span>
-								</div>
-							{/if}
+			<!-- Modal Body -->
+			<div class="p-6 space-y-6">
+				<!-- Visitor Info -->
+				<div class="bg-gray-50 rounded-lg p-4">
+					<h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+						<User class="w-4 h-4" />
+						Informasi Pengunjung
+					</h4>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div>
+							<p class="text-xs text-gray-500 mb-1">Nama</p>
+							<p class="text-sm font-medium text-gray-900">{selectedFeedback.visitor_name}</p>
+						</div>
+						<div>
+							<p class="text-xs text-gray-500 mb-1">Email</p>
+							<p class="text-sm font-medium text-gray-900">{selectedFeedback.visitor_email}</p>
+						</div>
+						<div>
+							<p class="text-xs text-gray-500 mb-1">Perusahaan</p>
+							<p class="text-sm font-medium text-gray-900">{selectedFeedback.company_name || '-'}</p>
+						</div>
+						<div>
+							<p class="text-xs text-gray-500 mb-1">Tanggal</p>
+							<p class="text-sm font-medium text-gray-900">{formatDate(selectedFeedback.created_at)}</p>
+						</div>
+						<div class="md:col-span-2">
+							<p class="text-xs text-gray-500 mb-1">IP Address</p>
+							<p class="text-sm font-medium text-gray-900">{selectedFeedback.ip_address || '-'}</p>
 						</div>
 					</div>
+				</div>
 
-					<!-- Feedback Content -->
+				<!-- Message -->
+				<div>
+					<h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+						<MessageSquare class="w-4 h-4" />
+						Pesan
+					</h4>
+					<div class="bg-white border border-gray-200 rounded-lg p-4">
+						<p class="text-gray-900 whitespace-pre-wrap">{selectedFeedback.message}</p>
+					</div>
+				</div>
+
+				<!-- User Agent -->
+				{#if selectedFeedback.user_agent}
 					<div>
-						<div class="flex items-center justify-between mb-4">
-							<h4 class="font-medium text-gray-900">{selectedFeedback.feedback_title}</h4>
-							<div class="flex items-center gap-1">
-								{#each getRatingStars(selectedFeedback.rating) as filled}
-									<Star class="w-5 h-5 {filled ? 'text-yellow-400 fill-current' : 'text-gray-300'}" />
-								{/each}
-							</div>
+						<h4 class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+							<Monitor class="w-4 h-4" />
+							Browser / Device
+						</h4>
+						<div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+							<p class="text-xs text-gray-600 font-mono break-all">{selectedFeedback.user_agent}</p>
 						</div>
-						<p class="text-gray-700 whitespace-pre-wrap">{selectedFeedback.feedback_message}</p>
+					</div>
+				{/if}
+
+				<!-- Status -->
+				<div class="flex items-center gap-4">
+					<div class="flex items-center gap-2">
+						<span class="text-sm text-gray-600">Status Tampilan:</span>
+						<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium {selectedFeedback.is_displayed === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}">
+							{#if selectedFeedback.is_displayed === 1}
+								<Eye class="w-3 h-3" />
+								Ditampilkan
+							{:else}
+								<EyeOff class="w-3 h-3" />
+								Disembunyikan
+							{/if}
+						</span>
 					</div>
 
-					<!-- Admin Response -->
-					{#if selectedFeedback.admin_response}
-						<div class="bg-blue-50 rounded-lg p-4">
-							<h4 class="font-medium text-blue-900 mb-2">Response Admin</h4>
-							<p class="text-blue-800 whitespace-pre-wrap">{selectedFeedback.admin_response}</p>
-							<div class="mt-2 text-sm text-blue-600">
-								Responded by {selectedFeedback.responded_by} on {formatDate(selectedFeedback.responded_at)}
-							</div>
-						</div>
-					{/if}
-
-					<!-- Meta Info -->
-					<div class="border-t pt-4">
-						<div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
-							<div>Type: <span class="font-medium">{getTypeLabel(selectedFeedback.feedback_type)}</span></div>
-							<div>Status: <span class="font-medium">{selectedFeedback.status}</span></div>
-							<div>Created: <span class="font-medium">{formatDate(selectedFeedback.created_at)}</span></div>
-							<div>Updated: <span class="font-medium">{formatDate(selectedFeedback.updated_at)}</span></div>
-						</div>
+					<div class="flex items-center gap-2">
+						<span class="text-sm text-gray-600">Status Baca:</span>
+						<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium {selectedFeedback.is_read === 1 ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}">
+							{#if selectedFeedback.is_read === 1}
+								<CheckCircle class="w-3 h-3" />
+								Sudah Dibaca
+							{:else}
+								<MailIcon class="w-3 h-3" />
+								Belum Dibaca
+							{/if}
+						</span>
 					</div>
 				</div>
+			</div>
 
-				<!-- Modal Actions -->
-				<div class="flex items-center justify-end gap-3 mt-8">
-					<button 
-						on:click={closeDetailModal}
-						class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+			<!-- Modal Footer -->
+			<div class="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+				<div class="flex items-center gap-2">
+					<button
+						onclick={() => {
+							toggleDisplay(selectedFeedback.feedback_id);
+							selectedFeedback = { ...selectedFeedback, is_displayed: selectedFeedback.is_displayed === 1 ? 0 : 1 };
+						}}
+						class="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
 					>
-						Tutup
+						{selectedFeedback.is_displayed === 1 ? 'Sembunyikan' : 'Tampilkan'}
 					</button>
-					{#if !selectedFeedback.admin_response}
-						<button 
-							on:click={() => { closeDetailModal(); openResponseModal(selectedFeedback); }}
-							class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-						>
-							Add Response
-						</button>
-					{/if}
+
+					<button
+						onclick={() => {
+							confirmDelete(selectedFeedback);
+							closeDetailModal();
+						}}
+						class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+					>
+						Hapus
+					</button>
 				</div>
+
+				<button
+					onclick={closeDetailModal}
+					class="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+				>
+					Tutup
+				</button>
 			</div>
 		</div>
 	</div>
 {/if}
 
-<!-- Response Modal -->
-{#if isResponseModalOpen && selectedFeedback}
-	<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-		<div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white">
-			<div class="mt-3">
-				<!-- Modal Header -->
-				<div class="flex items-center justify-between mb-6">
-					<h3 class="text-lg font-medium text-gray-900">Response untuk {selectedFeedback.client_name}</h3>
-					<button 
-						on:click={closeResponseModal}
-						class="text-gray-400 hover:text-gray-600"
-					>
-						<span class="sr-only">Close</span>
-						<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+<!-- Delete Confirmation Modal -->
+{#if showDeleteModal && feedbackToDelete}
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<div 
+		class="fixed inset-0 flex items-center justify-center z-50 p-4"
+		style="background-color: rgba(0, 0, 0, 0.3);"
+		onclick={handleModalClick}
+		onkeydown={handleKeydown}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="delete-modal-title"
+		tabindex="-1"
+	>
+		<div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
+			<!-- Modal Header -->
+			<div class="flex items-center justify-between p-6 border-b border-gray-200">
+				<div class="flex items-center gap-3">
+					<div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+						<Trash2 class="w-5 h-5 text-red-600" />
+					</div>
+					<div>
+						<h3 id="delete-modal-title" class="text-lg font-semibold text-gray-900">Konfirmasi Hapus</h3>
+						<p class="text-sm text-gray-500">Tindakan ini tidak dapat dibatalkan</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal Body -->
+			<div class="p-6">
+				<div class="mb-4">
+					<p class="text-gray-700 mb-3">
+						Apakah Anda yakin ingin menghapus feedback ini?
+					</p>
+					<div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
+						<div class="flex items-start gap-3">
+							<div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+								<User class="w-5 h-5 text-blue-600" />
+							</div>
+							<div class="flex-1 min-w-0">
+								<h4 class="font-medium text-gray-900 truncate">
+									{feedbackToDelete.visitor_name}
+								</h4>
+								<p class="text-sm text-gray-500 truncate">
+									{feedbackToDelete.visitor_email}
+								</p>
+								{#if feedbackToDelete.company_name}
+									<p class="text-xs text-gray-400 truncate mt-1">
+										{feedbackToDelete.company_name}
+									</p>
+								{/if}
+								<p class="text-sm text-gray-600 mt-2 line-clamp-2">
+									{feedbackToDelete.message}
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+					<div class="flex items-start gap-2">
+						<svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
 						</svg>
-					</button>
+						<div>
+							<p class="text-sm font-medium text-yellow-800">Peringatan!</p>
+							<p class="text-sm text-yellow-700">
+								Data feedback akan dihapus secara permanen dari database.
+							</p>
+						</div>
+					</div>
 				</div>
+			</div>
 
-				<!-- Original Feedback -->
-				<div class="bg-gray-50 rounded-lg p-4 mb-6">
-					<h4 class="font-medium text-gray-900 mb-2">{selectedFeedback.feedback_title}</h4>
-					<p class="text-gray-700 text-sm">{selectedFeedback.feedback_message}</p>
-				</div>
-
-				<!-- Response Form -->
-				<div>
-					<label for="admin_response" class="block text-sm font-medium text-gray-700 mb-2">Response Admin</label>
-					<textarea
-						id="admin_response"
-						bind:value={adminResponse}
-						placeholder="Tulis response untuk feedback ini..."
-						rows="6"
-						class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
-					></textarea>
-				</div>
-
-				<!-- Modal Actions -->
-				<div class="flex items-center justify-end gap-3 mt-6">
-					<button 
-						on:click={closeResponseModal}
-						class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-					>
-						Batal
-					</button>
-					<button 
-						on:click={submitResponse}
-						disabled={!adminResponse.trim()}
-						class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-					>
-						Kirim Response
-					</button>
-				</div>
+			<!-- Modal Footer -->
+			<div class="flex gap-3 px-6 py-4 bg-gray-50 rounded-b-xl">
+				<button
+					type="button"
+					onclick={cancelDelete}
+					class="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+					disabled={deleting}
+				>
+					Batal
+				</button>
+				<button
+					type="button"
+					onclick={executeDelete}
+					disabled={deleting}
+					class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				>
+					{#if deleting}
+						<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+						Menghapus...
+					{:else}
+						<Trash2 class="w-4 h-4" />
+						Hapus Feedback
+					{/if}
+				</button>
 			</div>
 		</div>
 	</div>
@@ -851,3 +838,4 @@
 		overflow: hidden;
 	}
 </style>
+
