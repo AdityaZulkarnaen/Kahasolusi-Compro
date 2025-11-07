@@ -1,7 +1,7 @@
 // API Service utility for CRUD operations
 import { browser } from '$app/environment';
 
-const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api' : '';
+const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api' : '';
 
 // Generic API handler with error handling
 async function apiRequest(url, options = {}) {
@@ -382,6 +382,42 @@ export const contactCTAAPI = {
     // Delete contact CTA
     async delete(id) {
         return await apiRequest(`/contact-cta/${id}`, {
+            method: 'DELETE'
+        });
+    }
+};
+
+// Feedback API functions
+export const feedbackAPI = {
+    // Get all feedback
+    async get() {
+        return await apiRequest('/feedback');
+    },
+
+    // Create feedback
+    async create(feedbackData) {
+        return await apiRequest('/feedback', {
+            method: 'POST',
+            body: JSON.stringify(feedbackData)
+        });
+    },
+
+    // Get feedback by ID
+    async getById(id) {
+        return await apiRequest(`/feedback/${id}`);
+    },
+
+    // Update feedback (is_displayed and is_read)
+    async update(id, feedbackData) {
+        return await apiRequest(`/feedback/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(feedbackData)
+        });
+    },
+
+    // Delete feedback
+    async delete(id) {
+        return await apiRequest(`/feedback/${id}`, {
             method: 'DELETE'
         });
     }

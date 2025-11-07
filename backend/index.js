@@ -16,6 +16,7 @@ import sdmRoutes from './routes/sdm.js'
 import companyRoutes from './routes/company.js'
 import multimediaRoutes from './routes/multimedia.js'
 import contactCTARoutes from './routes/contact-cta.js'
+import feedbackRoutes from './routes/feedback.js'
 import healthRoutes from './routes/health.js'
 import uploadRoutes from './routes/upload.js'
 
@@ -55,6 +56,7 @@ app.route('/api/sdm', sdmRoutes)
 app.route('/api/company', companyRoutes)
 app.route('/api/multimedia', multimediaRoutes)
 app.route('/api/contact-cta', contactCTARoutes)
+app.route('/api/feedback', feedbackRoutes)
 app.route('/api/health', healthRoutes)
 app.route('/api/upload', uploadRoutes)
 
