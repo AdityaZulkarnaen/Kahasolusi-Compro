@@ -2,19 +2,44 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import loginBg from '$lib/assets/images/login_bg.png';
+	import { authStore } from '$lib/stores/authStore.js';
+	import { authAPI } from '$lib/api.js';
 	
 	let username = '';
 	let password = '';
 	let rememberMe = false;
+	let loading = false;
+	let error = '';
 	
-	function handleSubmit() {
-		// Handle login logic here
-		console.log('Login attempt:', { username, password, rememberMe });
-		
-		// Simulasi login berhasil - redirect ke dashboard
-		// Dalam implementasi nyata, Anda perlu memvalidasi kredensial terlebih dahulu
-		if (username && password) {
+	// Check if already authenticated
+	onMount(() => {
+		if ($authStore.isAuthenticated) {
 			goto('/dashboard');
+		}
+	});
+	
+	async function handleSubmit() {
+		// Clear previous error
+		error = '';
+		loading = true;
+		
+		try {
+			// Call login API
+			const response = await authAPI.login(username, password);
+			
+			// Store auth data in localStorage
+			authStore.login(response.token, response.user);
+			
+			// Set cookie for server-side auth (expires in 7 days)
+			document.cookie = `auth_token=${response.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+			
+			// Redirect to dashboard
+			goto('/dashboard');
+		} catch (err) {
+			error = err.message || 'Login failed. Please check your credentials.';
+			console.error('Login error:', err);
+		} finally {
+			loading = false;
 		}
 	}
 </script>
@@ -39,6 +64,13 @@
 			
 			<!-- Login Form -->
 			<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+				<!-- Error Message -->
+				{#if error}
+					<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+						{error}
+					</div>
+				{/if}
+				
 				<!-- Username Input -->
 				<div>
 					<label for="username" class="block text-sm font-medium text-gray-700 mb-2">
@@ -51,6 +83,7 @@
 						placeholder="Masukkan username"
 						class="input-field w-full px-4 py-3 border-0 rounded-lg focus:ring-2 focus:ring-[#176684] outline-none transition-all duration-200 bg-gray-100 text-gray-900 placeholder-gray-500 shadow-inner"
 						required
+						disabled={loading}
 					/>
 				</div>
 				
@@ -66,6 +99,7 @@
 						placeholder="Masukkan password"
 						class="input-field w-full px-4 py-3 border-0 rounded-lg focus:ring-2 focus:ring-[#176684] outline-none transition-all duration-200 bg-gray-100 text-gray-900 placeholder-gray-500 shadow-inner"
 						required
+						disabled={loading}
 					/>
 				</div>
 				
@@ -76,6 +110,7 @@
 						id="remember"
 						bind:checked={rememberMe}
 						class="w-4 h-4 text-[#176684] bg-gray-100 border-gray-300 rounded focus:ring-[#176684] focus:ring-2"
+						disabled={loading}
 					/>
 					<label for="remember" class="ml-2 text-sm text-gray-600">
 						Remember Me
@@ -85,9 +120,20 @@
 				<!-- Submit Button -->
 				<button
 					type="submit"
-					class="w-full bg-[#176684] hover:bg-[#0f5469] text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#176684] focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+					disabled={loading}
+					class="w-full bg-[#176684] hover:bg-[#0f5469] text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#176684] focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
 				>
-					Sign In
+					{#if loading}
+						<span class="flex items-center justify-center gap-2">
+							<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+							</svg>
+							Signing In...
+						</span>
+					{:else}
+						Sign In
+					{/if}
 				</button>
 			</form>
 

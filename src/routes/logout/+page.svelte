@@ -1,12 +1,25 @@
-<script>
+tidak<script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { authStore } from '$lib/stores/authStore.js';
+	import { authAPI } from '$lib/api.js';
 	
-	onMount(() => {
-		// Simulasi logout - clear session dan redirect ke homepage
-		// Dalam implementasi nyata, Anda akan menghapus token/session
-		console.log('User logged out');
-		goto('/');
+	onMount(async () => {
+		try {
+			// Call logout API
+			await authAPI.logout();
+		} catch (error) {
+			console.error('Logout API error:', error);
+		}
+		
+		// Clear auth store
+		authStore.logout();
+		
+		// Clear cookie
+		document.cookie = 'auth_token=; path=/; max-age=0; SameSite=Strict';
+		
+		// Redirect to login
+		goto('/login');
 	});
 </script>
 

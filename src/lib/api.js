@@ -1,22 +1,30 @@
 // API Service utility for CRUD operations
 import { browser } from '$app/environment';
 
-const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api' : '';
+const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api' : '';
 
 // Generic API handler with error handling
 async function apiRequest(url, options = {}) {
     try {
+        // Add authorization header if token exists
+        const token = browser ? localStorage.getItem('auth_token') : null;
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const response = await fetch(`${API_BASE_URL}${url}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
+            headers,
             ...options
         });
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`);
         }
 
         return await response.json();
@@ -25,6 +33,26 @@ async function apiRequest(url, options = {}) {
         throw error;
     }
 }
+
+// Auth API functions
+export const authAPI = {
+    async login(username, password) {
+        return await apiRequest('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        });
+    },
+    
+    async verify() {
+        return await apiRequest('/auth/verify');
+    },
+    
+    async logout() {
+        return await apiRequest('/auth/logout', {
+            method: 'POST'
+        });
+    }
+};
 
 // Portfolio API functions
 export const portfolioAPI = {

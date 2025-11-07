@@ -19,6 +19,7 @@ import contactCTARoutes from './routes/contact-cta.js'
 import feedbackRoutes from './routes/feedback.js'
 import healthRoutes from './routes/health.js'
 import uploadRoutes from './routes/upload.js'
+import authRoutes from './routes/auth.js'
 
 const app = new Hono()
 
@@ -49,6 +50,7 @@ app.get('/', (c) => {
 })
 
 // API Routes
+app.route('/api/auth', authRoutes)
 app.route('/api/portfolio', portfolioRoutes)
 app.route('/api/categories', categoryRoutes)
 app.route('/api/technologies', technologyRoutes)

@@ -1,7 +1,9 @@
 ﻿<script>
 	import "../../app.css";
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import kahaLogo from '$lib/assets/images/kaha-solution-logo.png';
+	import { authStore } from '$lib/stores/authStore.js';
 	import { 
 		Users, 
 		FolderOpen, 
@@ -16,7 +18,7 @@
 		Phone
 	} from 'lucide-svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 	let isMobileMenuOpen = $state(false);
 
 	function toggleMobileMenu() {
@@ -31,6 +33,11 @@
 	function isActive(path) {
 		return $page.url.pathname === path || 
 			   ($page.url.pathname.startsWith(path + '/') && path !== '/dashboard');
+	}
+	
+	// Logout function
+	function handleLogout() {
+		goto('/logout');
 	}
 </script>
 
@@ -152,7 +159,10 @@
 		</nav>
 		
 		<div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
-			<button class="flex items-center gap-3 w-full px-4 py-3 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+			<button 
+				onclick={handleLogout}
+				class="flex items-center gap-3 w-full px-4 py-3 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+			>
 				<LogOut class="w-5 h-5" />
 				<span class="font-medium">Logout</span>
 			</button>

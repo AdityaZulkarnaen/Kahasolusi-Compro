@@ -9,17 +9,30 @@
 	} from 'lucide-svelte';
 	import { sdmAPI, portfolioAPI, technologiesAPI, multimediaAPI } from '$lib/api.js';
 	
-	// Stats data
-	let stats = {
+	let { data } = $props();
+	
+	// Get user initials from username
+	function getUserInitials(username) {
+		if (!username) return 'U';
+		
+		const words = username.trim().split(' ');
+		if (words.length === 1) {
+			return username.substring(0, 2).toUpperCase();
+		}
+		return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+	}
+	
+	// Stats data (using $state for reactivity in runes mode)
+	let stats = $state({
 		sdm: 0,
 		portfolio: 0,
 		technologies: 0,
 		multimedia: 0
-	};
-	let loading = true;
+	});
+	let loading = $state(true);
 	
-	// Stats cards configuration
-	$: statsCards = [
+	// Stats cards configuration (using $derived for runes mode)
+	let statsCards = $derived([
 		{
 			title: 'SDM',
 			value: stats.sdm.toString(),
@@ -48,7 +61,7 @@
 			bgColor: 'bg-red-50',
 			iconBg: 'bg-red-500'
 		}
-	];
+	]);
 	
 	// Load dashboard statistics
 	onMount(async () => {
@@ -120,10 +133,10 @@
 			<!-- User Profile -->
 			<div class="flex items-center gap-3">
 				<div class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500 rounded-full flex items-center justify-center">
-					<span class="text-white font-medium text-sm">LH</span>
+					<span class="text-white font-medium text-sm">{getUserInitials(data?.user?.username || 'User')}</span>
 				</div>
 				<div class="text-right hidden sm:block">
-					<p class="font-medium text-gray-800">Lilis Haria</p>
+					<p class="font-medium text-gray-800">{data?.user?.username || 'User'}</p>
 					<p class="text-sm text-gray-500">Admin</p>
 				</div>
 			</div>
