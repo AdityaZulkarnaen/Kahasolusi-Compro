@@ -1,7 +1,7 @@
 // API Service utility for CRUD operations
 import { browser } from '$app/environment';
 
-const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api' : '';
+const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api' : '';
 
 // Generic API handler with error handling
 async function apiRequest(url, options = {}) {
