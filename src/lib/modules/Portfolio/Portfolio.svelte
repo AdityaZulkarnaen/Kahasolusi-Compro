@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
     import { ChevronLeft, ChevronRight } from 'lucide-svelte';
-    import MapIndonesia from '$lib/assets/images/map_indonesia.png';
+    import IndonesiaMap from '$lib/components/IndonesiaMap.svelte';
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import { projects, getProjectsByCategory } from '$lib/data/projects.js';
@@ -208,13 +208,9 @@
                 <div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
             </div>
             
-            <!-- Indonesia Map -->
-            <div class="relative max-w-6xl mx-auto mb-12">
-                <img 
-                    src={MapIndonesia} 
-                    alt="Peta Indonesia" 
-                    class="w-full h-auto max-h-[500px] object-contain"
-                />
+            <!-- Indonesia Map with Leaflet -->
+            <div class="relative max-w-6xl mx-auto mb-12" style="z-index: 1;">
+                <IndonesiaMap />
             </div>
         </div>
     </section>
