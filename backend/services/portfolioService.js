@@ -7,13 +7,10 @@ export class PortfolioService {
     
     let query = `
       SELECT p.*, 
-             GROUP_CONCAT(DISTINCT pc.category_name) as categories,
-             GROUP_CONCAT(DISTINCT t.tech_name) as technologies
+             GROUP_CONCAT(DISTINCT pc.category_name) as categories
       FROM portfolio p
       LEFT JOIN portfolio_categories pcat ON p.portfolio_id = pcat.portfolio_id
       LEFT JOIN project_categories pc ON pcat.category_id = pc.category_id
-      LEFT JOIN portfolio_technologies pt ON p.portfolio_id = pt.portfolio_id
-      LEFT JOIN technologies t ON pt.tech_id = t.tech_id
       WHERE p.is_active = 1
     `;
     
@@ -35,24 +32,53 @@ export class PortfolioService {
       params.push(filters.limit);
     }
     
-    return await db.all(query, params);
+    const portfolios = await db.all(query, params);
+    
+    // Get technologies for each portfolio
+    for (const portfolio of portfolios) {
+      const technologies = await db.all(`
+        SELECT t.tech_id, t.tech_name, t.logo_url, t.icon_url
+        FROM technologies t
+        INNER JOIN portfolio_technologies pt ON t.tech_id = pt.tech_id
+        WHERE pt.portfolio_id = ? AND t.is_active = 1
+        ORDER BY t.sort_order
+      `, [portfolio.portfolio_id]);
+      
+      portfolio.technologies = JSON.stringify(technologies);
+    }
+    
+    return portfolios;
   }
 
   static async getById(id) {
     const db = getDatabase();
     
-    return await db.get(`
+    const portfolio = await db.get(`
       SELECT p.*, 
-             GROUP_CONCAT(DISTINCT pc.category_name) as categories,
-             GROUP_CONCAT(DISTINCT t.tech_name) as technologies
+             GROUP_CONCAT(DISTINCT pc.category_name) as categories
       FROM portfolio p
       LEFT JOIN portfolio_categories pcat ON p.portfolio_id = pcat.portfolio_id
       LEFT JOIN project_categories pc ON pcat.category_id = pc.category_id
-      LEFT JOIN portfolio_technologies pt ON p.portfolio_id = pt.portfolio_id
-      LEFT JOIN technologies t ON pt.tech_id = t.tech_id
       WHERE p.portfolio_id = ? AND p.is_active = 1
       GROUP BY p.portfolio_id
     `, [id]);
+    
+    if (!portfolio) {
+      return null;
+    }
+    
+    // Get technologies for this portfolio
+    const technologies = await db.all(`
+      SELECT t.tech_id, t.tech_name, t.logo_url, t.icon_url
+      FROM technologies t
+      INNER JOIN portfolio_technologies pt ON t.tech_id = pt.tech_id
+      WHERE pt.portfolio_id = ? AND t.is_active = 1
+      ORDER BY t.sort_order
+    `, [id]);
+    
+    portfolio.technologies = JSON.stringify(technologies);
+    
+    return portfolio;
   }
 
   static async create(data) {
@@ -65,14 +91,16 @@ export class PortfolioService {
       // Insert portfolio
       const result = await db.run(`
         INSERT INTO portfolio (
-          project_name, project_description, case_study, image_url, 
-          project_url, client_name, project_start_date, project_end_date, 
+          project_name, project_description, case_study, permasalahan, hasil,
+          image_url, project_url, client_name, project_start_date, project_end_date, 
           is_featured, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.project_name,
         data.project_description,
         data.case_study,
+        data.permasalahan || null,
+        data.hasil || '[]',
         data.image_url,
         data.project_url,
         data.client_name,
@@ -126,6 +154,7 @@ export class PortfolioService {
       await db.run(`
         UPDATE portfolio 
         SET project_name = ?, project_description = ?, case_study = ?, 
+            permasalahan = ?, hasil = ?,
             image_url = ?, project_url = ?, client_name = ?, 
             project_start_date = ?, project_end_date = ?, is_featured = ?, 
             updated_at = CURRENT_TIMESTAMP, updated_by = ?
@@ -134,6 +163,8 @@ export class PortfolioService {
         data.project_name,
         data.project_description,
         data.case_study,
+        data.permasalahan || null,
+        data.hasil || '[]',
         data.image_url,
         data.project_url,
         data.client_name,

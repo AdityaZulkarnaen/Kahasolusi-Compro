@@ -5,102 +5,102 @@
     import IndonesiaMap from '$lib/components/IndonesiaMap.svelte';
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
-    import { projects, getProjectsByCategory } from '$lib/data/projects.js';
-    import { feedbackAPI } from '$lib/api.js';
+    import { feedbackAPI, portfolioAPI, categoriesAPI } from '$lib/api.js';
     
     // Filter state
-    let selectedFilter = 'pemerintah';
+    let selectedFilter = $state('pemerintah');
     
     // Pagination state
-    let currentPage = 1;
+    let currentPage = $state(1);
     const itemsPerPage = 8;
     
+    // Data state
+    let portfolios = $state([]);
+    let categories = $state([]);
+    let feedbacks = $state([]);
+    let loading = $state(true);
+    let error = $state('');
+    
     // Feedback form state
-    let feedbackForm = {
+    let feedbackForm = $state({
         visitor_name: '',
         visitor_email: '',
         company_name: '',
         message: '',
         hide_name: false
-    };
-    let submitting = false;
-    let submitSuccess = false;
-    let submitError = '';
+    });
+    let submitting = $state(false);
+    let submitSuccess = $state(false);
+    let submitError = $state('');
     
     // Testimonial state
-    let currentTestimonialSet = 0;
-    const testimonialSets = [
-        [
-            {
-                id: 1,
-                text: "Sangat membantu! Cepat, dapat diandalkan, dan profesional. Kahasolusi membantu perusahaan kami untuk melakukan transformasi digital dengan mudah.",
-                name: "Sarah Mediana",
-                position: "CEO Alternative"
-            },
-            {
-                id: 2,
-                text: "Tim yang sangat responsif dan solusi yang diberikan sangat sesuai dengan kebutuhan bisnis kami. Highly recommended!",
-                name: "Ahmad Rizki",
-                position: "CTO Tech Corp"
-            },
-            {
-                id: 3,
-                text: "Pelayanan yang excellent dan hasil yang memuaskan. Kahasolusi benar-benar memahami kebutuhan digital transformation.",
-                name: "Linda Sari",
-                position: "Operations Manager"
-            }
-        ],
-        [
-            {
-                id: 4,
-                text: "Proyek berjalan sesuai timeline dan budget yang disepakati. Komunikasi yang baik sepanjang proses development.",
-                name: "Budi Santoso",
-                position: "IT Director"
-            },
-            {
-                id: 5,
-                text: "Solusi yang inovatif dan implementasi yang smooth. Tim Kahasolusi sangat professional dalam menangani project kami.",
-                name: "Maya Putri",
-                position: "Business Analyst"
-            },
-            {
-                id: 6,
-                text: "Kualitas hasil kerja yang tinggi dengan dukungan after-sales yang memuaskan. Pasti akan bekerjasama lagi di masa depan.",
-                name: "Rudi Hartono",
-                position: "General Manager"
-            }
-        ],
-        [
-            {
-                id: 7,
-                text: "Pendekatan yang sistematis dan metodologi yang jelas membuat project kami berjalan dengan lancar dari awal hingga akhir.",
-                name: "Siti Nurhaliza",
-                position: "Project Manager"
-            },
-            {
-                id: 8,
-                text: "User experience yang dibuat sangat user-friendly dan sesuai dengan ekspektasi end-user kami. Great job!",
-                name: "Andi Wijaya",
-                position: "UX Lead"
-            },
-            {
-                id: 9,
-                text: "Teknologi terdepan yang diimplementasikan membuat sistem kami menjadi lebih efisien dan scalable.",
-                name: "Dewi Lestari",
-                position: "Systems Architect"
-            }
-        ]
-    ];
+    let currentTestimonialSet = $state(0);
     
-    $: currentTestimonials = testimonialSets[currentTestimonialSet] || testimonialSets[0]; 
+    // Derived testimonials from database (group by 3)
+    let testimonialSets = $derived(() => {
+        const displayed = feedbacks.filter(f => f.is_displayed === 1 || f.is_displayed === true);
+        const sets = [];
+        for (let i = 0; i < displayed.length; i += 3) {
+            sets.push(displayed.slice(i, i + 3));
+        }
+        return sets.length > 0 ? sets : [[]];
+    });
+    
+    let currentTestimonials = $derived(testimonialSets()[currentTestimonialSet] || []);
     
     // Filtered projects 
-    $: filteredProjects = getProjectsByCategory(selectedFilter);
+    let filteredProjects = $derived(
+        portfolios.filter(project => {
+            if (!project.categories) return false;
+            return project.categories.toLowerCase().includes(selectedFilter.toLowerCase());
+        })
+    );
     
-    $: totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
-    $: startIndex = (currentPage - 1) * itemsPerPage;
-    $: endIndex = startIndex + itemsPerPage;
-    $: paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+    let totalPages = $derived(Math.ceil(filteredProjects.length / itemsPerPage));
+    let startIndex = $derived((currentPage - 1) * itemsPerPage);
+    let endIndex = $derived(startIndex + itemsPerPage);
+    let paginatedProjects = $derived(filteredProjects.slice(startIndex, endIndex));
+    
+    // Load data on mount
+    onMount(async () => {
+        await loadData();
+    });
+    
+    async function loadData() {
+        loading = true;
+        error = '';
+        try {
+            const [portfolioData, categoryData, feedbackResponse] = await Promise.all([
+                portfolioAPI.getAll().catch(() => []),
+                categoriesAPI.getAll().catch(() => []),
+                feedbackAPI.get().catch(() => ({ data: [] }))
+            ]);
+            
+            portfolios = Array.isArray(portfolioData) ? portfolioData : [];
+            categories = Array.isArray(categoryData) ? categoryData : [];
+            feedbacks = Array.isArray(feedbackResponse.data) ? feedbackResponse.data : [];
+            
+            console.log('Loaded feedbacks:', feedbacks);
+            console.log('Displayed feedbacks:', feedbacks.filter(f => f.is_displayed === 1 || f.is_displayed === true));
+            
+            // Set default filter to first category or 'pemerintah'
+            if (categories.length > 0) {
+                const defaultCategory = categories.find(cat => 
+                    cat.category_name.toLowerCase() === 'pemerintah'
+                );
+                if (defaultCategory) {
+                    selectedFilter = defaultCategory.category_name.toLowerCase();
+                } else {
+                    selectedFilter = categories[0].category_name.toLowerCase();
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load data:', err);
+            error = 'Gagal memuat data portfolio. Silakan coba lagi.';
+        } finally {
+            loading = false;
+        }
+    }
     
     function setFilter(filter) {
         selectedFilter = filter;
@@ -218,62 +218,103 @@
     <!-- Filter Section -->
     <section class="relative px-4 sm:px-6 lg:px-8 pb-16">
         <div class="max-w-7xl mx-auto">
-            <div class="flex flex-wrap justify-center gap-4 mb-16">
-                <button
-                    class="px-8 py-3 rounded-lg font-medium font-family-sans transition-all duration-300 min-w-[140px] text-sm
-                           {selectedFilter === 'akademik' 
-                             ? 'bg-[#0D4E6D] text-white shadow-md' 
-                             : 'bg-[#A5BCC7] text-[#0D4E6D] hover:bg-[#96b1be] border border-[#0D4E6D]'}"
-                    on:click={() => setFilter('akademik')}
-                >
-                    Akademik
-                </button>
-                <button
-                    class="px-8 py-3 rounded-lg font-medium font-family-sans transition-all duration-300 min-w-[140px] text-sm
-                           {selectedFilter === 'pemerintah' 
-                             ? 'bg-[#0D4E6D] text-white shadow-md' 
-                             : 'bg-[#A5BCC7] text-[#0D4E6D] hover:bg-[#96b1be] border border-[#0D4E6D]'}"
-                    on:click={() => setFilter('pemerintah')}
-                >
-                    Pemerintah
-                </button>
-                <button
-                    class="px-8 py-3 rounded-lg font-medium font-family-sans transition-all duration-300 min-w-[140px] text-sm
-                           {selectedFilter === 'swasta' 
-                             ? 'bg-[#0D4E6D] text-white shadow-md' 
-                             : 'bg-[#A5BCC7] text-[#0D4E6D] hover:bg-[#96b1be] border border-[#0D4E6D]'}"
-                    on:click={() => setFilter('swasta')}
-                >
-                    Swasta
-                </button>
-            </div>
+            {#if loading}
+                <!-- Loading skeleton for filters -->
+                <div class="flex flex-wrap justify-center gap-4 mb-16">
+                    {#each Array(3) as _}
+                        <div class="h-12 w-[140px] bg-gray-200 rounded-lg animate-pulse"></div>
+                    {/each}
+                </div>
+            {:else if error}
+                <div class="text-center text-red-600 mb-16">
+                    <p>{error}</p>
+                </div>
+            {:else}
+                <div class="flex flex-wrap justify-center gap-4 mb-16">
+                    {#each categories as category (category.category_id)}
+                        <button
+                            class="px-8 py-3 rounded-lg font-medium font-family-sans transition-all duration-300 min-w-[140px] text-sm
+                                   {selectedFilter === category.category_name.toLowerCase() 
+                                     ? 'bg-[#0D4E6D] text-white shadow-md' 
+                                     : 'bg-[#A5BCC7] text-[#0D4E6D] hover:bg-[#96b1be] border border-[#0D4E6D]'}"
+                            onclick={() => setFilter(category.category_name.toLowerCase())}
+                        >
+                            {category.category_name}
+                        </button>
+                    {/each}
+                </div>
+            {/if}
         </div>
     </section>
     
     <!-- Projects Grid Section -->
     <section class="relative px-4 sm:px-6 lg:px-8 pb-20">
         <div class="max-w-7xl mx-auto">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center mb-12">
-                {#each paginatedProjects as project (project.id)}
-                    <div in:fade={{ duration: 300, delay: 100 }}>
-                        <ProjectCard {project} />
-                    </div>
-                {/each}
-            </div>
-            
-            {#if filteredProjects.length === 0}
-                <div class="text-center py-16">
-                    <p class="text-gray-900 text-lg font-family-sans">
-                        Belum ada proyek untuk kategori {selectedFilter}.
-                    </p>
+            {#if loading}
+                <!-- Loading skeleton for projects -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center mb-12">
+                    {#each Array(8) as _}
+                        <div class="w-full max-w-sm">
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                <div class="h-48 bg-gray-200 animate-pulse"></div>
+                                <div class="p-6 space-y-3">
+                                    <div class="h-6 bg-gray-200 rounded animate-pulse"></div>
+                                    <div class="h-4 bg-gray-200 rounded animate-pulse"></div>
+                                    <div class="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            {:else if paginatedProjects.length === 0}
+                <div class="text-center py-20">
+                    <p class="text-gray-500 text-lg">Tidak ada project untuk kategori ini.</p>
+                </div>
+            {:else}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                    {#each paginatedProjects as project (project.portfolio_id)}
+                        <div in:fade={{ duration: 300, delay: 100 }} class="h-full flex">
+                            <ProjectCard project={{
+                                id: project.portfolio_id,
+                                title: project.project_name,
+                                description: project.project_description,
+                                category: project.categories ? project.categories.split(',')[0] : '',
+                                image: project.image_url ? `http://localhost:3001${project.image_url}` : '/images/project_example.png',
+                                link: project.project_url || '#',
+                                client: project.client_name,
+                                technologies: (() => {
+                                    try {
+                                        const techs = project.technologies ? JSON.parse(project.technologies) : [];
+                                        return techs.map(tech => ({
+                                            name: tech.tech_name,
+                                            image: tech.icon_url ? `http://localhost:3001${tech.icon_url}` : (tech.logo_url ? `http://localhost:3001${tech.logo_url}` : null)
+                                        }));
+                                    } catch (e) {
+                                        console.error('Error parsing technologies:', e);
+                                        return [];
+                                    }
+                                })(),
+                                problems: project.permasalahan ? [project.permasalahan] : [],
+                                results: (() => {
+                                    try {
+                                        return project.hasil ? JSON.parse(project.hasil) : [];
+                                    } catch (e) {
+                                        console.error('Error parsing hasil:', e);
+                                        return [];
+                                    }
+                                })(),
+                                images: project.image_url ? [{ url: `http://localhost:3001${project.image_url}`, alt: project.project_name }] : []
+                            }} />
+                        </div>
+                    {/each}
                 </div>
             {/if}
             
-            {#if filteredProjects.length > itemsPerPage}
+            {#if !loading && filteredProjects.length > itemsPerPage}
                 <div class="hidden sm:flex justify-center items-center gap-2 mt-8">
                     <button
                         class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
-                        on:click={prevPage}
+                        onclick={prevPage}
                         disabled={currentPage === 1}
                     >
                         <ChevronLeft class="w-5 h-5" />
@@ -286,7 +327,7 @@
                                    {currentPage === pageNumber 
                                      ? 'bg-[#0D4E6D] text-white' 
                                      : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
-                            on:click={() => goToPage(pageNumber)}
+                            onclick={() => goToPage(pageNumber)}
                         >
                             {pageNumber}
                         </button>
@@ -294,7 +335,7 @@
                     
                     <button
                         class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
-                        on:click={nextPage}
+                        onclick={nextPage}
                         disabled={currentPage === totalPages}
                     >
                         <ChevronRight class="w-5 h-5" />
@@ -338,7 +379,7 @@
             
             <!-- Testimonial Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                {#each currentTestimonials as testimonial, index (testimonial.id)}
+                {#each currentTestimonials as testimonial, index (testimonial.feedback_id)}
                     <div class="bg-white rounded-xl p-6 shadow-lg relative flex flex-col" in:fade={{ duration: 300, delay: index * 100 }}>
                         <!-- Quote Icon - dengan radius yang lebih rounded -->
                         <div class="absolute top-4 left-4 w-10 h-10 bg-[#176684] rounded-lg flex items-center justify-center">
@@ -350,7 +391,7 @@
                         <!-- Quote Text - dengan tinggi yang konsisten -->
                         <div class="mt-12 mb-6 flex-1 flex items-start">
                             <p class="text-gray-800 text-sm leading-relaxed font-family-sans font-medium min-h-[120px] flex items-center">
-                                "{testimonial.text}"
+                                "{testimonial.message}"
                             </p>
                         </div>
                         
@@ -367,8 +408,8 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-gray-900 text-sm font-family-sans">{testimonial.name}</h4>
-                                    <p class="text-gray-500 text-xs font-family-sans">{testimonial.position}</p>
+                                    <h4 class="font-semibold text-gray-900 text-sm font-family-sans">{testimonial.visitor_name}</h4>
+                                    <p class="text-gray-500 text-xs font-family-sans">{testimonial.company_name || 'Client'}</p>
                                 </div>
                             </div>
                         </div>
@@ -378,12 +419,12 @@
             
             <!-- Pagination Dots -->
             <div class="flex justify-center gap-2">
-                {#each testimonialSets as _, index}
+                {#each testimonialSets() as _, index}
                     <button
                         class="transition-all duration-300 rounded-full {currentTestimonialSet === index 
                             ? 'w-6 h-2 bg-[#176684]' 
                             : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'}"
-                        on:click={() => setTestimonialSet(index)}
+                        onclick={() => setTestimonialSet(index)}
                         aria-label="Testimonial set {index + 1}"
                     ></button>
                 {/each}
@@ -443,7 +484,7 @@
                         </div>
                     {/if}
 
-                    <form on:submit={handleSubmit} class="space-y-6">
+                    <form onsubmit={handleSubmit} class="space-y-6">
                         <!-- Name Fields Row -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>

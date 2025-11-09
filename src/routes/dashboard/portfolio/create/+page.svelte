@@ -19,6 +19,8 @@
 		project_name: '',
 		project_description: '',
 		case_study: '',
+		permasalahan: '',
+		hasil: [],
 		client_name: '',
 		project_start_date: '',
 		project_end_date: '',
@@ -32,6 +34,9 @@
 	let availableTechnologies = [];
 	let selectedCategories = [];
 	let selectedTechnologies = [];
+	
+	// Hasil items state
+	let hasilInput = '';
 	
 	let loading = false;
 	let submitting = false;
@@ -183,6 +188,25 @@
 		formData.technologies = selectedTechnologies;
 	}
 	
+	// Hasil management
+	function addHasil() {
+		if (hasilInput.trim()) {
+			formData.hasil = [...formData.hasil, hasilInput.trim()];
+			hasilInput = '';
+		}
+	}
+	
+	function removeHasil(index) {
+		formData.hasil = formData.hasil.filter((_, i) => i !== index);
+	}
+	
+	function handleHasilKeyPress(event) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			addHasil();
+		}
+	}
+	
 	// Form submission
 	async function handleSubmit(event) {
 		event.preventDefault();
@@ -214,6 +238,7 @@
 			// Prepare data with categories and technologies
 			const submissionData = {
 				...formData,
+				hasil: JSON.stringify(formData.hasil), // Convert array to JSON string
 				categories: selectedCategories,
 				technologies: selectedTechnologies
 			};
@@ -472,6 +497,70 @@
 							placeholder="Jelaskan detail case study, tantangan yang dihadapi, solusi yang diterapkan, dan hasil yang dicapai"
 						></textarea>
 						<p class="text-sm text-gray-500 mt-1">Opsional - Berikan detail tentang proses dan hasil project</p>
+					</div>
+					
+					<!-- Permasalahan -->
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">
+							Permasalahan
+						</label>
+						<textarea
+							bind:value={formData.permasalahan}
+							rows="4"
+							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+							placeholder="Jelaskan permasalahan yang dihadapi client sebelum menggunakan solusi ini..."
+						></textarea>
+						<p class="text-sm text-gray-500 mt-1">Opsional - Deskripsi masalah yang dihadapi client</p>
+					</div>
+					
+					<!-- Hasil (List) -->
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">
+							Hasil & Pencapaian
+						</label>
+						<div class="space-y-3">
+							<!-- Input untuk menambah hasil -->
+							<div class="flex gap-2">
+								<input
+									type="text"
+									bind:value={hasilInput}
+									onkeypress={handleHasilKeyPress}
+									placeholder="Masukkan hasil yang dicapai (tekan Enter untuk menambah)"
+									class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+								/>
+								<button
+									type="button"
+									onclick={addHasil}
+									class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+								>
+									<Plus class="w-4 h-4" />
+									Tambah
+								</button>
+							</div>
+							
+							<!-- List hasil yang sudah ditambahkan -->
+							{#if formData.hasil.length > 0}
+								<div class="bg-gray-50 rounded-lg p-4 space-y-2">
+									<p class="text-sm font-medium text-gray-700 mb-2">Daftar Hasil:</p>
+									{#each formData.hasil as hasil, index}
+										<div class="flex items-start gap-2 bg-white p-3 rounded-lg border border-gray-200">
+											<span class="text-sm text-gray-700 flex-1">{index + 1}. {hasil}</span>
+											<button
+												type="button"
+												onclick={() => removeHasil(index)}
+												class="text-red-500 hover:text-red-700 transition-colors"
+												title="Hapus"
+											>
+												<X class="w-4 h-4" />
+											</button>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p class="text-sm text-gray-500 italic">Belum ada hasil yang ditambahkan</p>
+							{/if}
+						</div>
+						<p class="text-sm text-gray-500 mt-1">Opsional - Tambahkan hasil-hasil yang dicapai dari project ini</p>
 					</div>
 				</div>
 			</div>
