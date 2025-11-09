@@ -93,8 +93,8 @@ export class PortfolioService {
         INSERT INTO portfolio (
           project_name, project_description, case_study, permasalahan, hasil,
           image_url, project_url, client_name, project_start_date, project_end_date, 
-          is_featured, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          is_featured, daerah, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.project_name,
         data.project_description,
@@ -107,6 +107,7 @@ export class PortfolioService {
         data.project_start_date,
         data.project_end_date,
         data.is_featured || 0,
+        data.daerah || null,
         data.created_by || 1
       ]);
       
@@ -157,6 +158,7 @@ export class PortfolioService {
             permasalahan = ?, hasil = ?,
             image_url = ?, project_url = ?, client_name = ?, 
             project_start_date = ?, project_end_date = ?, is_featured = ?, 
+            daerah = ?,
             updated_at = CURRENT_TIMESTAMP, updated_by = ?
         WHERE portfolio_id = ?
       `, [
@@ -171,6 +173,7 @@ export class PortfolioService {
         data.project_start_date,
         data.project_end_date,
         data.is_featured || 0,
+        data.daerah || null,
         data.updated_by || 1,
         id
       ]);
@@ -256,5 +259,22 @@ export class PortfolioService {
     const db = getDatabase();
     const result = await db.get('SELECT COUNT(*) as count FROM portfolio WHERE is_active = 1');
     return result.count;
+  }
+
+  static async getByProvinces() {
+    const db = getDatabase();
+    
+    const provinces = await db.all(`
+      SELECT 
+        daerah as province,
+        COUNT(*) as total_projects,
+        GROUP_CONCAT(project_name) as projects
+      FROM portfolio 
+      WHERE is_active = 1 AND daerah IS NOT NULL AND daerah != ''
+      GROUP BY daerah
+      ORDER BY total_projects DESC
+    `);
+    
+    return provinces;
   }
 }

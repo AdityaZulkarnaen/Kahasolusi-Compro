@@ -59,9 +59,9 @@
 	$: isDarkMode = isPortfolioPage || isClientSectionVisible;
 	$: navbarBg = (isTechPage || isAboutPage || isLayananPage || isSDMPage || isPortfolioPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
 	$: borderColor = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-200' : 'border-white');
-	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-[#0E2144]' : 'text-white');
+	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
 	$: logoSrc = (isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
-	$: Strip = (isHomePage || isPortfolioPage) ? 'bg-white' : 'bg-[#176684]';
+	$: Strip = (isHomePage) ? 'bg-white' : 'bg-[#176684]';
 </script>
 
 <nav

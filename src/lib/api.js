@@ -65,6 +65,11 @@ export const portfolioAPI = {
     async getById(id) {
         return await apiRequest(`/portfolio/${id}`);
     },
+    
+    // Get portfolio statistics by provinces
+    async getByProvinces() {
+        return await apiRequest('/portfolio/provinces/stats');
+    },
 
     // Create new portfolio
     async create(portfolioData) {

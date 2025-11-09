@@ -115,4 +115,14 @@ export class PortfolioController {
       return c.json({ error: 'Failed to restore portfolio' }, 500)
     }
   }
+
+  static async getByProvinces(c) {
+    try {
+      const provinces = await PortfolioService.getByProvinces()
+      return c.json(provinces)
+    } catch (error) {
+      console.error('Error fetching portfolio by provinces:', error)
+      return c.json({ error: 'Failed to fetch portfolio by provinces' }, 500)
+    }
+  }
 }

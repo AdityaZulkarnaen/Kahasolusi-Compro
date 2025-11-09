@@ -2,10 +2,13 @@
     import { onMount, onDestroy } from 'svelte';
     import 'leaflet/dist/leaflet.css';
     
+    export let portfolioStats = [];
+    
     let mapContainer;
     let map;
     let loading = true;
     let error = false;
+    let markers = [];
     
     onMount(async () => {
         try {
@@ -119,6 +122,73 @@
             map.fitBounds(geojsonLayer.getBounds(), {
                 padding: [20, 20]
             });
+            
+            // Add markers for portfolios
+            if (portfolioStats && portfolioStats.length > 0) {
+
+                
+                // Create custom icon (smaller size)
+                const customIcon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div class="marker-pin"></div>`,
+                    iconSize: [20, 28],
+                    iconAnchor: [10, 28],
+                    popupAnchor: [0, -28]
+                });
+                
+                portfolioStats.forEach(stat => {
+                    // Find province in GeoJSON (exact match)
+                    const provinceFeature = geojsonData.features.find(f => 
+                        f.properties.Propinsi === stat.province
+                    );
+                    
+                    if (!provinceFeature) {
+                        console.warn(`⚠️ Province not found in GeoJSON: "${stat.province}"`);
+                        console.warn(`Available provinces:`, geojsonData.features.map(f => f.properties.Propinsi));
+                        return;
+                    }
+                    
+                    if (provinceFeature && provinceFeature.geometry) {
+                        // Get center of province (simplified centroid)
+                        let lat, lng;
+                        
+                        if (provinceFeature.geometry.type === 'Polygon') {
+                            const coords = provinceFeature.geometry.coordinates[0];
+                            lat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+                            lng = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+                        } else if (provinceFeature.geometry.type === 'MultiPolygon') {
+                            const coords = provinceFeature.geometry.coordinates[0][0];
+                            lat = coords.reduce((sum, c) => sum + c[1], 0) / coords.length;
+                            lng = coords.reduce((sum, c) => sum + c[0], 0) / coords.length;
+                        }
+                        
+                        if (lat && lng) {
+                            console.log(`✅ Adding marker for ${stat.province} at [${lat}, ${lng}]`);
+                            const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+                            
+                            // Create popup content
+                            const popupContent = `
+                                <div class="marker-popup">
+                                    <h3 class="marker-popup-title">${stat.province}</h3>
+                                    <p class="marker-popup-count">
+                                        <strong>${stat.total_projects}</strong> Proyek
+                                    </p>
+                                </div>
+                            `;
+                            
+                            marker.bindPopup(popupContent, {
+                                className: 'custom-popup',
+                                closeButton: true,
+                                offset: [0, -10]
+                            });
+                            
+                            markers.push(marker);
+                        }
+                    }
+                });
+            } else {
+                console.log('ℹ️ No portfolio stats available');
+            }
             
             loading = false;
             
@@ -313,6 +383,94 @@
     
     :global(.leaflet-interactive:hover) {
         cursor: pointer !important;
+    }
+    
+    /* Custom marker styles */
+    :global(.custom-marker) {
+        background: none !important;
+        border: none !important;
+    }
+    
+    :global(.marker-pin) {
+        width: 20px;
+        height: 20px;
+        border-radius: 50% 50% 50% 0;
+        background: #F97316;
+        position: absolute;
+        transform: rotate(-45deg);
+        left: 50%;
+        top: 50%;
+        margin: -10px 0 0 -10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+        animation: bounce 0.5s ease-out;
+    }
+    
+    :global(.marker-pin::after) {
+        content: '';
+        width: 10px;
+        height: 10px;
+        margin: 5px 0 0 -5px;
+        background: #fff;
+        position: absolute;
+        border-radius: 50%;
+    }
+    
+    @keyframes bounce {
+        0% {
+            opacity: 0;
+            transform: translateY(-2000px) rotate(-45deg);
+        }
+        60% {
+            opacity: 1;
+            transform: translateY(30px) rotate(-45deg);
+        }
+        80% {
+            transform: translateY(-10px) rotate(-45deg);
+        }
+        100% {
+            transform: translateY(0) rotate(-45deg);
+        }
+    }
+    
+    :global(.custom-popup .leaflet-popup-content-wrapper) {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+        padding: 0;
+    }
+    
+    :global(.custom-popup .leaflet-popup-content) {
+        margin: 0;
+        min-width: 180px;
+    }
+    
+    :global(.custom-popup .leaflet-popup-tip) {
+        background: white;
+    }
+    
+    :global(.marker-popup) {
+        padding: 12px 16px;
+    }
+    
+    :global(.marker-popup-title) {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0D4E6D;
+        margin: 0 0 8px 0;
+        font-family: inherit;
+    }
+    
+    :global(.marker-popup-count) {
+        font-size: 14px;
+        color: #374151;
+        margin: 0;
+        font-family: inherit;
+    }
+    
+    :global(.marker-popup-count strong) {
+        color: #F97316;
+        font-size: 18px;
     }
     
     @media (max-width: 768px) {

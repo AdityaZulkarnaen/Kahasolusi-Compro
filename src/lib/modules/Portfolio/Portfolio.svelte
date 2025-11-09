@@ -18,6 +18,7 @@
     let portfolios = $state([]);
     let categories = $state([]);
     let feedbacks = $state([]);
+    let portfolioStats = $state([]);
     let loading = $state(true);
     let error = $state('');
     
@@ -70,17 +71,34 @@
         loading = true;
         error = '';
         try {
-            const [portfolioData, categoryData, feedbackResponse] = await Promise.all([
-                portfolioAPI.getAll().catch(() => []),
-                categoriesAPI.getAll().catch(() => []),
-                feedbackAPI.get().catch(() => ({ data: [] }))
+            const [portfolioData, categoryData, feedbackResponse, statsData] = await Promise.all([
+                portfolioAPI.getAll().catch(err => {
+                    console.error('Failed to load portfolios:', err);
+                    return [];
+                }),
+                categoriesAPI.getAll().catch(err => {
+                    console.error('Failed to load categories:', err);
+                    return [];
+                }),
+                feedbackAPI.get().catch(err => {
+                    console.error('Failed to load feedbacks:', err);
+                    return { data: [] };
+                }),
+                portfolioAPI.getByProvinces().catch(err => {
+                    console.error('Failed to load portfolio stats:', err);
+                    return [];
+                })
             ]);
             
             portfolios = Array.isArray(portfolioData) ? portfolioData : [];
             categories = Array.isArray(categoryData) ? categoryData : [];
             feedbacks = Array.isArray(feedbackResponse.data) ? feedbackResponse.data : [];
+            portfolioStats = Array.isArray(statsData) ? statsData : [];
             
-            console.log('Loaded feedbacks:', feedbacks);
+            console.log('✅ Loaded portfolios:', portfolios.length);
+            console.log('✅ Loaded categories:', categories.length);
+            console.log('✅ Loaded feedbacks:', feedbacks.length);
+            console.log('📊 Portfolio stats by provinces:', portfolioStats);
             console.log('Displayed feedbacks:', feedbacks.filter(f => f.is_displayed === 1 || f.is_displayed === true));
             
             // Set default filter to first category or 'pemerintah'
@@ -210,7 +228,7 @@
             
             <!-- Indonesia Map with Leaflet -->
             <div class="relative max-w-6xl mx-auto mb-12" style="z-index: 1;">
-                <IndonesiaMap />
+                <IndonesiaMap portfolioStats={portfolioStats} />
             </div>
         </div>
     </section>
