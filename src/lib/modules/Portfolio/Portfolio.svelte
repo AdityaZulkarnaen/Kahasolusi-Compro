@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { fade, fly } from 'svelte/transition';
     import { ChevronLeft, ChevronRight } from 'lucide-svelte';
-    import MapIndonesia from '$lib/assets/images/map_indonesia.png';
+    import IndonesiaMap from '$lib/components/IndonesiaMap.svelte';
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import { feedbackAPI, portfolioAPI, categoriesAPI } from '$lib/api.js';
@@ -18,6 +18,7 @@
     let portfolios = $state([]);
     let categories = $state([]);
     let feedbacks = $state([]);
+    let portfolioStats = $state([]);
     let loading = $state(true);
     let error = $state('');
     
@@ -70,17 +71,34 @@
         loading = true;
         error = '';
         try {
-            const [portfolioData, categoryData, feedbackResponse] = await Promise.all([
-                portfolioAPI.getAll().catch(() => []),
-                categoriesAPI.getAll().catch(() => []),
-                feedbackAPI.get().catch(() => ({ data: [] }))
+            const [portfolioData, categoryData, feedbackResponse, statsData] = await Promise.all([
+                portfolioAPI.getAll().catch(err => {
+                    console.error('Failed to load portfolios:', err);
+                    return [];
+                }),
+                categoriesAPI.getAll().catch(err => {
+                    console.error('Failed to load categories:', err);
+                    return [];
+                }),
+                feedbackAPI.get().catch(err => {
+                    console.error('Failed to load feedbacks:', err);
+                    return { data: [] };
+                }),
+                portfolioAPI.getByProvinces().catch(err => {
+                    console.error('Failed to load portfolio stats:', err);
+                    return [];
+                })
             ]);
             
             portfolios = Array.isArray(portfolioData) ? portfolioData : [];
             categories = Array.isArray(categoryData) ? categoryData : [];
             feedbacks = Array.isArray(feedbackResponse.data) ? feedbackResponse.data : [];
+            portfolioStats = Array.isArray(statsData) ? statsData : [];
             
-            console.log('Loaded feedbacks:', feedbacks);
+            console.log('✅ Loaded portfolios:', portfolios.length);
+            console.log('✅ Loaded categories:', categories.length);
+            console.log('✅ Loaded feedbacks:', feedbacks.length);
+            console.log('📊 Portfolio stats by provinces:', portfolioStats);
             console.log('Displayed feedbacks:', feedbacks.filter(f => f.is_displayed === 1 || f.is_displayed === true));
             
             // Set default filter to first category or 'pemerintah'
@@ -208,13 +226,9 @@
                 <div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
             </div>
             
-            <!-- Indonesia Map -->
-            <div class="relative max-w-6xl mx-auto mb-12">
-                <img 
-                    src={MapIndonesia} 
-                    alt="Peta Indonesia" 
-                    class="w-full h-auto max-h-[500px] object-contain"
-                />
+            <!-- Indonesia Map with Leaflet -->
+            <div class="relative max-w-6xl mx-auto mb-12" style="z-index: 1;">
+                <IndonesiaMap portfolioStats={portfolioStats} />
             </div>
         </div>
     </section>

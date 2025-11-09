@@ -57,11 +57,11 @@
 	$: isSDMPage = $page.url.pathname.includes('/sdm');
 	$: isHomePage = $page.url.pathname === '/';
 	$: isDarkMode = isPortfolioPage || isClientSectionVisible;
-	$: navbarBg = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
-	$: borderColor = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-700' : 'border-white');
-	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
-	$: logoSrc = (isTechPage || isLayananPage || isSDMPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
-	$: Strip = (isHomePage || isPortfolioPage) ? 'bg-white' : 'bg-[#176684]';
+	$: navbarBg = (isTechPage || isAboutPage || isLayananPage || isSDMPage || isPortfolioPage) ? 'bg-white' : (isDarkMode ? 'bg-gray-900/95' : 'bg-white/5');
+	$: borderColor = (isTechPage || isAboutPage || isLayananPage || isSDMPage) ? 'border-gray-200' : (isDarkMode ? 'border-gray-200' : 'border-white');
+	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
+	$: logoSrc = (isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
+	$: Strip = (isHomePage) ? 'bg-white' : 'bg-[#176684]';
 </script>
 
 <nav
@@ -129,17 +129,17 @@
 				aria-expanded={isMenuOpen}
 			>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isPortfolioPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? 'rotate-45 translate-y-2'
 						: ''}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage || isPortfolioPage? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? 'opacity-0'
 						: 'opacity-100'}"
 				></span>
 				<span
-					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
+					class="w-6 h-0.5 {isTechPage || isAboutPage || isLayananPage || isSDMPage || isPortfolioPage ? 'bg-[#0E2144]' : 'bg-white'} transition-all duration-300 {isMenuOpen
 						? '-rotate-45 -translate-y-2'
 						: ''}"
 				></span>

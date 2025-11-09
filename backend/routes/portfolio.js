@@ -6,6 +6,9 @@ const portfolioRoutes = new Hono()
 // GET /api/portfolio - Get all portfolios (add ?includeDeleted=true to see deleted ones)
 portfolioRoutes.get('/', PortfolioController.getAll)
 
+// GET /api/portfolio/provinces/stats - Get portfolio statistics by provinces
+portfolioRoutes.get('/provinces/stats', PortfolioController.getByProvinces)
+
 // GET /api/portfolio/:id - Get portfolio by ID
 portfolioRoutes.get('/:id', PortfolioController.getById)
 
