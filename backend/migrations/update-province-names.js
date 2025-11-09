@@ -3,7 +3,7 @@ import { open } from 'sqlite'
 
 const dbPath = './database.sqlite'
 
-console.log('🔄 Updating province names to match GeoJSON format...\n')
+console.log('Updating province names to match GeoJSON format...\n')
 
 const db = await open({
   filename: dbPath,
@@ -80,19 +80,19 @@ try {
     `, [newName, oldName])
     
     if (result.changes > 0) {
-      console.log(`✅ Updated: "${oldName}" → "${newName}" (${result.changes} portfolio(s))`)
+      console.log(`Updated: "${oldName}" → "${newName}" (${result.changes} portfolio(s))`)
       updatedCount += result.changes
     }
   }
   
   if (updatedCount === 0) {
-    console.log('ℹ️  No portfolios needed updating.')
+    console.log('ℹNo portfolios needed updating.')
   } else {
-    console.log(`\n✨ Total updated: ${updatedCount} portfolio(s)`)
+    console.log(`\n Total updated: ${updatedCount} portfolio(s)`)
   }
   
   // Show current data
-  console.log('\n📊 Current portfolio provinces:')
+  console.log('\n Current portfolio provinces:')
   console.log('='.repeat(80))
   const stats = await db.all(`
     SELECT 
@@ -107,15 +107,15 @@ try {
   
   if (stats.length > 0) {
     stats.forEach(s => {
-      console.log(`\n${s.province}: ${s.total_projects} project(s)`)
+      console.log(`\n ${s.province}: ${s.total_projects} project(s)`)
       console.log(`  Projects: ${s.projects}`)
     })
   }
   
   await db.close()
-  console.log('\n✅ Migration completed successfully!')
+  console.log('\n Migration completed successfully!')
 } catch (error) {
-  console.error('❌ Error:', error)
+  console.error('Error:', error)
   await db.close()
   process.exit(1)
 }
