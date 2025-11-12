@@ -1,5 +1,5 @@
 <script>
-    import Code from '$lib/assets/svg/Code.svg';
+    import Default from '$lib/assets/svg/TechDefault.svg';
 	// Technology logos - You can replace these with actual logo URLs or SVG imports
 	const technologies = [
 		{ name: 'Visual Studio Code', icon: 'vscode' },
@@ -33,9 +33,9 @@
 	<div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
 		{#each technologies as tech}
 			<div class="tech-item relative flex items-center justify-center p-6 bg-[#D7EDF5] rounded-2xl hover:bg-blue-100 transition-colors group">
-				<!-- Placeholder for VS Code icon -->
-				<div class="w-12 h-12 flex items-center justify-center">
-                    <img src={Code} alt={tech.name}>
+				<!-- Placeholder icon -->
+				<div class="w-12 h-12 flex items-center justify-center rounded-xl overflow-clip">
+                    <img src={Default} alt={tech.name}>
 				</div>
 				
 				<!-- Bubble Chat Tooltip -->
