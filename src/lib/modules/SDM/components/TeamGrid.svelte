@@ -2,7 +2,7 @@
 	// Team Grid Component
 	import TeamCard from './TeamCard.svelte';
 	import SDMDetailModal from './SDMDetailModal.svelte';
-	import PersonIcon from '$lib/assets/images/Person.png';
+	import PersonIcon from '$lib/assets/svg/PersonDefault.svg';
 
 	let selectedMember = null;
 	let isModalOpen = false;

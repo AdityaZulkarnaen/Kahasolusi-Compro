@@ -1,7 +1,7 @@
 <script>
 	// Team Card Component
 	import { createEventDispatcher } from 'svelte';
-	import PersonIcon from '$lib/assets/images/Person.png';
+	import PersonIcon from '$lib/assets/svg/PersonDefault.svg';
 	
 	export let name = 'Steve';
 	export let position = 'Co-founder';
@@ -27,9 +27,9 @@
 		<div class="absolute inset-0 bg-[#D7EDF5] rounded-3xl"></div>
 
 		<!-- Profile Image -->
-		<div class="relative w-full h-full flex items-end justify-center pt-6">
+		<div class="relative w-full h-full flex justify-center mt-12">
 			{#if image}
-				<img src={image} alt={name} class="w=-full h-full object-cover rounded-2xl" />
+				<img src={image} alt={name} class="w-1/2 h-1/2 object-cover rounded-2xl" />
 			{:else}
 				<!-- Placeholder untuk gambar -->
 				<div class="w-56 h-56 bg-gray-200 rounded-2xl flex items-center justify-center">
