@@ -67,7 +67,7 @@
 	});
 </script>
 
-<section class="w-full bg-[#004D66] py-16 md:py-20 lg:py-24 px-6 sm:px-12">
+<section class="w-full bg-[#023F53] py-16 md:py-20 lg:py-24 px-6 sm:px-12">
 	<div class="max-w-7xl mx-auto">
 		<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 			<!-- Map Container Wrapper -->
@@ -131,11 +131,11 @@
 	.map-overlay {
 		background: linear-gradient(
 			to top,
-			#004D66 0%,
-			#004D66 5%,
-			rgba(0, 77, 102, 0.9) 20%,
-			rgba(0, 77, 102, 0.6) 40%,
-			rgba(0, 77, 102, 0.3) 60%,
+			#023F53 0%,
+			#023F53 5%,
+			rgba(2, 63, 83, 0.9) 20%,
+			rgba(2, 63, 83, 0.6) 50%,
+			rgba(2, 63, 83, 0.3) 70%,
 			transparent 100%
 		);
 	}

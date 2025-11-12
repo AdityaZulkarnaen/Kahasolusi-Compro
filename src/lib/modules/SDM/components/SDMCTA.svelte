@@ -26,12 +26,12 @@
 				>
 					Hubungi Kami
 				</button>
-				<button
+				<a
 					class="px-6 py-3 bg-[#D0E6F3] text-[#176684] border-2 border-[#176684] rounded-full font-semibold hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors"
-					onclick={() => (window.location.href = '/layanan')}
+					href="/layanan"
 				>
 					Lihat Layanan
-				</button>
+				</a>
 			</div>
 		</div>
 	</div>

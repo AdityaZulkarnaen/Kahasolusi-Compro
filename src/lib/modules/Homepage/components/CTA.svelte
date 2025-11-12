@@ -1,3 +1,9 @@
+<script>
+	function ctaPressed() {
+		window.location.href='/layanan'
+	}
+</script>
+
 <section class="w-full bg-white py-16 md:py-24">
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<!-- CTA Card with Gradient Masking -->
@@ -23,7 +29,9 @@
 					<button class="bg-[#176684] text-white px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors">
 						Hubungi Kami
 					</button>
-					<button class="bg-transparent text-[#176684] px-8 py-3 rounded-full font-medium hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors border-2 border-[#176684]">
+					<button 
+						onclick={ctaPressed}
+						class="bg-transparent text-[#176684] px-8 py-3 rounded-full font-medium hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors border-2 border-[#176684]">
 						Lihat Layanan
 					</button>
 				</div>

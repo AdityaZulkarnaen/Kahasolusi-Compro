@@ -4,10 +4,10 @@
 
 	const navLinks = [
 		{ name: 'Home', href: '/' },
-		{ name: 'Tentang Kami', href: '/#tentang-kami' },
-		{ name: 'Layanan', href: '/#layanan' },
+		{ name: 'Tentang Kami', href: '/about' },
+		{ name: 'Layanan', href: '/layanan' },
 		{ name: 'Portofolio', href: '/portofolio' },
-		{ name: 'Teknologi', href: '/#teknologi' }
+		{ name: 'Teknologi', href: '/teknologi' }
 	];
 
 	const socialLinks = [
