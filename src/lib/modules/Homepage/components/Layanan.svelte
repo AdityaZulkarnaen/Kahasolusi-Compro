@@ -18,11 +18,12 @@
 					Solusi Digital untuk Mendukung<br />Transformasi Digital Anda
 				</h3>
 			</div>
-			<button
+			<a
+				href="/layanan"
 				class="self-start md:self-auto bg-[#176684] text-white px-6 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors inline-flex items-center gap-2"
 			>
 				Pelajari Selengkapnya
-			</button>
+			</a>
 		</div>
 
 		<!-- Service Cards Grid -->

@@ -65,7 +65,8 @@
 								</svg>
 							</a>
 						{:else}
-							<button
+							<a
+								href="/layanan"
 								class="w-[95%] px-6 py-3 border-2 border-white rounded-full font-family-sans text-white font-medium hover:bg-white hover:text-[#004D66] transition-all duration-300 flex justify-center self-center items-center gap-2"
 							>
 								{card.buttonText}
@@ -79,7 +80,7 @@
 								>
 									<path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
 								</svg>
-							</button>
+							</a>
 						{/if}
 					</div>
 				</div>
@@ -103,16 +104,18 @@
 					Di balik setiap proyek Kahasolusi, ada cerita tentang tantangan, kerja sama, dan keberhasilan. Kami percaya, kisah sukses berikutnya adalah milik Anda. Bergabunglah bersama kami dalam perjalanan transformasi digital yang penuh makna.
 				</p>
 				<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-				<button
+				<a
+					href='#'
 					class="w-full sm:w-auto px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl"
 				>
 					Hubungi Kami
-				</button>
-				<button
+				</a>
+				<a
+					href='/layanan'
 					class="w-full sm:w-auto px-8 py-3 border-2 border-[#004D66] text-[#004D66] rounded-full font-medium hover:bg-[#004D66] hover:text-white transition-all duration-300"
 				>
 					Lihat Layanan
-				</button>
+				</a>
 				</div>
 			</div>
 		</div>

@@ -28,11 +28,12 @@
 					Didukung oleh talenta yang ahli dan berkomitmen, kami memastikan setiap detail dikerjakan
 					dengan standar tinggi.
 				</p>
-				<button
+				<a
 					class="w-full border-2 border-[#176684] text-[#176684] rounded-full py-2.5 md:py-3 px-6 font-sans font-medium hover:bg-[#176684] hover:text-white transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
+					href="/sdm"
 				>
 					Meet Our Team <ArrowRight class="w-4 h-4 md:w-5 md:h-5" />
-				</button>
+				</a>
 			</div>
 
 			<!-- Berpengalaman Card -->
@@ -46,11 +47,12 @@
 					Lebih dari 10 proyek sukses bersama instansi pemerintah dan sektor swasta menjadi bukti
 					kemampuan kami menghadirkan solusi tepat.
 				</p>
-				<button
+				<a
+					href='/portofolio'
 					class="w-full border-2 border-[#176684] text-[#176684] rounded-full py-2.5 md:py-3 px-6 font-sans font-medium hover:bg-[#176684] hover:text-white transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
 				>
 					Lihat Proyek <ArrowRight class="w-4 h-4 md:w-5 md:h-5" />
-				</button>
+				</a>
 			</div>
 
 			<!-- Right Column with Inverted Border Radius Cards -->
@@ -69,7 +71,7 @@
 						</p>
 					</div>
 					<div class="icon-wrapper">
-						<a href="#" class="icon-box">
+						<a href="/teknologi" class="icon-box">
 							<ArrowUpRight class="w-6 h-6 md:w-7 md:h-7 text-white" />
 						</a>
 					</div>
@@ -91,7 +93,7 @@
 						</p>
 					</div>
 					<div class="icon-wrapper">
-						<a href="#" class="icon-box">
+						<a href="/layanan" class="icon-box">
 							<ArrowUpRight class="w-6 h-6 md:w-7 md:h-7 text-white" />
 						</a>
 					</div>
@@ -110,6 +112,7 @@
 		height: 5rem;
 		background: #e1f1f5;
 		border-top-left-radius: 50%;
+		z-index: 20;
 	}
 
 	.icon-wrapper::before {
@@ -145,6 +148,8 @@
 		justify-content: center;
 		align-items: center;
 		transition: transform 0.3s;
+		cursor: pointer;
+		z-index: 10;
 	}
 
 	.icon-wrapper:hover .icon-box {

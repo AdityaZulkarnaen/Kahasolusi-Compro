@@ -17,12 +17,16 @@
 				</h2>
 			</div>
 			<div class="flex gap-4">
-				<button class=" px-6 md:px-18 py-3 bg-[#176684] text-white rounded-full font-semibold hover:bg-[#0d4d5f] transition-colors">
+				<a
+					href="#"
+					class=" px-6 md:px-18 py-3 bg-[#176684] text-white rounded-full font-semibold hover:bg-[#0d4d5f] transition-colors">
 					Hubungi Kami
-				</button>
-				<button class="px-6 py-3 bg-[#D0E6F3] text-[#176684] border-2 border-[#176684] rounded-full font-semibold hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors">
+				</a>
+				<a 
+					href="/layanan"
+					class="px-6 py-3 bg-[#D0E6F3] text-[#176684] border-2 border-[#176684] rounded-full font-semibold hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors">
 					Lihat Layanan
-				</button>
+				</a>
 			</div>
 		</div>
 	</div>

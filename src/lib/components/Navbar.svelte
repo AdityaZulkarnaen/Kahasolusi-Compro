@@ -86,7 +86,6 @@
 					class="flex items-center gap-1 {textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 				>
 					<span>Tentang Kami</span>
-					<ChevronDown class="w-4 h-4 flex mt-1" />
 				</a>
 				<a
 					href="/layanan"
@@ -103,6 +102,10 @@
 					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Teknologi</a
 				>
+				<a
+					href="/sdm"
+					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					>Tim Kami</a>
 			</div>
 
 			<!-- Action Buttons -->

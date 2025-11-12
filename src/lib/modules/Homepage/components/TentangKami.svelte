@@ -17,12 +17,13 @@
 					Dengan pengalaman menjalankan lebih dari 10 proyek berskala pemerintah pusat dan daerah,
 					kami membangun solusi digital yang andal, aman, dan sesuai kebutuhan klien.
 				</p>
-				<button
+				<a
+					href="/layanan"
 					class="inline-flex items-center gap-1 text-white hover:text-orange-400 font-regular underline transition-colors group"
 				>
 					Ketahui lebih banyak
 					<ArrowUpRight class="w-5 h-5" />
-				</button>
+				</a>
 			</div>
 
 			<!-- Image/Illustration -->
