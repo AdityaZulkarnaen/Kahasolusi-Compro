@@ -11,7 +11,7 @@
 	const teamMembers = [
 		{
 			name: 'Steve',
-			position: 'Co-Founder',
+			position: 'Fullstack',
 			image: PersonIcon,
 			experience:
 				'Steve adalah "Founding Father" di Kahasolusi. Kepemimpinannya di bidang Financial Bisnis dan Human Resources membuat beliau memiliki kemampuan dalam mengatur puluhan karyawan agar tetap berada pada jalur. Beliau selalu berusaha dalam mengembangkan kompensasi, menjadi Akuntung dan Master Manajemen serta pengalaman kerja sebelumnya di berbagai lembaga keuangan korporat sangat berharga dalam membangun Kahasolusi hingga sekarang.',

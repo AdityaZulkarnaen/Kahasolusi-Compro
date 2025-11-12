@@ -4,7 +4,7 @@
 	import PersonIcon from '$lib/assets/svg/PersonDefault.svg';
 	
 	export let name = 'Steve';
-	export let position = 'Co-founder';
+	export let position = 'Fullstack';
 	export let image = PersonIcon;
 	export let member = null;
 
