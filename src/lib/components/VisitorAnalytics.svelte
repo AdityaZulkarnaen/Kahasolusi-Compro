@@ -110,20 +110,23 @@
 				iconBg: 'bg-green-500'
 			},
 			{
-				title: 'Total Requests',
-				value: formatNumber(today.requests),
-				change: calculateChange(today.requests, yesterday.requests),
+				title: 'Total Visits',
+				value: formatNumber(today.visits || today.uniqueVisitors),
+				change: calculateChange(today.visits || today.uniqueVisitors, yesterday.visits || yesterday.uniqueVisitors),
 				icon: Globe,
 				bgColor: 'bg-purple-50',
 				iconBg: 'bg-purple-500'
 			},
 			{
-				title: 'Threats Blocked',
-				value: formatNumber(today.threats),
-				change: calculateChange(today.threats, yesterday.threats),
+				title: 'Avg. Page Views',
+				value: formatNumber(Math.round((today.pageViews || 0) / (today.visits || 1))),
+				change: calculateChange(
+					Math.round((today.pageViews || 0) / (today.visits || 1)),
+					Math.round((yesterday.pageViews || 0) / (yesterday.visits || 1))
+				),
 				icon: TrendingUp,
-				bgColor: 'bg-red-50',
-				iconBg: 'bg-red-500'
+				bgColor: 'bg-orange-50',
+				iconBg: 'bg-orange-500'
 			}
 		];
 	});
