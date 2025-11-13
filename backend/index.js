@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
 import { cors } from 'hono/cors'
@@ -20,6 +21,7 @@ import feedbackRoutes from './routes/feedback.js'
 import healthRoutes from './routes/health.js'
 import uploadRoutes from './routes/upload.js'
 import authRoutes from './routes/auth.js'
+import analyticsRoutes from './routes/analytics.js'
 
 const app = new Hono()
 
@@ -61,6 +63,7 @@ app.route('/api/contact-cta', contactCTARoutes)
 app.route('/api/feedback', feedbackRoutes)
 app.route('/api/health', healthRoutes)
 app.route('/api/upload', uploadRoutes)
+app.route('/api/analytics', analyticsRoutes)
 
 // Error handling
 app.onError(errorHandler)

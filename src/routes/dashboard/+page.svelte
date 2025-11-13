@@ -5,9 +5,11 @@
 		FolderOpen, 
 		Code, 
 		FileText, 
-		Search
+		Search,
+		Activity
 	} from 'lucide-svelte';
 	import { sdmAPI, portfolioAPI, technologiesAPI, multimediaAPI } from '$lib/api.js';
+	import VisitorAnalytics from '$lib/components/VisitorAnalytics.svelte';
 	
 	let { data } = $props();
 	
@@ -171,12 +173,21 @@
 							<p class="text-3xl font-bold text-gray-800">{card.value}</p>
 						</div>
 						<div class="w-12 h-12 {card.iconBg} rounded-xl flex items-center justify-center">
-							<svelte:component this={card.icon} class="text-white w-6 h-6" />
+							<card.icon class="text-white w-6 h-6" />
 						</div>
 					</div>
 				</div>
 			{/each}
 		{/if}
+	</div>
+
+	<!-- Visitor Analytics Section -->
+	<div class="mb-6">
+		<div class="flex items-center gap-2 mb-4">
+			<Activity class="w-5 h-5 text-gray-700" />
+			<h2 class="text-xl font-bold text-gray-800">Visitor Analytics</h2>
+		</div>
+		<VisitorAnalytics {data} />
 	</div>
 
 	<!-- Analytics Content Grid -->
