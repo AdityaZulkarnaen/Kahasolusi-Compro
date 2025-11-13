@@ -10,7 +10,8 @@
 			problems: [],
 			results: [],
 			images: [],
-			technologies: []
+			technologies: [],
+			url_youtube: ''
 		},
 		onClose = () => {}
 	} = $props();
@@ -23,6 +24,34 @@
 		if (e.target === e.currentTarget) {
 			handleClose();
 		}
+	}
+
+	// Extract YouTube video ID from URL
+	function getYouTubeEmbedId(url) {
+		if (!url) return null;
+		
+		try {
+			const urlObj = new URL(url);
+			
+			// Handle youtube.com/watch?v=VIDEO_ID
+			if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
+				return urlObj.searchParams.get('v');
+			}
+			
+			// Handle youtu.be/VIDEO_ID
+			if (urlObj.hostname.includes('youtu.be')) {
+				return urlObj.pathname.slice(1);
+			}
+			
+			// Handle youtube.com/embed/VIDEO_ID
+			if (urlObj.hostname.includes('youtube.com') && urlObj.pathname.includes('/embed/')) {
+				return urlObj.pathname.split('/embed/')[1];
+			}
+		} catch (e) {
+			return null;
+		}
+		
+		return null;
 	}
 
 	// Prevent body scroll when modal is open
@@ -75,6 +104,26 @@
 						{project.description}
 					</p>
 				</div>
+
+				<!-- YouTube Video Preview -->
+				{#if project.url_youtube && getYouTubeEmbedId(project.url_youtube)}
+					<div class="px-6 pb-6">
+						<h3 class="text-lg font-bold text-gray-900 mb-4">Video Proyek</h3>
+						<div class="w-full h-[2px] bg-[#176684] mx-auto mb-6"></div>
+						<div class="rounded-lg overflow-hidden border border-gray-200 shadow-md">
+							<div class="relative" style="padding-bottom: 56.25%; height: 0;">
+								<iframe
+									src="https://www.youtube.com/embed/{getYouTubeEmbedId(project.url_youtube)}"
+									title="Video {project.title}"
+									frameborder="0"
+									allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+									allowfullscreen
+									class="absolute top-0 left-0 w-full h-full"
+								></iframe>
+							</div>
+						</div>
+					</div>
+				{/if}
 
 				<!-- Two Column: Permasalahan & Hasil -->
 				<div class="flex flex-col lg:flex-row justify-evenly align-middle">

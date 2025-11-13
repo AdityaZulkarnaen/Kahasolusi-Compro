@@ -27,6 +27,7 @@
 		project_start_date: '',
 		project_end_date: '',
 		project_url: '',
+		url_youtube: '',
 		image_url: '',
 		is_featured: 0
 	};
@@ -282,6 +283,34 @@
 		const tech = availableTechnologies.find(t => t.tech_id === techId);
 		return tech ? tech.tech_name : '';
 	}
+	
+	// Extract YouTube video ID from URL
+	function getYouTubeEmbedId(url) {
+		if (!url) return null;
+		
+		try {
+			const urlObj = new URL(url);
+			
+			// Handle youtube.com/watch?v=VIDEO_ID
+			if (urlObj.hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
+				return urlObj.searchParams.get('v');
+			}
+			
+			// Handle youtu.be/VIDEO_ID
+			if (urlObj.hostname.includes('youtu.be')) {
+				return urlObj.pathname.slice(1);
+			}
+			
+			// Handle youtube.com/embed/VIDEO_ID
+			if (urlObj.hostname.includes('youtube.com') && urlObj.pathname.includes('/embed/')) {
+				return urlObj.pathname.split('/embed/')[1];
+			}
+		} catch (e) {
+			return null;
+		}
+		
+		return null;
+	}
 </script>
 
 <svelte:head>
@@ -442,6 +471,45 @@
 						</div>
 						{#if errors.project_url}
 							<p class="text-red-500 text-sm mt-1">{errors.project_url}</p>
+						{/if}
+					</div>
+					
+					<div class="md:col-span-2">
+						<label class="block text-sm font-medium text-gray-700 mb-2">
+							URL YouTube
+						</label>
+						<div class="relative">
+							<LinkIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+							<input
+								type="url"
+								bind:value={formData.url_youtube}
+								class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+								placeholder="https://youtube.com/watch?v=..."
+							/>
+						</div>
+						<p class="text-sm text-gray-500 mt-1">Opsional - Link video YouTube tentang project</p>
+						
+						<!-- YouTube Preview -->
+						{#if formData.url_youtube && getYouTubeEmbedId(formData.url_youtube)}
+							<div class="mt-4 rounded-lg overflow-hidden border border-gray-200">
+								<div class="bg-gray-100 px-3 py-2 border-b border-gray-200">
+									<p class="text-sm font-medium text-gray-700">Preview YouTube</p>
+								</div>
+								<div class="relative" style="padding-bottom: 56.25%; height: 0;">
+									<iframe
+										src="https://www.youtube.com/embed/{getYouTubeEmbedId(formData.url_youtube)}"
+										title="YouTube video preview"
+										frameborder="0"
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+										allowfullscreen
+										class="absolute top-0 left-0 w-full h-full"
+									></iframe>
+								</div>
+							</div>
+						{:else if formData.url_youtube}
+							<div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+								<p class="text-sm text-yellow-800">URL YouTube tidak valid. Gunakan format: https://youtube.com/watch?v=... atau https://youtu.be/...</p>
+							</div>
 						{/if}
 					</div>
 					
