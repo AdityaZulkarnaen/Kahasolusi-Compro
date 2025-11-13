@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import { 
 	CLOUDFLARE_API_TOKEN, 
-	CLOUDFLARE_ZONE_ID 
+	CLOUDFLARE_ACCOUNT_ID,
+	CLOUDFLARE_SITE_TAG 
 } from '$env/static/private';
 
 const CLOUDFLARE_GRAPHQL_ENDPOINT = 'https://api.cloudflare.com/client/v4/graphql';
@@ -56,9 +57,15 @@ export async function GET({ url }) {
 	const type = url.searchParams.get('type') || 'overview';
 
 	try {
-		if (!CLOUDFLARE_ZONE_ID) {
+		if (!CLOUDFLARE_ACCOUNT_ID) {
 			return json({ 
-				error: 'CLOUDFLARE_ZONE_ID not configured' 
+				error: 'CLOUDFLARE_ACCOUNT_ID not configured' 
+			}, { status: 500 });
+		}
+		
+		if (!CLOUDFLARE_SITE_TAG) {
+			return json({ 
+				error: 'CLOUDFLARE_SITE_TAG not configured' 
 			}, { status: 500 });
 		}
 
@@ -92,25 +99,20 @@ async function getOverview() {
 	const until = new Date();
 
 	const query = `
-		query GetAnalyticsOverview($zoneTag: string!, $since: string!, $until: string!) {
+		query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
 			viewer {
-				zones(filter: { zoneTag: $zoneTag }) {
-					httpRequests1dGroups(
-						limit: 30
-						filter: { date_geq: $since, date_leq: $until }
-						orderBy: [date_ASC]
+				accounts(filter: { accountTag: $accountTag }) {
+					rumPageloadEventsAdaptiveGroups(
+						filter: {
+							siteTag: $siteTag,
+							datetime_geq: $datetimeStart,
+							datetime_leq: $datetimeEnd
+						},
+						limit: 1000
 					) {
-						date: dimensions {
+						count
+						dimensions {
 							date
-						}
-						sum {
-							requests
-							pageViews
-							threats
-							bytes
-						}
-						uniq {
-							uniques
 						}
 					}
 				}
@@ -119,23 +121,32 @@ async function getOverview() {
 	`;
 
 	const data = await cloudflareGraphQL(query, {
-		zoneTag: CLOUDFLARE_ZONE_ID,
-		since: formatDateForCloudflare(since),
-		until: formatDateForCloudflare(until)
+		accountTag: CLOUDFLARE_ACCOUNT_ID,
+		siteTag: CLOUDFLARE_SITE_TAG,
+		datetimeStart: since.toISOString(),
+		datetimeEnd: until.toISOString()
 	});
 
-	const httpRequests = data.viewer.zones[0]?.httpRequests1dGroups || [];
+	const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
+	
+	// Group by date
+	const dailyMap = {};
+	rumData.forEach(group => {
+		const date = group.dimensions.date;
+		if (!dailyMap[date]) {
+			dailyMap[date] = 0;
+		}
+		dailyMap[date] += group.count;
+	});
 
 	return json({
 		success: true,
 		data: {
-			daily: httpRequests.map(group => ({
-				date: group.date.date,
-				requests: group.sum.requests,
-				pageViews: group.sum.pageViews,
-				uniqueVisitors: group.uniq.uniques,
-				threats: group.sum.threats,
-				bandwidth: group.sum.bytes
+			daily: Object.entries(dailyMap).map(([date, count]) => ({
+				date,
+				pageViews: count,
+				visits: count,
+				uniqueVisitors: count
 			}))
 		}
 	});
@@ -145,32 +156,25 @@ async function getOverview() {
  * Get current stats (today vs yesterday)
  */
 async function getStats() {
-	// Get data for today and yesterday for comparison
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	
-	const yesterday = new Date(today);
-	yesterday.setDate(yesterday.getDate() - 1);
+	// Get data for last 2 days
+	const now = new Date();
+	const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
 
 	const query = `
-		query GetAnalyticsStats($zoneTag: string!, $since: string!, $until: string!) {
+		query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
 			viewer {
-				zones(filter: { zoneTag: $zoneTag }) {
-					httpRequests1dGroups(
-						limit: 2
-						filter: { date_geq: $since, date_leq: $until }
-						orderBy: [date_DESC]
+				accounts(filter: { accountTag: $accountTag }) {
+					rumPageloadEventsAdaptiveGroups(
+						filter: {
+							siteTag: $siteTag,
+							datetime_geq: $datetimeStart,
+							datetime_leq: $datetimeEnd
+						},
+						limit: 1000
 					) {
-						date: dimensions {
+						count
+						dimensions {
 							date
-						}
-						sum {
-							requests
-							pageViews
-							threats
-						}
-						uniq {
-							uniques
 						}
 					}
 				}
@@ -179,30 +183,48 @@ async function getStats() {
 	`;
 
 	const data = await cloudflareGraphQL(query, {
-		zoneTag: CLOUDFLARE_ZONE_ID,
-		since: formatDateForCloudflare(yesterday),
-		until: formatDateForCloudflare(today)
+		accountTag: CLOUDFLARE_ACCOUNT_ID,
+		siteTag: CLOUDFLARE_SITE_TAG,
+		datetimeStart: twoDaysAgo.toISOString(),
+		datetimeEnd: now.toISOString()
 	});
 
-	const groups = data.viewer.zones[0]?.httpRequests1dGroups || [];
+	const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
 	
-	const todayStats = groups[0] || { sum: {}, uniq: {} };
-	const yesterdayStats = groups[1] || { sum: {}, uniq: {} };
+	// Group by date
+	const dailyMap = {};
+	rumData.forEach(group => {
+		const date = group.dimensions.date;
+		if (!dailyMap[date]) {
+			dailyMap[date] = 0;
+		}
+		dailyMap[date] += group.count;
+	});
+	
+	// Get today and yesterday dates
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const yesterday = new Date(today);
+	yesterday.setDate(yesterday.getDate() - 1);
+	
+	const todayDate = formatDateForCloudflare(today);
+	const yesterdayDate = formatDateForCloudflare(yesterday);
+	
+	const todayCount = dailyMap[todayDate] || 0;
+	const yesterdayCount = dailyMap[yesterdayDate] || 0;
 
 	return json({
 		success: true,
 		data: {
 			today: {
-				requests: todayStats.sum.requests || 0,
-				pageViews: todayStats.sum.pageViews || 0,
-				uniqueVisitors: todayStats.uniq.uniques || 0,
-				threats: todayStats.sum.threats || 0
+				pageViews: todayCount,
+				uniqueVisitors: todayCount,
+				visits: todayCount
 			},
 			yesterday: {
-				requests: yesterdayStats.sum.requests || 0,
-				pageViews: yesterdayStats.sum.pageViews || 0,
-				uniqueVisitors: yesterdayStats.uniq.uniques || 0,
-				threats: yesterdayStats.sum.threats || 0
+				pageViews: yesterdayCount,
+				uniqueVisitors: yesterdayCount,
+				visits: yesterdayCount
 			}
 		}
 	});
