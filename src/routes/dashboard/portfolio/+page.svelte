@@ -429,14 +429,15 @@
 							<td class="px-6 py-4">
 								<div class="flex flex-wrap gap-1">
 									{#if portfolio.technologies}
-										{#each portfolio.technologies.split(',').slice(0, 3) as tech}
+										{@const techArray = typeof portfolio.technologies === 'string' ? JSON.parse(portfolio.technologies) : portfolio.technologies}
+										{#each techArray.slice(0, 3) as tech}
 											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-												{tech.trim()}
+												{tech.tech_name}
 											</span>
 										{/each}
-										{#if portfolio.technologies.split(',').length > 3}
+										{#if techArray.length > 3}
 											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-												+{portfolio.technologies.split(',').length - 3}
+												+{techArray.length - 3}
 											</span>
 										{/if}
 									{:else}

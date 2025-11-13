@@ -118,10 +118,13 @@
 			}
 
 			if (portfolioData.technologies) {
-				const techNames = portfolioData.technologies.split(',');
-				selectedTechnologies = availableTechnologies
-					.filter(tech => techNames.includes(tech.tech_name))
-					.map(tech => tech.tech_id);
+				// Parse JSON string to get array of technology objects
+				const techArray = typeof portfolioData.technologies === 'string' 
+					? JSON.parse(portfolioData.technologies) 
+					: portfolioData.technologies;
+				
+				// Extract tech IDs from the array
+				selectedTechnologies = techArray.map(tech => tech.tech_id);
 			}
 
 		} catch (err) {
