@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { 
 	CLOUDFLARE_API_TOKEN, 
 	CLOUDFLARE_ACCOUNT_ID,
-	CLOUDFLARE_SITE_TAG 
+	CLOUDFLARE_SITE_TAG,
 } from '$env/static/private';
 
 const CLOUDFLARE_GRAPHQL_ENDPOINT = 'https://api.cloudflare.com/client/v4/graphql';
@@ -17,6 +17,82 @@ function formatDateForCloudflare(date) {
 	return `${year}-${month}-${day}`;
 }
 
+async function testWebAnalyticsWithSite() {
+    const since = new Date();
+    since.setDate(since.getDate() - 7);
+    const until = new Date();
+    
+    const dateStart = formatDateForCloudflare(since);
+    const dateEnd = formatDateForCloudflare(until);
+    
+    
+    // Test 1: Coba ambil list semua sites di account
+    try {
+        const restApiUrl = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/rum/site_info`;
+        const restResponse = await fetch(restApiUrl, {
+            headers: {
+                'Authorization': `Bearer ${CLOUDFLARE_API_TOKEN}`,
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (restResponse.ok) {
+            const restData = await restResponse.json();
+            console.log('Available Web Analytics Sites:', JSON.stringify(restData, null, 2));
+        }
+    } catch (e) {
+        console.log('REST API test failed:', e.message);
+    }
+    
+    // Test 2: GraphQL tanpa filter siteTag untuk melihat semua site
+    const query = `
+        query TestAnalytics($accountTag: string, $dateStart: string, $dateEnd: string) {
+            viewer {
+                accounts(filter: { accountTag: $accountTag }) {
+                    rumPageloadEventsAdaptiveGroups(
+                        filter: {
+                            date_geq: $dateStart,
+                            date_leq: $dateEnd
+                        },
+                        limit: 1000,
+                        orderBy: [date_DESC]
+                    ) {
+                        count
+                        dimensions {
+                            date
+                            siteTag
+                        }
+                    }
+                }
+            }
+        }
+    `;
+    
+    const data = await cloudflareGraphQL(query, {
+        accountTag: CLOUDFLARE_ACCOUNT_ID,
+        dateStart: dateStart,
+        dateEnd: dateEnd
+    });
+    
+    
+    const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
+    
+    // Group by siteTag to see which sites have data
+    const siteTags = {};
+    rumData.forEach(item => {
+        const tag = item.dimensions.siteTag || 'unknown';
+        siteTags[tag] = (siteTags[tag] || 0) + item.count;
+    });
+    
+    return { 
+        success: true,
+        availableSiteTags: Object.keys(siteTags),
+        siteTagCounts: siteTags,
+        configuredSiteTag: CLOUDFLARE_SITE_TAG,
+        totalRecords: rumData.length,
+        rawData: data
+    };
+}
 /**
  * Helper function to make Cloudflare GraphQL requests
  */
@@ -51,7 +127,7 @@ async function cloudflareGraphQL(query, variables = {}) {
 }
 
 /**
- * GET /api/visitors?type=overview|stats|countries
+ * GET /api/visitors?type=overview|stats|countries|test
  */
 export async function GET({ url }) {
 	const type = url.searchParams.get('type') || 'overview';
@@ -71,6 +147,13 @@ export async function GET({ url }) {
 
 		// Handle different types of analytics requests
 		switch (type) {
+			case 'test': {
+				const testData = await testWebAnalyticsWithSite();
+				return json({
+					success: true,
+					data: testData
+				});
+			}
 			case 'overview':
 				return await getOverview();
 			case 'stats':
@@ -92,64 +175,76 @@ export async function GET({ url }) {
 /**
  * Get visitor analytics overview (last 30 days)
  */
+/**
+ * Get visitor analytics overview (last 30 days)
+ */
 async function getOverview() {
-	// Get data for last 30 days
-	const since = new Date();
-	since.setDate(since.getDate() - 30);
-	const until = new Date();
+    // Get data for last 30 days
+    const since = new Date();
+    since.setDate(since.getDate() - 60);
+    const until = new Date();
 
-	const query = `
-		query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
-			viewer {
-				accounts(filter: { accountTag: $accountTag }) {
-					rumPageloadEventsAdaptiveGroups(
-						filter: {
-							siteTag: $siteTag,
-							datetime_geq: $datetimeStart,
-							datetime_leq: $datetimeEnd
-						},
-						limit: 1000
-					) {
-						count
-						dimensions {
-							date
-						}
-					}
-				}
-			}
-		}
-	`;
+    const dateStart = formatDateForCloudflare(since);
+    const dateEnd = formatDateForCloudflare(until);
 
-	const data = await cloudflareGraphQL(query, {
-		accountTag: CLOUDFLARE_ACCOUNT_ID,
-		siteTag: CLOUDFLARE_SITE_TAG,
-		datetimeStart: since.toISOString(),
-		datetimeEnd: until.toISOString()
-	});
 
-	const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
-	
-	// Group by date
-	const dailyMap = {};
-	rumData.forEach(group => {
-		const date = group.dimensions.date;
-		if (!dailyMap[date]) {
-			dailyMap[date] = 0;
-		}
-		dailyMap[date] += group.count;
-	});
+    // Query untuk mengambil page views
+    const query = `
+        query ($accountTag: string, $siteTag: string, $dateStart: string, $dateEnd: string) {
+            viewer {
+                accounts(filter: { accountTag: $accountTag }) {
+                    rumPageloadEventsAdaptiveGroups( 
+                        filter: {
+                            siteTag: $siteTag,
+                            date_geq: $dateStart,
+                            date_leq: $dateEnd
+                        },
+                        limit: 1000,
+                        orderBy: [date_ASC]
+                    ) {
+                        count  
+                        dimensions {
+                            date
+                        }
+                    }
+                }
+            }
+        }
+    `;
 
-	return json({
-		success: true,
-		data: {
-			daily: Object.entries(dailyMap).map(([date, count]) => ({
-				date,
-				pageViews: count,
-				visits: count,
-				uniqueVisitors: count
-			}))
-		}
-	});
+    const data = await cloudflareGraphQL(query, {
+        accountTag: CLOUDFLARE_ACCOUNT_ID,
+        siteTag: CLOUDFLARE_SITE_TAG,
+        dateStart: dateStart,
+        dateEnd: dateEnd
+    });
+
+    // PARSING DATA UNTUK 'count'
+    const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
+    
+    // Group by date (penting jika ada beberapa data per tanggal)
+    const dailyMap = {};
+    rumData.forEach(group => {
+        const date = group.dimensions.date;
+        if (!dailyMap[date]) {
+            dailyMap[date] = 0;
+        }
+        dailyMap[date] += group.count;
+    });
+
+    const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
+        date: date,
+        pageViews: count, 
+        visits: count, // Kita asumsikan visit = page view untuk saat ini
+        uniqueVisitors: count // Kita tidak bisa mendapatkan uniques dari API ini
+    }));
+
+    return json({
+        success: true,
+        data: {
+            daily: dailyData
+        }
+    });
 }
 
 /**
@@ -159,6 +254,7 @@ async function getStats() {
 	// Get data for last 2 days
 	const now = new Date();
 	const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+
 
 	const query = `
 		query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
