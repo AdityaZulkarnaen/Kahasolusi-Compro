@@ -299,6 +299,7 @@
                                 category: project.categories ? project.categories.split(',')[0] : '',
                                 image: project.image_url ? `http://localhost:3001${project.image_url}` : '/images/project_example.png',
                                 link: project.project_url || '#',
+                                url_youtube: project.url_youtube || '',
                                 client: project.client_name,
                                 technologies: (() => {
                                     try {

@@ -47,10 +47,35 @@
 			{project.description}
 		</p>
 
-		<div class="flex gap-3 mb-4">
-			<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
-			<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
-			<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
+		<!-- Technologies Icons -->
+		<div class="flex gap-3 mb-4 items-center">
+			{#if project.technologies && project.technologies.length > 0}
+				{#each project.technologies.slice(0, 3) as tech}
+					{#if tech.image}
+						<div class="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center overflow-hidden p-1">
+							<img 
+								src={tech.image} 
+								alt={tech.name} 
+								class="w-full h-full object-contain"
+								title={tech.name}
+							/>
+						</div>
+					{:else}
+						<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full flex items-center justify-center" title={tech.name}>
+							<span class="text-xs font-semibold text-gray-600">{tech.name.charAt(0)}</span>
+						</div>
+					{/if}
+				{/each}
+				{#if project.technologies.length > 3}
+					<div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center border border-gray-300">
+						<span class="text-xs font-semibold text-gray-600">+{project.technologies.length - 3}</span>
+					</div>
+				{/if}
+			{:else}
+				<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
+				<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
+				<div class="w-8 h-8 bg-[#D2D2D2B2] rounded-full"></div>
+			{/if}
 		</div>
 
 		<!-- External Link -->
