@@ -92,9 +92,9 @@ export class PortfolioService {
       const result = await db.run(`
         INSERT INTO portfolio (
           project_name, project_description, case_study, permasalahan, hasil,
-          image_url, project_url, client_name, project_start_date, project_end_date, 
+          image_url, project_url, url_youtube, client_name, project_start_date, project_end_date, 
           is_featured, daerah, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.project_name,
         data.project_description,
@@ -103,6 +103,7 @@ export class PortfolioService {
         data.hasil || '[]',
         data.image_url,
         data.project_url,
+        data.url_youtube || null,
         data.client_name,
         data.project_start_date,
         data.project_end_date,
@@ -156,7 +157,7 @@ export class PortfolioService {
         UPDATE portfolio 
         SET project_name = ?, project_description = ?, case_study = ?, 
             permasalahan = ?, hasil = ?,
-            image_url = ?, project_url = ?, client_name = ?, 
+            image_url = ?, project_url = ?, url_youtube = ?, client_name = ?, 
             project_start_date = ?, project_end_date = ?, is_featured = ?, 
             daerah = ?,
             updated_at = CURRENT_TIMESTAMP, updated_by = ?
@@ -169,6 +170,7 @@ export class PortfolioService {
         data.hasil || '[]',
         data.image_url,
         data.project_url,
+        data.url_youtube || null,
         data.client_name,
         data.project_start_date,
         data.project_end_date,

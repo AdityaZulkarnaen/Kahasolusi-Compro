@@ -27,6 +27,7 @@
 		project_start_date: '',
 		project_end_date: '',
 		project_url: '',
+		url_youtube: '',
 		image_url: '',
 		is_featured: 0
 	};
@@ -443,6 +444,22 @@
 						{#if errors.project_url}
 							<p class="text-red-500 text-sm mt-1">{errors.project_url}</p>
 						{/if}
+					</div>
+					
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">
+							URL YouTube
+						</label>
+						<div class="relative">
+							<LinkIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+							<input
+								type="url"
+								bind:value={formData.url_youtube}
+								class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+								placeholder="https://youtube.com/watch?v=..."
+							/>
+						</div>
+						<p class="text-sm text-gray-500 mt-1">Opsional - Link video YouTube tentang project</p>
 					</div>
 					
 					<div>

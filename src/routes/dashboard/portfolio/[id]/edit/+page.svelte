@@ -41,6 +41,7 @@
 		project_start_date: '',
 		project_end_date: '',
 		project_url: '',
+		url_youtube: '',
 		image_url: '',
 		is_featured: 0
 	};
@@ -94,6 +95,7 @@
 				project_start_date: portfolioData.project_start_date || '',
 				project_end_date: portfolioData.project_end_date || '',
 				project_url: portfolioData.project_url || '',
+				url_youtube: portfolioData.url_youtube || '',
 				image_url: portfolioData.image_url || '',
 				is_featured: portfolioData.is_featured || 0
 			};
@@ -444,6 +446,21 @@
 								placeholder="https://project-demo.com"
 								disabled={submitting}
 							/>
+						</div>
+						
+						<div>
+							<label for="url_youtube" class="block text-sm font-medium text-gray-700 mb-2">
+								URL YouTube
+							</label>
+							<input
+								type="url"
+								id="url_youtube"
+								bind:value={formData.url_youtube}
+								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+								placeholder="https://youtube.com/watch?v=..."
+								disabled={submitting}
+							/>
+							<p class="text-sm text-gray-500 mt-1">Opsional - Link video YouTube tentang project</p>
 						</div>
 						
 						<div>
