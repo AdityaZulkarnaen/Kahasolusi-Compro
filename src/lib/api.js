@@ -455,3 +455,26 @@ export const feedbackAPI = {
         });
     }
 };
+
+// Analytics API functions
+export const analyticsAPI = {
+    // Get analytics overview (last 30 days)
+    async getOverview() {
+        return await apiRequest('/analytics/overview');
+    },
+
+    // Get analytics by country
+    async getCountries() {
+        return await apiRequest('/analytics/countries');
+    },
+
+    // Get analytics by browser
+    async getBrowsers() {
+        return await apiRequest('/analytics/browsers');
+    },
+
+    // Get current stats (today vs yesterday)
+    async getStats() {
+        return await apiRequest('/analytics/stats');
+    }
+};
