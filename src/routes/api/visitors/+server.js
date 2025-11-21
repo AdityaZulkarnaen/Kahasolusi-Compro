@@ -183,18 +183,20 @@ async function getOverview() {
     const dateStart = formatDateForCloudflare(since);
     const dateEnd = formatDateForCloudflare(until);
 
-    // Query untuk mengambil page load events yang merupakan data asli dari Cloudflare
+    console.log('Fetching overview data from', dateStart, 'to', dateEnd);
+
+    // Query menggunakan datetime untuk data realtime
     const query = `
-        query ($accountTag: string, $siteTag: string, $dateStart: string, $dateEnd: string) {
+        query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
             viewer {
                 accounts(filter: { accountTag: $accountTag }) {
                     rumPageloadEventsAdaptiveGroups( 
                         filter: {
                             siteTag: $siteTag,
-                            date_geq: $dateStart,
-                            date_leq: $dateEnd
+                            datetime_geq: $datetimeStart,
+                            datetime_leq: $datetimeEnd
                         },
-                        limit: 1000,
+                        limit: 10000,
                         orderBy: [date_ASC]
                     ) {
                         count
@@ -210,11 +212,13 @@ async function getOverview() {
     const data = await cloudflareGraphQL(query, {
         accountTag: CLOUDFLARE_ACCOUNT_ID,
         siteTag: CLOUDFLARE_SITE_TAG,
-        dateStart: dateStart,
-        dateEnd: dateEnd
+        datetimeStart: since.toISOString(),
+        datetimeEnd: until.toISOString()
     });
 
     const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
+    
+    console.log('Received', rumData.length, 'data points from Cloudflare');
     
     // Group by date
     const dailyMap = {};
@@ -227,10 +231,14 @@ async function getOverview() {
     });
 
     // Return ONLY real pageload data from Cloudflare
-    const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
-        date: date,
-        pageLoads: count  // Real metric: actual page load events
-    }));
+    const dailyData = Object.entries(dailyMap)
+        .map(([date, count]) => ({
+            date: date,
+            pageLoads: count  // Real metric: actual page load events
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+    console.log('Daily data range:', dailyData[0]?.date, 'to', dailyData[dailyData.length - 1]?.date);
 
     return json({
         success: true,
@@ -241,10 +249,10 @@ async function getOverview() {
 }
 
 /**
- * Get current stats (today vs all time) - Real data only
+ * Get current stats 
  */
 async function getStats() {
-	// Get data for all time (last 365 days - Cloudflare limit)
+	// Get data for all time (last 90 days - Cloudflare limit)
 	const now = new Date();
 	const oneYearAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
