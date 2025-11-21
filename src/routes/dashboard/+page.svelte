@@ -191,8 +191,8 @@
 	</div>
 
 	<!-- Analytics Content Grid -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-		<!-- Monthly Visitor -->
+	<!-- <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+		
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 			<h2 class="text-lg font-semibold text-gray-800 mb-4">Monthly Visitor</h2>
 			<div class="h-64 flex items-center justify-center text-gray-500">
@@ -200,7 +200,7 @@
 			</div>
 		</div>
 
-		<!-- Visitor by Provinces -->
+		
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 			<h2 class="text-lg font-semibold text-gray-800 mb-4">Visitor by Provinces</h2>
 			<div class="h-64 flex items-center justify-center text-gray-500">
@@ -209,7 +209,7 @@
 		</div>
 	</div>
 
-	<!-- Visitor Overview -->
+	
 	<div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 		<div class="flex items-center justify-between mb-4">
 			<h2 class="text-lg font-semibold text-gray-800">Visitor Overview</h2>
@@ -222,5 +222,5 @@
 		<div class="h-80 flex items-center justify-center text-gray-500">
 			<p>Overview chart akan ditambahkan nanti</p>
 		</div>
-	</div>
+	</div> -->
 </div>
