@@ -1,7 +1,7 @@
 <script>
 	// Team Card Component
 	import { createEventDispatcher } from 'svelte';
-	import PersonIcon from '$lib/assets/svg/PersonDefault.svg';
+	import PersonIcon from '$lib/assets/svg/People.svg';
 	
 	export let name = 'Steve';
 	export let position = 'Fullstack';
@@ -14,6 +14,12 @@
 		console.log('TeamCard clicked!', member);
 		dispatch('click', member);
 	}
+
+	// Handle image error - fallback to default
+	function handleImageError(event) {
+		event.target.src = PersonIcon;
+	}
+
 </script>
 
 <button
@@ -29,7 +35,12 @@
 		<!-- Profile Image -->
 		<div class="relative w-full h-full flex justify-center mt-12">
 			{#if image}
-				<img src={image} alt={name} class="w-1/2 h-1/2 object-cover rounded-2xl" />
+				<img 
+					src={image} 
+					alt={name} 
+					class="w-1/2 h-1/2 object-cover rounded-2xl"
+					on:error={handleImageError}
+				/>
 			{:else}
 				<!-- Placeholder untuk gambar -->
 				<div class="w-56 h-56 bg-gray-200 rounded-2xl flex items-center justify-center">
