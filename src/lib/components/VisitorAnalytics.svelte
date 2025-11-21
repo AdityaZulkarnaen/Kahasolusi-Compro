@@ -1,6 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
 	import { BarChart3, TrendingUp, Globe, Users } from 'lucide-svelte';
+	import { Chart, registerables } from 'chart.js';
+
+	// Register Chart.js components
+	Chart.register(...registerables);
 
 	let { data } = $props();
 
@@ -11,6 +15,8 @@
 		stats: null,
 		countries: []
 	});
+	let dailyChart = null;
+	let overviewChart = null;
 
 	// Format number with separators
 	function formatNumber(num) {
@@ -65,6 +71,12 @@
 				stats: stats.data || null,
 				countries: countries.data || []
 			};
+
+			// Render chart after data is loaded
+			setTimeout(() => {
+				renderDailyChart();
+				renderOverviewChart();
+			}, 100);
 		} catch (err) {
 			console.error('Analytics error:', err);
 			error = err.message || 'Failed to load analytics';
@@ -73,58 +85,286 @@
 		}
 	}
 
+	// Render daily visitors chart
+	function renderDailyChart() {
+		const canvas = document.getElementById('dailyVisitorsChart');
+		if (!canvas || !analyticsData.daily.length) return;
+
+		// Destroy existing chart
+		if (dailyChart) {
+			dailyChart.destroy();
+		}
+
+		const ctx = canvas.getContext('2d');
+		
+		const labels = analyticsData.daily.map(day => {
+			const date = new Date(day.date);
+			return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+		});
+
+		// Only use real data from Cloudflare
+		const pageLoadsData = analyticsData.daily.map(day => day.pageLoads || 0);
+
+		dailyChart = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels: labels,
+				datasets: [
+					{
+						label: 'Page Loads',
+						data: pageLoadsData,
+						borderColor: 'rgb(59, 130, 246)',
+						backgroundColor: 'rgba(59, 130, 246, 0.1)',
+						fill: true,
+						tension: 0.4,
+						pointRadius: 3,
+						pointHoverRadius: 5,
+						borderWidth: 2
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						display: true,
+						position: 'top',
+						labels: {
+							usePointStyle: true,
+							padding: 15,
+							font: {
+								size: 12
+							}
+						}
+					},
+					tooltip: {
+						mode: 'index',
+						intersect: false,
+						backgroundColor: 'rgba(0, 0, 0, 0.8)',
+						titleFont: {
+							size: 13
+						},
+						bodyFont: {
+							size: 12
+						},
+						padding: 12,
+						callbacks: {
+							label: function(context) {
+								let label = context.dataset.label || '';
+								if (label) {
+									label += ': ';
+								}
+								label += formatNumber(context.parsed.y);
+								return label;
+							}
+						}
+					}
+				},
+				scales: {
+					x: {
+						grid: {
+							display: false
+						},
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45,
+							font: {
+								size: 10
+							}
+						}
+					},
+					y: {
+						beginAtZero: true,
+						grid: {
+							color: 'rgba(0, 0, 0, 0.05)'
+						},
+						ticks: {
+							callback: function(value) {
+								return formatNumber(value);
+							},
+							font: {
+								size: 11
+							}
+						}
+					}
+				},
+				interaction: {
+					mode: 'nearest',
+					axis: 'x',
+					intersect: false
+				}
+			}
+		});
+	}
+
+	// Render overview all-time chart (same style as daily chart)
+	function renderOverviewChart() {
+		const canvas = document.getElementById('overviewChart');
+		if (!canvas || !analyticsData.daily.length) return;
+
+		// Destroy existing chart
+		if (overviewChart) {
+			overviewChart.destroy();
+		}
+
+		const ctx = canvas.getContext('2d');
+		
+		const labels = analyticsData.daily.map(day => {
+			const date = new Date(day.date);
+			return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+		});
+
+		// Only use real data from Cloudflare
+		const pageLoadsData = analyticsData.daily.map(day => day.pageLoads || 0);
+
+		overviewChart = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels: labels,
+				datasets: [
+					{
+						label: 'Page Loads',
+						data: pageLoadsData,
+						borderColor: 'rgb(59, 130, 246)',
+						backgroundColor: 'rgba(59, 130, 246, 0.1)',
+						fill: true,
+						tension: 0.4,
+						pointRadius: 3,
+						pointHoverRadius: 5,
+						borderWidth: 2
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						display: true,
+						position: 'top',
+						labels: {
+							usePointStyle: true,
+							padding: 15,
+							font: {
+								size: 12
+							}
+						}
+					},
+					tooltip: {
+						mode: 'index',
+						intersect: false,
+						backgroundColor: 'rgba(0, 0, 0, 0.8)',
+						titleFont: {
+							size: 13
+						},
+						bodyFont: {
+							size: 12
+						},
+						padding: 12,
+						callbacks: {
+							label: function(context) {
+								let label = context.dataset.label || '';
+								if (label) {
+									label += ': ';
+								}
+								label += formatNumber(context.parsed.y);
+								return label;
+							}
+						}
+					}
+				},
+				scales: {
+					x: {
+						grid: {
+							display: false
+						},
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45,
+							font: {
+								size: 10
+							}
+						}
+					},
+					y: {
+						beginAtZero: true,
+						grid: {
+							color: 'rgba(0, 0, 0, 0.05)'
+						},
+						ticks: {
+							callback: function(value) {
+								return formatNumber(value);
+							},
+							font: {
+								size: 11
+							}
+						}
+					}
+				},
+				interaction: {
+					mode: 'nearest',
+					axis: 'x',
+					intersect: false
+				}
+			}
+		});
+	}
+
 	// Calculate totals for period
 	const periodTotals = $derived(() => {
 		if (!analyticsData.daily.length) return null;
 
 		return analyticsData.daily.reduce((acc, day) => {
-			acc.requests += day.requests || 0;
-			acc.pageViews += day.pageViews || 0;
-			acc.uniqueVisitors += day.uniqueVisitors || 0;
-			acc.bandwidth += day.bandwidth || 0;
+			acc.pageLoads += day.pageLoads || 0;
 			return acc;
-		}, { requests: 0, pageViews: 0, uniqueVisitors: 0, bandwidth: 0 });
+		}, { pageLoads: 0 });
 	});
 
-	// Stats cards configuration
+	// Stats cards configuration - Real data only
 	const statsCards = $derived(() => {
 		if (!analyticsData.stats) return [];
 
-		const { today, yesterday } = analyticsData.stats;
+		const { today, yesterday, allTime } = analyticsData.stats;
+		const totals = periodTotals();
+
+		// Calculate average page loads per day
+		const avgPageLoadsPerDay = totals ? Math.round(totals.pageLoads / analyticsData.daily.length) : 0;
 
 		return [
 			{
-				title: 'Page Views',
-				value: formatNumber(today.pageViews),
-				change: calculateChange(today.pageViews, yesterday.pageViews),
-				icon: BarChart3,
+				title: 'Total Page Loads',
+				subtitle: 'Last 3 month',
+				value: formatNumber(allTime?.totalPageLoads || 0),
+				change: calculateChange(today.pageLoads || 0, yesterday.pageLoads || 0),
+				icon: Globe,
 				bgColor: 'bg-blue-50',
 				iconBg: 'bg-blue-500'
 			},
 			{
-				title: 'Unique Visitors',
-				value: formatNumber(today.uniqueVisitors),
-				change: calculateChange(today.uniqueVisitors, yesterday.uniqueVisitors),
-				icon: Users,
+				title: 'Today',
+				subtitle: 'Page Loads',
+				value: formatNumber(today.pageLoads || 0),
+				change: calculateChange(today.pageLoads || 0, yesterday.pageLoads || 0),
+				icon: BarChart3,
 				bgColor: 'bg-green-50',
 				iconBg: 'bg-green-500'
 			},
 			{
-				title: 'Total Visits',
-				value: formatNumber(today.visits || today.uniqueVisitors),
-				change: calculateChange(today.visits || today.uniqueVisitors, yesterday.visits || yesterday.uniqueVisitors),
-				icon: Globe,
+				title: 'Days Tracked',
+				subtitle: 'With Data',
+				value: formatNumber(allTime?.totalDays || 0),
+				change: '0',
+				icon: TrendingUp,
 				bgColor: 'bg-purple-50',
 				iconBg: 'bg-purple-500'
 			},
 			{
-				title: 'Avg. Page Views',
-				value: formatNumber(Math.round((today.pageViews || 0) / (today.visits || 1))),
-				change: calculateChange(
-					Math.round((today.pageViews || 0) / (today.visits || 1)),
-					Math.round((yesterday.pageViews || 0) / (yesterday.visits || 1))
-				),
-				icon: TrendingUp,
+				title: 'Daily Average',
+				subtitle: 'Last 60 Days',
+				value: formatNumber(avgPageLoadsPerDay),
+				change: '0',
+				icon: Users,
 				bgColor: 'bg-orange-50',
 				iconBg: 'bg-orange-500'
 			}
@@ -133,6 +373,16 @@
 
 	onMount(() => {
 		loadAnalytics();
+		
+		// Cleanup on unmount
+		return () => {
+			if (dailyChart) {
+				dailyChart.destroy();
+			}
+			if (overviewChart) {
+				overviewChart.destroy();
+			}
+		};
 	});
 </script>
 
@@ -195,9 +445,14 @@
 		{#each statsCards() as card}
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
 				<div class="flex items-center justify-between">
-					<div>
-						<p class="text-gray-600 text-sm font-medium mb-1">{card.title}</p>
-						<p class="text-3xl font-bold text-gray-800 mb-1">{card.value}</p>
+					<div class="flex-1">
+						<div class="flex items-baseline gap-2 mb-1">
+							<p class="text-gray-800 text-sm font-semibold">{card.title}</p>
+							{#if card.subtitle}
+								<span class="text-gray-400 text-xs">({card.subtitle})</span>
+							{/if}
+						</div>
+						<p class="text-3xl font-bold text-gray-900 mb-1">{card.value}</p>
 						<div class="flex items-center gap-1 text-xs">
 							{#if getTrendDirection(card.change) === 'up'}
 								<span class="text-green-600 font-medium">↑ {card.change}%</span>
@@ -207,7 +462,7 @@
 							<span class="text-gray-500">vs yesterday</span>
 						</div>
 					</div>
-					<div class="w-12 h-12 {card.iconBg} rounded-xl flex items-center justify-center">
+					<div class="w-12 h-12 {card.iconBg} rounded-xl flex items-center justify-center flex-shrink-0">
 						<card.icon class="text-white w-6 h-6" />
 					</div>
 				</div>
@@ -219,79 +474,55 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 		<!-- Daily Visitors Chart -->
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-			<h2 class="text-lg font-semibold text-gray-800 mb-4">Daily Visitors (Last 30 Days)</h2>
-			<div class="h-64">
-				{#if analyticsData.daily.length > 0}
-					<div class="h-full flex items-end gap-1">
-						{#each analyticsData.daily as day}
-							{@const maxValue = Math.max(...analyticsData.daily.map(d => d.pageViews))}
-							{@const heightPercent = (day.pageViews / maxValue) * 100}
-							<div class="flex-1 flex flex-col items-center group relative">
-								<div 
-									class="w-full bg-blue-500 rounded-t hover:bg-blue-600 transition-colors cursor-pointer"
-									style="height: {heightPercent}%"
-									title="{new Date(day.date).toLocaleDateString('id-ID')}: {formatNumber(day.pageViews)} views"
-								></div>
-								<div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-xs px-2 py-1 rounded mt-1 whitespace-nowrap z-10">
-									<div class="font-semibold">{new Date(day.date).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}</div>
-									<div>Views: {formatNumber(day.pageViews)}</div>
-									<div>Visitors: {formatNumber(day.uniqueVisitors)}</div>
-								</div>
-							</div>
-						{/each}
-					</div>
-					<div class="mt-4 text-center text-xs text-gray-500">
-						Total: {formatNumber(periodTotals().pageViews)} page views
-					</div>
-				{:else}
-					<div class="h-full flex items-center justify-center text-gray-400">
-						No data available
-					</div>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Top Countries -->
+			<h2 class="text-lg font-semibold text-gray-800 mb-4">Daily Page Loads (Last 60 Days)</h2>
+			{#if analyticsData.daily.length > 0}
+				<div class="h-72">
+					<canvas id="dailyVisitorsChart"></canvas>
+				</div>
+				<div class="mt-4 text-center text-xs text-gray-500">
+					Total: {formatNumber(periodTotals().pageLoads)} page loads from Cloudflare Web Analytics
+				</div>
+			{:else}
+				<div class="h-72 flex items-center justify-center text-gray-400">
+					No data available
+				</div>
+			{/if}
+		</div>	
+		<!-- Overview All-Time Chart -->
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-			<h2 class="text-lg font-semibold text-gray-800 mb-4">Top Visitors by Country</h2>
-			<div class="h-64 overflow-y-auto">
-				{#if analyticsData.countries.length > 0}
-					<div class="space-y-3">
-						{#each analyticsData.countries.slice(0, 10) as country, index}
-							{@const maxRequests = analyticsData.countries[0].requests}
-							{@const widthPercent = (country.requests / maxRequests) * 100}
-							<div class="group">
-								<div class="flex items-center justify-between mb-1">
-									<span class="text-sm font-medium text-gray-700 flex items-center gap-2">
-										<span class="text-gray-400 text-xs">#{index + 1}</span>
-										{country.country}
-									</span>
-									<span class="text-xs text-gray-500">
-										{formatNumber(country.uniqueVisitors)} visitors
-									</span>
-								</div>
-								<div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-									<div 
-										class="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-500 ease-out"
-										style="width: {widthPercent}%"
-									></div>
-								</div>
-								<div class="text-xs text-gray-400 mt-1">
-									{formatNumber(country.pageViews)} page views
-								</div>
-							</div>
-						{/each}
-					</div>
-				{:else}
-					<div class="h-full flex items-center justify-center text-gray-400">
-						No country data available
-					</div>
-				{/if}
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-semibold text-gray-800">Visitor Overview All Time</h2>
+				<span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+					Last {analyticsData.daily.length} days
+				</span>
 			</div>
+			{#if periodTotals()}
+				<div class="h-64">
+					<canvas id="overviewChart"></canvas>
+				</div>
+				<div class="mt-6 grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+					<div class="text-center">
+						<p class="text-xs text-gray-500 mb-1">Avg per Day</p>
+						<p class="text-lg font-bold text-gray-800">
+							{formatNumber(Math.round(periodTotals().pageLoads / analyticsData.daily.length))}
+						</p>
+					</div>
+					<div class="text-center">
+						<p class="text-xs text-gray-500 mb-1">Total Days</p>
+						<p class="text-lg font-bold text-gray-800">
+							{analyticsData.daily.length}
+						</p>
+					</div>
+				</div>
+			{:else}
+				<div class="h-64 flex items-center justify-center text-gray-400">
+					No data available
+				</div>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Period Summary -->
+	<!-- Period Summary
 	{#if periodTotals()}
 		<div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
 			<h2 class="text-lg font-semibold mb-4">30-Day Summary</h2>
@@ -314,5 +545,5 @@
 				</div>
 			</div>
 		</div>
-	{/if}
+	{/if} -->
 {/if}

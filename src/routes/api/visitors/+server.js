@@ -173,13 +173,9 @@ export async function GET({ url }) {
 }
 
 /**
- * Get visitor analytics overview (last 30 days)
- */
-/**
- * Get visitor analytics overview (last 30 days)
+ * Get visitor analytics overview (last 60 days) - Real data only
  */
 async function getOverview() {
-    // Get data for last 30 days
     const since = new Date();
     since.setDate(since.getDate() - 60);
     const until = new Date();
@@ -187,22 +183,23 @@ async function getOverview() {
     const dateStart = formatDateForCloudflare(since);
     const dateEnd = formatDateForCloudflare(until);
 
+    console.log('Fetching overview data from', dateStart, 'to', dateEnd);
 
-    // Query untuk mengambil page views
+    // Query menggunakan datetime untuk data realtime
     const query = `
-        query ($accountTag: string, $siteTag: string, $dateStart: string, $dateEnd: string) {
+        query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
             viewer {
                 accounts(filter: { accountTag: $accountTag }) {
                     rumPageloadEventsAdaptiveGroups( 
                         filter: {
                             siteTag: $siteTag,
-                            date_geq: $dateStart,
-                            date_leq: $dateEnd
+                            datetime_geq: $datetimeStart,
+                            datetime_leq: $datetimeEnd
                         },
-                        limit: 1000,
+                        limit: 10000,
                         orderBy: [date_ASC]
                     ) {
-                        count  
+                        count
                         dimensions {
                             date
                         }
@@ -215,14 +212,15 @@ async function getOverview() {
     const data = await cloudflareGraphQL(query, {
         accountTag: CLOUDFLARE_ACCOUNT_ID,
         siteTag: CLOUDFLARE_SITE_TAG,
-        dateStart: dateStart,
-        dateEnd: dateEnd
+        datetimeStart: since.toISOString(),
+        datetimeEnd: until.toISOString()
     });
 
-    // PARSING DATA UNTUK 'count'
     const rumData = data.viewer.accounts[0]?.rumPageloadEventsAdaptiveGroups || [];
     
-    // Group by date (penting jika ada beberapa data per tanggal)
+    console.log('Received', rumData.length, 'data points from Cloudflare');
+    
+    // Group by date
     const dailyMap = {};
     rumData.forEach(group => {
         const date = group.dimensions.date;
@@ -232,12 +230,15 @@ async function getOverview() {
         dailyMap[date] += group.count;
     });
 
-    const dailyData = Object.entries(dailyMap).map(([date, count]) => ({
-        date: date,
-        pageViews: count, 
-        visits: count, // Kita asumsikan visit = page view untuk saat ini
-        uniqueVisitors: count // Kita tidak bisa mendapatkan uniques dari API ini
-    }));
+    // Return ONLY real pageload data from Cloudflare
+    const dailyData = Object.entries(dailyMap)
+        .map(([date, count]) => ({
+            date: date,
+            pageLoads: count  // Real metric: actual page load events
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+    console.log('Daily data range:', dailyData[0]?.date, 'to', dailyData[dailyData.length - 1]?.date);
 
     return json({
         success: true,
@@ -248,13 +249,12 @@ async function getOverview() {
 }
 
 /**
- * Get current stats (today vs yesterday)
+ * Get current stats 
  */
 async function getStats() {
-	// Get data for last 2 days
+	// Get data for all time (last 90 days - Cloudflare limit)
 	const now = new Date();
-	const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-
+	const oneYearAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
 	const query = `
 		query ($accountTag: string, $siteTag: string, $datetimeStart: string, $datetimeEnd: string) {
@@ -266,7 +266,7 @@ async function getStats() {
 							datetime_geq: $datetimeStart,
 							datetime_leq: $datetimeEnd
 						},
-						limit: 1000
+						limit: 10000
 					) {
 						count
 						dimensions {
@@ -281,7 +281,7 @@ async function getStats() {
 	const data = await cloudflareGraphQL(query, {
 		accountTag: CLOUDFLARE_ACCOUNT_ID,
 		siteTag: CLOUDFLARE_SITE_TAG,
-		datetimeStart: twoDaysAgo.toISOString(),
+		datetimeStart: oneYearAgo.toISOString(),
 		datetimeEnd: now.toISOString()
 	});
 
@@ -289,12 +289,15 @@ async function getStats() {
 	
 	// Group by date
 	const dailyMap = {};
+	let totalAllTime = 0;
 	rumData.forEach(group => {
 		const date = group.dimensions.date;
+		const count = group.count;
 		if (!dailyMap[date]) {
 			dailyMap[date] = 0;
 		}
-		dailyMap[date] += group.count;
+		dailyMap[date] += count;
+		totalAllTime += count;
 	});
 	
 	// Get today and yesterday dates
@@ -313,91 +316,28 @@ async function getStats() {
 		success: true,
 		data: {
 			today: {
-				pageViews: todayCount,
-				uniqueVisitors: todayCount,
-				visits: todayCount
+				pageLoads: todayCount  // Real metric
 			},
 			yesterday: {
-				pageViews: yesterdayCount,
-				uniqueVisitors: yesterdayCount,
-				visits: yesterdayCount
+				pageLoads: yesterdayCount  // Real metric
+			},
+			allTime: {
+				totalPageLoads: totalAllTime,  // Real total from last 365 days
+				totalDays: Object.keys(dailyMap).length  // Number of days with data
 			}
 		}
 	});
 }
 
 /**
- * Get visitor analytics by country
+ * Get visitor analytics by country - Not available with current Cloudflare plan
  */
 async function getCountries() {
 	// Country breakdown requires Cloudflare Business/Enterprise plan
-	// Return sample data for demonstration
-	const countries = [
-		{
-			country: 'Indonesia',
-			requests: 8500,
-			pageViews: 6500,
-			uniqueVisitors: 3200
-		},
-		{
-			country: 'United States',
-			requests: 1200,
-			pageViews: 950,
-			uniqueVisitors: 450
-		},
-		{
-			country: 'Singapore',
-			requests: 800,
-			pageViews: 620,
-			uniqueVisitors: 280
-		},
-		{
-			country: 'Malaysia',
-			requests: 450,
-			pageViews: 350,
-			uniqueVisitors: 180
-		},
-		{
-			country: 'Australia',
-			requests: 320,
-			pageViews: 250,
-			uniqueVisitors: 120
-		},
-		{
-			country: 'Japan',
-			requests: 280,
-			pageViews: 220,
-			uniqueVisitors: 95
-		},
-		{
-			country: 'Thailand',
-			requests: 210,
-			pageViews: 165,
-			uniqueVisitors: 75
-		},
-		{
-			country: 'Philippines',
-			requests: 180,
-			pageViews: 140,
-			uniqueVisitors: 65
-		},
-		{
-			country: 'South Korea',
-			requests: 150,
-			pageViews: 115,
-			uniqueVisitors: 55
-		},
-		{
-			country: 'Others',
-			requests: 310,
-			pageViews: 240,
-			uniqueVisitors: 110
-		}
-	];
-
+	// Return empty data to indicate feature not available
 	return json({
-		success: true,
-		data: countries,
-		note: 'This is sample data. Country breakdown requires Cloudflare Business/Enterprise plan.'
+		success: false,
+		data: [],
+		message: 'Geographic data requires Cloudflare Business or Enterprise plan'
 	});
 }
