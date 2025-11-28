@@ -26,14 +26,14 @@
 </script>
 
 <div
-	class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 max-w-sm w-full h-full flex flex-col"
+	class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full flex-1 flex-col"
 >
 	<!-- Project Image -->
-	<div class="h-48 bg-gray-200 overflow-hidden flex-shrink-0">
+	<div class="relative w-full bg-gray-200 overflow-hidden flex-shrink-0" style="aspect-ratio: 16/9;">
 		<img
 			src={project.image}
 			alt={project.title}
-			class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+			class="absolute inset-0 w-full h-full object-cover hover:scale-105 transition-transform duration-300"
 		/>
 	</div>
 

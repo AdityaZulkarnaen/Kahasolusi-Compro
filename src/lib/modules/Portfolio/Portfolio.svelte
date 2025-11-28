@@ -291,7 +291,7 @@
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                     {#each paginatedProjects as project (project.portfolio_id)}
-                        <div in:fade={{ duration: 300, delay: 100 }} class="h-full flex">
+                        <div in:fade={{ duration: 300, delay: 100 }} class="flex-1">
                             <ProjectCard project={{
                                 id: project.portfolio_id,
                                 title: project.project_name,
@@ -323,7 +323,9 @@
                                     }
                                 })(),
                                 images: project.image_url ? [{ url: `http://localhost:3001${project.image_url}`, alt: project.project_name }] : []
-                            }} />
+                            }}
+                            
+                            />
                         </div>
                     {/each}
                 </div>
