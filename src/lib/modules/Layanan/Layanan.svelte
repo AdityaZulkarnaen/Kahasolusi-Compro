@@ -23,7 +23,7 @@
 
 	<!-- Services Details Section -->
 	<section class="py-8 md:py-16">
-		<!-- Website Development - Gambar mepet ke kiri -->
+		<!-- Website Development -->
 		<ServiceDetail
 			title="Website Development"
 			description="Website yang kami kembangkan membantu bisnis tampil lebih profesional, memperkuat kehadiran digital, dan mempermudah komunikasi dengan pelanggan. Dengan desain responsif dan performa yang optimal, website Anda akan berfungsi sempurna di berbagai perangkat dan mudah dikelola."
@@ -31,7 +31,7 @@
 			fullWidth={true}
 		/>
 
-		<!-- Mobile Application Development - Gambar ada jarak dari kiri -->
+		<!-- Mobile Application Development -->
 		<ServiceDetail
 			title="Mobile Application Development"
 			description="Website yang kami kembangkan membantu bisnis tampil lebih profesional, memperkuat kehadiran digital, dan mempermudah komunikasi dengan pelanggan. Dengan desain responsif dan performa yang optimal, website Anda akan berfungsi sempurna di berbagai perangkat dan mudah dikelola."
@@ -39,7 +39,7 @@
 			fullWidth={false}
 		/>
 
-		<!-- Custom Software Solution - Gambar mepet ke kiri -->
+		<!-- Custom Software Solution -->
 		<ServiceDetail
 			title="Custom Software Solution"
 			description="Website yang kami kembangkan membantu bisnis tampil lebih profesional, memperkuat kehadiran digital, dan mempermudah komunikasi dengan pelanggan. Dengan desain responsif dan performa yang optimal, website Anda akan berfungsi sempurna di berbagai perangkat dan mudah dikelola."
@@ -47,7 +47,7 @@
 			fullWidth={true}
 		/>
 
-		<!-- IT Consultation - Gambar ada jarak dari kiri -->
+		<!-- IT Consultation -->
 		<ServiceDetail
 			title="IT Consultation"
 			description="Website yang kami kembangkan membantu bisnis tampil lebih profesional, memperkuat kehadiran digital, dan mempermudah komunikasi dengan pelanggan. Dengan desain responsif dan performa yang optimal, website Anda akan berfungsi sempurna di berbagai perangkat dan mudah dikelola."
