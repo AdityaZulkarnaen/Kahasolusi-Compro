@@ -22,19 +22,19 @@
 	<div class="max-w-7xl mx-auto">
 		<!-- Top Section: Copyright and Navigation -->
 		<div
-			class="flex flex-col md:flex-row justify-between items-center gap-6 pb-6 border-b border-white"
+			class="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 pb-6 border-b border-white"
 		>
 			<!-- Copyright -->
 			<div class="flex items-center gap-3">
-				<img src={LogoWhite} alt="Kaha Solution Logo" class="h-8 w-auto" />
+				<img src={LogoWhite} alt="Kaha Solution Logo" class="h-6 md:h-8 w-auto" />
 			</div>
 
 			<!-- Navigation Links -->
-			<nav class="flex flex-wrap justify-center items-center gap-6 md:gap-8">
+			<nav class="flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
 				{#each navLinks as link}
 					<a
 						href={link.href}
-						class="text-sm md:text-base hover:text-gray-300 transition-colors duration-200"
+						class="text-xs md:text-sm lg:text-base hover:text-gray-300 transition-colors duration-200"
 					>
 						{link.name}
 					</a>
@@ -43,9 +43,9 @@
 		</div>
 
 		<!-- Bottom Section: Social Media Icons -->
-		<div class="flex justify-between items-end">
-			<p class="text-sm md:text-base">© Copyright 2025 - Kahasolusi</p>
-			<div class="flex justify-center items-center gap-6 pt-6">
+		<div class="flex flex-col md:flex-row justify-between items-center md:items-end gap-4 md:gap-0 pt-4 md:pt-0">
+			<p class="text-xs md:text-sm lg:text-base text-center md:text-left">© Copyright 2025 - Kahasolusi</p>
+			<div class="flex justify-center items-center gap-4 md:gap-6 md:pt-6">
 				{#each socialLinks as social}
 					<a
 						href={social.href}
@@ -54,7 +54,7 @@
 						class="hover:opacity-70 transition-opacity duration-200"
 						aria-label={social.label}
 					>
-						<svelte:component this={social.icon} size={24} />
+						<svelte:component this={social.icon} size={20} class="md:w-6 md:h-6" />
 					</a>
 				{/each}
 			</div>
