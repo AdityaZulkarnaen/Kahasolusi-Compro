@@ -8,6 +8,7 @@
     let slidesContainer;
     let isAutoPlaying = true;
     let autoPlayInterval;
+    let screenSize = 'desktop';
     
     const featuredProjects = projects.slice(0, 6);
     
@@ -41,16 +42,29 @@
     
     function updateSliderPosition() {
         if (slidesContainer) {
-            const cardWidth = 380;
-            const gap = 32;
+            // Responsif card width dan gap berdasarkan screen size
+            let cardWidth, gap;
             
-           
+            if (window.innerWidth < 640) {
+                // Untuk mobile S, gunakan 85% dari viewport width
+                cardWidth = Math.floor(window.innerWidth * 0.85);
+                gap = 12;
+                screenSize = 'mobile';
+            } else if (window.innerWidth < 1024) {
+                cardWidth = 340;
+                gap = 24;
+                screenSize = 'tablet';
+            } else {
+                cardWidth = 380;
+                gap = 32;
+                screenSize = 'desktop';
+            }
+            
             const centerIndex = 2; 
             const targetIndex = centerIndex + currentSlide;
-            
             const moveDistance = targetIndex * (cardWidth + gap);
             
-            slidesContainer.style.transform = `translate3d(calc(50% - 190px - ${moveDistance}px), 0, 0)`;
+            slidesContainer.style.transform = `translate3d(calc(50% - ${cardWidth/2}px - ${moveDistance}px), 0, 0)`;
         }
     }
     
@@ -127,33 +141,33 @@
         </div>
         
         <!-- Slider Container -->
-        <div class="relative w-ful">
+        <div class="relative w-full overflow-x-hidden">
             <!-- Navigation Buttons -->
             <button 
-                class="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-[#176684] hover:bg-[#176684] hover:text-white transition-all duration-200 hover:scale-105"
+                class="absolute left-2 sm:left-4 lg:left-8 top-[40%] sm:top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-[#176684] hover:bg-[#176684] hover:text-white transition-all duration-200 hover:scale-105"
                 on:click={prevSlide}
                 on:mouseenter={stopAutoPlay}
                 on:mouseleave={resumeAutoPlay}
                 aria-label="Previous slide"
             >
-                <ChevronLeft class="w-6 h-6" />
+                <ChevronLeft class="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             
             <button 
-                class="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-[#176684] hover:bg-[#176684] hover:text-white transition-all duration-200 hover:scale-105"
+                class="absolute right-2 sm:right-4 lg:right-8 top-[40%] sm:top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-[#176684] hover:bg-[#176684] hover:text-white transition-all duration-200 hover:scale-105"
                 on:click={nextSlide}
                 on:mouseenter={stopAutoPlay}
                 on:mouseleave={resumeAutoPlay}
                 aria-label="Next slide"
             >
-                <ChevronRight class="w-6 h-6" />
+                <ChevronRight class="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             
             <!-- Slides Wrapper -->
-            <div class="overflow-hidden px-4 sm:px-16 py-12">
+            <div class="overflow-hidden px-4 sm:px-12 lg:px-16 py-8 sm:py-12">
                 <div 
                     bind:this={slidesContainer}
-                    class="flex gap-8 transition-transform duration-700 ease-in-out"
+                    class="flex gap-3 sm:gap-6 lg:gap-8 transition-transform duration-700 ease-in-out"
                     role="group"
                     aria-label="Project slider"
                     on:mouseenter={stopAutoPlay}
@@ -168,9 +182,9 @@
                         
                         <div 
                             class="flex-shrink-0 bg-white overflow-hidden transition-all duration-700 ease-in-out cursor-pointer
-                                   w-[380px] {isCenter ? 'scale-110 opacity-100 shadow-lg rounded-2xl z-10' : 
-                                            isAdjacent ? 'scale-90 opacity-70 shadow-lg rounded-xl blur-[2px]' : 
-                                            'scale-75 opacity-40 shadow-md rounded-lg blur-[4px]'}"
+                                   w-[85vw] sm:w-[340px] lg:w-[380px] {isCenter ? 'scale-100 sm:scale-110 opacity-100 shadow-lg rounded-xl sm:rounded-2xl z-10' : 
+                                            isAdjacent ? 'scale-75 sm:scale-90 opacity-50 sm:opacity-70 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl blur-[1px] sm:blur-[2px]' : 
+                                            'scale-60 opacity-20 sm:opacity-40 shadow-sm sm:shadow-md rounded-md sm:rounded-lg blur-[2px] sm:blur-[4px]'}"
                             on:click={() => !isCenter && goToSlide(originalIndex)}
                             on:keydown={(e) => e.key === 'Enter' && !isCenter && goToSlide(originalIndex)}
                             role="button"
@@ -178,7 +192,7 @@
                             aria-label="View {project.title}"
                         >
                             <!-- Project Image -->
-                            <div class="relative h-52 bg-gradient-to-br from-[#176684] to-[#0D4E6D] overflow-hidden">
+                            <div class="relative h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-[#176684] to-[#0D4E6D] overflow-hidden">
                                 <img 
                                     src={project.image} 
                                     alt={project.title}
@@ -189,34 +203,34 @@
                             </div>
                             
                             <!-- Project Content -->
-                            <div class="p-6">
-                                <h3 class="{isCenter ? 'text-2xl' : 'text-xl'} font-semibold text-gray-900 font-family-sans mb-3">
+                            <div class="p-4 sm:p-5 lg:p-6">
+                                <h3 class="{isCenter ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'} font-semibold text-gray-900 font-family-sans mb-2 sm:mb-3">
                                     {project.title}
                                 </h3>
                                 
-                                <p class="text-gray-600 {isCenter ? 'text-base' : 'text-sm'} font-family-sans leading-relaxed mb-4 line-clamp-3">
+                                <p class="text-gray-600 {isCenter ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'} font-family-sans leading-relaxed mb-3 sm:mb-4 line-clamp-3">
                                     {project.description}
                                 </p>
                                 
                                 <!-- Tech Stack Icons -->
-                                <div class="flex items-center gap-2 mb-4">
+                                <div class="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                                     <!-- HTML5 Icon -->
-                                    <div class="{isCenter ? 'w-10 h-10' : 'w-8 h-8'} bg-[#E34F26] rounded flex items-center justify-center">
-                                        <svg class="{isCenter ? 'w-6 h-6' : 'w-5 h-5'} text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-[#E34F26] rounded flex items-center justify-center">
+                                        <svg class="{isCenter ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.564-2.438L1.5 0zm7.031 9.75l-.232-2.718 10.059.003.23-2.622L5.412 4.41l.698 8.01h9.126l-.326 3.426-2.91.804-2.955-.81-.188-2.11H6.248l.33 4.171L12 19.351l5.379-1.443.744-8.157H8.531z"/>
                                         </svg>
                                     </div>
                                     
                                     <!-- CSS3 Icon -->
-                                    <div class="{isCenter ? 'w-10 h-10' : 'w-8 h-8'} bg-[#1572B6] rounded flex items-center justify-center">
-                                        <svg class="{isCenter ? 'w-6 h-6' : 'w-5 h-5'} text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-[#1572B6] rounded flex items-center justify-center">
+                                        <svg class="{isCenter ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M1.5 0h21l-1.91 21.563L11.977 24l-8.565-2.438L1.5 0zm17.09 4.413L5.41 4.41l.213 2.622 10.125.002-.255 2.716h-6.64l.24 2.573h6.182l-.366 3.523-2.91.804-2.956-.81-.188-2.11h-2.61l.29 3.855L12 19.288l5.373-1.53L18.59 4.414z"/>
                                         </svg>
                                     </div>
                                     
                                     <!-- JavaScript Icon -->
-                                    <div class="{isCenter ? 'w-10 h-10' : 'w-8 h-8'} bg-[#F7DF1E] rounded flex items-center justify-center">
-                                        <svg class="{isCenter ? 'w-6 h-6' : 'w-5 h-5'} text-black" fill="currentColor" viewBox="0 0 24 24">
+                                    <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-[#F7DF1E] rounded flex items-center justify-center">
+                                        <svg class="{isCenter ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} text-black" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M0 0h24v24H0V0zm22.034 18.276c-.175-1.095-.888-2.015-3.003-2.873-.736-.345-1.554-.585-1.797-1.14-.091-.33-.105-.51-.046-.705.15-.646.915-.84 1.515-.66.39.12.75.42.976.9 1.034-.676 1.034-.676 1.755-1.125-.27-.42-.404-.601-.586-.78-.63-.705-1.469-1.065-2.834-1.034l-.705.089c-.676.165-1.32.525-1.71 1.005-1.14 1.291-.811 3.541.569 4.471 1.365 1.02 3.361 1.244 3.616 2.205.24 1.17-.87 1.545-1.966 1.41-.811-.18-1.26-.586-1.755-1.336l-1.83 1.051c.21.48.45.689.81 1.109 1.74 1.756 6.09 1.666 6.871-1.004.029-.09.24-.705.074-1.65l.046.067zm-8.983-7.245h-2.248c0 1.938-.009 3.864-.009 5.805 0 1.232.063 2.363-.138 2.711-.33.689-1.18.601-1.566.48-.396-.196-.597-.466-.83-.855-.063-.105-.11-.196-.127-.196l-1.825 1.125c.305.63.75 1.172 1.324 1.517.855.51 2.004.675 3.207.405.783-.226 1.458-.691 1.811-1.411.51-.93.402-2.07.397-3.346.012-2.054 0-4.109 0-6.179l.004-.056z"/>
                                         </svg>
                                     </div>
