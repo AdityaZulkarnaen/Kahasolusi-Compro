@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Plus, Search, Eye, Edit, Trash2, Upload, ExternalLink, Code2 } from 'lucide-svelte';
+	import { Plus, Search, Eye, Edit, Trash2, Upload, ExternalLink, Code2, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { technologiesAPI, uploadAPI } from '$lib/api.js';
 	import { browser } from '$app/environment';
 	
@@ -25,6 +25,12 @@
 	let selectedStatus = '';
 	let filteredTechnologies = [];
 	let viewMode = 'grid'; // 'table' or 'grid'
+	
+	// Pagination state
+	let currentPage = 1;
+	let itemsPerPage = 6; 
+	let totalPages = 1;
+	let paginatedTechnologies = [];
 
 	// Delete modal state
 	let showDeleteModal = false;
@@ -104,6 +110,43 @@
 			
 			return textMatch && typeMatch && statusMatch;
 		});
+		
+		// Update pagination
+		totalPages = Math.ceil(filteredTechnologies.length / itemsPerPage);
+		currentPage = Math.min(currentPage, Math.max(1, totalPages));
+		updatePaginatedTechnologies();
+	}
+	
+	// Update paginated technologies
+	function updatePaginatedTechnologies() {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		paginatedTechnologies = filteredTechnologies.slice(startIndex, endIndex);
+	}
+	
+	// Pagination functions
+	function goToPage(page) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+			updatePaginatedTechnologies();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function nextPage() {
+		if (currentPage < totalPages) {
+			currentPage++;
+			updatePaginatedTechnologies();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function prevPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			updatePaginatedTechnologies();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
 	}
 
 	// Handle delete confirmation
@@ -1083,7 +1126,7 @@
 {#if viewMode === 'grid'}
 	<div class="px-4 lg:px-6">
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
-		{#each filteredTechnologies as tech}
+		{#each paginatedTechnologies as tech}
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow flex flex-col">
 				<!-- Header -->
 				<div class="flex items-start justify-between mb-4">
@@ -1176,9 +1219,51 @@
 			</div>
 		{/each}
 	</div>
+	
+	<!-- Pagination Controls -->
+	{#if !loading && filteredTechnologies.length > itemsPerPage}
+		<div class="flex justify-center items-center gap-2 mb-6">
+			<!-- Previous Button -->
+			<button
+				onclick={prevPage}
+				disabled={currentPage === 1}
+				class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+			>
+				<ChevronLeft class="w-5 h-5" />
+			</button>
+			
+			<!-- Page Numbers -->
+			{#each Array(totalPages) as _, index}
+				{@const pageNumber = index + 1}
+				<button
+					onclick={() => goToPage(pageNumber)}
+					class="flex items-center justify-center w-10 h-10 rounded-lg font-medium transition-all duration-200
+						   {currentPage === pageNumber 
+							 ? 'bg-[#0D4E6D] text-white' 
+							 : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
+				>
+					{pageNumber}
+				</button>
+			{/each}
+			
+			<!-- Next Button -->
+			<button
+				onclick={nextPage}
+				disabled={currentPage === totalPages}
+				class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+			>
+				<ChevronRight class="w-5 h-5" />
+			</button>
+		</div>
+		
+		<!-- Page Info -->
+		<div class="text-center mb-6 text-gray-600 text-sm">
+			Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredTechnologies.length)} dari {filteredTechnologies.length} teknologi
+		</div>
+	{/if}
 
 	<!-- Empty State -->
-	{#if filteredTechnologies.length === 0}
+	{#if paginatedTechnologies.length === 0}
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
 			<div class="text-center">
 				<Code2 class="mx-auto h-12 w-12 text-gray-400" />

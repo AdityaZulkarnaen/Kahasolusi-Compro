@@ -27,7 +27,7 @@
 	
 	// Pagination state
 	let currentPage = 1;
-	let itemsPerPage = 9; // 3 rows x 3 columns
+	let itemsPerPage = 6; 
 	let totalPages = 1;
 	let paginatedMembers = [];
 	
