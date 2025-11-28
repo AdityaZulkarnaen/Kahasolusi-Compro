@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Plus, Search, Eye, Edit, Trash2, Calendar, Tag, ExternalLink } from 'lucide-svelte';
+	import { Plus, Search, Eye, Edit, Trash2, Calendar, Tag, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { portfolioAPI, categoriesAPI, technologiesAPI } from '$lib/api.js';
 	import { browser } from '$app/environment';
 	
@@ -27,6 +27,12 @@
 	let selectedStatus = '';
 	let selectedFeatured = '';
 	let filteredPortfolios = [];
+	
+	// Pagination state
+	let currentPage = 1;
+	let itemsPerPage = 8; // 2 rows in table view
+	let totalPages = 1;
+	let paginatedPortfolios = [];
 
 	// Delete modal state
 	let showDeleteModal = false;
@@ -107,6 +113,43 @@
 			
 			return textMatch && categoryMatch && statusMatch && featuredMatch;
 		});
+		
+		// Update pagination
+		totalPages = Math.ceil(filteredPortfolios.length / itemsPerPage);
+		currentPage = Math.min(currentPage, Math.max(1, totalPages));
+		updatePaginatedPortfolios();
+	}
+	
+	// Update paginated portfolios
+	function updatePaginatedPortfolios() {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		paginatedPortfolios = filteredPortfolios.slice(startIndex, endIndex);
+	}
+	
+	// Pagination functions
+	function goToPage(page) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+			updatePaginatedPortfolios();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function nextPage() {
+		if (currentPage < totalPages) {
+			currentPage++;
+			updatePaginatedPortfolios();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function prevPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			updatePaginatedPortfolios();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
 	}
 
 	// Handle delete confirmation
@@ -372,7 +415,7 @@
 							</td>
 						</tr>
 					{:else}
-						{#each filteredPortfolios as portfolio}
+						{#each paginatedPortfolios as portfolio}
 							<tr class="hover:bg-gray-50">
 								<td class="px-6 py-4">
 									<div class="flex items-start">
@@ -514,15 +557,47 @@
 		{/if}
 	</div>
 
-	<!-- Pagination (for future implementation) -->
-	<div class="mt-8 flex items-center justify-between">
-		<div class="text-sm text-gray-700">
-			Menampilkan <span class="font-medium">{filteredPortfolios.length}</span> dari <span class="font-medium">{portfolios.length}</span> portfolio
+	<!-- Pagination -->
+	{#if !loading && filteredPortfolios.length > itemsPerPage}
+		<div class="mt-8 flex flex-col items-center justify-center gap-4">
+			<div class="flex items-center gap-2">
+				<!-- Previous Button -->
+				<button
+					onclick={prevPage}
+					disabled={currentPage === 1}
+					class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+				>
+					<ChevronLeft class="w-5 h-5" />
+				</button>
+				
+				<!-- Page Numbers -->
+				{#each Array(totalPages) as _, index}
+					{@const pageNumber = index + 1}
+					<button
+						onclick={() => goToPage(pageNumber)}
+						class="flex items-center justify-center w-10 h-10 rounded-lg font-medium transition-all duration-200
+							   {currentPage === pageNumber 
+								 ? 'bg-[#0D4E6D] text-white' 
+								 : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
+					>
+						{pageNumber}
+					</button>
+				{/each}
+				
+				<!-- Next Button -->
+				<button
+					onclick={nextPage}
+					disabled={currentPage === totalPages}
+					class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+				>
+					<ChevronRight class="w-5 h-5" />
+				</button>
+			</div>
+			<div class="text-sm text-gray-700">
+				Menampilkan <span class="font-medium">{((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredPortfolios.length)}</span> dari <span class="font-medium">{filteredPortfolios.length}</span> portfolio
+			</div>
 		</div>
-		<div class="flex items-center gap-2">
-			<!-- Pagination buttons will be here -->
-		</div>
-	</div>
+	{/if}
 </div>
 
 <!-- Delete Confirmation Modal -->

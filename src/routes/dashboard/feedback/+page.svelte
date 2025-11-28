@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { feedbackAPI } from '$lib/api.js';
-	import { MessageSquare, Eye, EyeOff, Trash2, Filter, Calendar, User, Mail, CheckCircle, XCircle, Clock, Search, Download, Monitor, Mail as MailIcon } from 'lucide-svelte';
+	import { MessageSquare, Eye, EyeOff, Trash2, Filter, Calendar, User, Mail, CheckCircle, XCircle, Clock, Search, Download, Monitor, Mail as MailIcon, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	
 	// Feedback data
 	let feedbacks = [];
@@ -14,6 +14,12 @@
 	let selectedReadStatus = 'all'; // all, read, unread
 	let sortBy = 'recent'; // recent, oldest, name
 	let filteredFeedbacks = [];
+	
+	// Pagination state
+	let currentPage = 1;
+	let itemsPerPage = 10;
+	let totalPages = 1;
+	let paginatedFeedbacks = [];
 	
 	// Modal states
 	let selectedFeedback = null;
@@ -80,6 +86,43 @@
 		}
 		
 		filteredFeedbacks = filtered;
+		
+		// Update pagination
+		totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
+		currentPage = Math.min(currentPage, Math.max(1, totalPages));
+		updatePaginatedFeedbacks();
+	}
+	
+	// Update paginated feedbacks
+	function updatePaginatedFeedbacks() {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		paginatedFeedbacks = filteredFeedbacks.slice(startIndex, endIndex);
+	}
+	
+	// Pagination functions
+	function goToPage(page) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+			updatePaginatedFeedbacks();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function nextPage() {
+		if (currentPage < totalPages) {
+			currentPage++;
+			updatePaginatedFeedbacks();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function prevPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			updatePaginatedFeedbacks();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
 	}
 	
 	// Reactive statement to trigger filtering
@@ -463,7 +506,7 @@
 							</tr>
 						</thead>
 						<tbody class="bg-white divide-y divide-gray-200">
-							{#each filteredFeedbacks as feedback (feedback.feedback_id)}
+							{#each paginatedFeedbacks as feedback (feedback.feedback_id)}
 								<tr class="hover:bg-gray-50 transition-colors {feedback.is_read === 0 ? 'bg-blue-50' : ''}">
 									<!-- Visitor Info -->
 									<td class="px-4 py-4">
@@ -568,12 +611,54 @@
 					</table>
 				</div>
 
-				<!-- Result Count -->
-				<div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
-					<p class="text-sm text-gray-600">
-						Menampilkan <span class="font-medium">{filteredFeedbacks.length}</span> dari <span class="font-medium">{feedbacks.length}</span> feedback
-					</p>
-				</div>
+				<!-- Pagination Controls -->
+				{#if filteredFeedbacks.length > itemsPerPage}
+					<div class="px-4 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+						<p class="text-sm text-gray-600">
+							Menampilkan <span class="font-medium">{((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredFeedbacks.length)}</span> dari <span class="font-medium">{filteredFeedbacks.length}</span> feedback
+						</p>
+						<div class="flex items-center gap-2">
+							<!-- Previous Button -->
+							<button
+								onclick={prevPage}
+								disabled={currentPage === 1}
+								class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+							>
+								<ChevronLeft class="w-5 h-5" />
+							</button>
+							
+							<!-- Page Numbers -->
+							{#each Array(totalPages) as _, index}
+								{@const pageNumber = index + 1}
+								<button
+									onclick={() => goToPage(pageNumber)}
+									class="flex items-center justify-center w-10 h-10 rounded-lg font-medium transition-all duration-200
+										   {currentPage === pageNumber 
+											 ? 'bg-[#0D4E6D] text-white' 
+											 : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
+								>
+									{pageNumber}
+								</button>
+							{/each}
+							
+							<!-- Next Button -->
+							<button
+								onclick={nextPage}
+								disabled={currentPage === totalPages}
+								class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+							>
+								<ChevronRight class="w-5 h-5" />
+							</button>
+						</div>
+					</div>
+				{:else}
+					<!-- Result Count -->
+					<div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+						<p class="text-sm text-gray-600">
+							Menampilkan <span class="font-medium">{filteredFeedbacks.length}</span> dari <span class="font-medium">{feedbacks.length}</span> feedback
+						</p>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	{/if}
