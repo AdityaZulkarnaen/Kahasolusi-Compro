@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Plus, Search, Eye, Edit, Trash2, User, MapPin, Calendar, Award, Loader2 } from 'lucide-svelte';
+	import { Plus, Search, Eye, Edit, Trash2, User, MapPin, Calendar, Award, Loader2, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { sdmAPI } from '$lib/api.js';
 	
 	// Data and state management
@@ -24,6 +24,12 @@
 	let selectedPosition = '';
 	let sortBy = 'name'; // name, experience, projects
 	let filteredMembers = [];
+	
+	// Pagination state
+	let currentPage = 1;
+	let itemsPerPage = 9; // 3 rows x 3 columns
+	let totalPages = 1;
+	let paginatedMembers = [];
 	
 	// Modal states
 	let showDeleteModal = false;
@@ -89,6 +95,44 @@
 		}
 		
 		filteredMembers = filtered;
+		
+		// Update pagination
+		totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+		currentPage = Math.min(currentPage, Math.max(1, totalPages)); // Reset to valid page
+		updatePaginatedMembers();
+	}
+	
+	// Update paginated members
+	function updatePaginatedMembers() {
+		const startIndex = (currentPage - 1) * itemsPerPage;
+		const endIndex = startIndex + itemsPerPage;
+		paginatedMembers = filteredMembers.slice(startIndex, endIndex);
+	}
+	
+	// Pagination functions
+	function goToPage(page) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+			updatePaginatedMembers();
+			// Scroll to top of grid
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function nextPage() {
+		if (currentPage < totalPages) {
+			currentPage++;
+			updatePaginatedMembers();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function prevPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			updatePaginatedMembers();
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
 	}
 	
 	// Handle delete - show confirmation modal
@@ -395,7 +439,7 @@
 
 	<!-- Team Members Grid -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
-		{#each filteredMembers as member}
+		{#each paginatedMembers as member}
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow flex flex-col">
 				<!-- Header with Photo -->
 				<div class="p-6 pb-4">
@@ -542,8 +586,50 @@
 		{/each}
 	</div>
 
+	<!-- Pagination Controls -->
+	{#if !isLoading && filteredMembers.length > itemsPerPage}
+		<div class="flex justify-center items-center gap-2 mb-6">
+			<!-- Previous Button -->
+			<button
+				onclick={prevPage}
+				disabled={currentPage === 1}
+				class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+			>
+				<ChevronLeft class="w-5 h-5" />
+			</button>
+			
+			<!-- Page Numbers -->
+			{#each Array(totalPages) as _, index}
+				{@const pageNumber = index + 1}
+				<button
+					onclick={() => goToPage(pageNumber)}
+					class="flex items-center justify-center w-10 h-10 rounded-lg font-medium transition-all duration-200
+						   {currentPage === pageNumber 
+							 ? 'bg-[#0D4E6D] text-white' 
+							 : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
+				>
+					{pageNumber}
+				</button>
+			{/each}
+			
+			<!-- Next Button -->
+			<button
+				onclick={nextPage}
+				disabled={currentPage === totalPages}
+				class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+			>
+				<ChevronRight class="w-5 h-5" />
+			</button>
+		</div>
+		
+		<!-- Page Info -->
+		<div class="text-center mb-6 text-gray-600 text-sm">
+			Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredMembers.length)} dari {filteredMembers.length} anggota tim
+		</div>
+	{/if}
+
 	<!-- Empty State -->
-	{#if filteredMembers.length === 0}
+	{#if paginatedMembers.length === 0}
 		<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12">
 			<div class="text-center">
 				<User class="mx-auto h-12 w-12 text-gray-400" />
