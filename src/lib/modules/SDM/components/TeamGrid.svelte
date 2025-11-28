@@ -1,6 +1,7 @@
 <script>
 	// Team Grid Component
 	import { onMount } from 'svelte';
+	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { sdmAPI } from '$lib/api.js';
 	import TeamCard from './TeamCard.svelte';
 	import SDMDetailModal from './SDMDetailModal.svelte';
@@ -11,6 +12,37 @@
 	let teamMembers = [];
 	let loading = true;
 	let error = null;
+	
+	// Pagination state
+	let currentPage = 1;
+	let itemsPerPage = 6; // 2 rows x 3 columns
+	$: totalPages = Math.ceil(teamMembers.length / itemsPerPage);
+	$: paginatedMembers = teamMembers.slice(
+		(currentPage - 1) * itemsPerPage,
+		currentPage * itemsPerPage
+	);
+	
+	function goToPage(page) {
+		if (page >= 1 && page <= totalPages) {
+			currentPage = page;
+			// Scroll to top of team grid
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function nextPage() {
+		if (currentPage < totalPages) {
+			currentPage++;
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
+	
+	function prevPage() {
+		if (currentPage > 1) {
+			currentPage--;
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}
 
 	// Fetch SDM data from database
 	onMount(async () => {
@@ -106,7 +138,7 @@
 		<div
 			class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-6 md:gap-x-4 md:gap-y-8 lg:gap-x-4 lg:gap-y-20"
 		>
-			{#each teamMembers as member}
+			{#each paginatedMembers as member}
 				<TeamCard
 					name={member.member_name}
 					position={member.position}
@@ -116,6 +148,43 @@
 				/>
 			{/each}
 		</div>
+		
+		<!-- Pagination Controls -->
+		{#if totalPages > 1}
+			<div class="flex justify-center items-center gap-2 mt-12">
+				<!-- Previous Button -->
+				<button
+					on:click={prevPage}
+					disabled={currentPage === 1}
+					class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+				>
+					<ChevronLeft class="w-5 h-5" />
+				</button>
+				
+				<!-- Page Numbers -->
+				{#each Array(totalPages) as _, index}
+					{@const pageNumber = index + 1}
+					<button
+						on:click={() => goToPage(pageNumber)}
+						class="flex items-center justify-center w-10 h-10 rounded-lg font-medium font-family-sans transition-all duration-200
+							   {currentPage === pageNumber 
+								 ? 'bg-[#0D4E6D] text-white' 
+								 : 'border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white'}"
+					>
+						{pageNumber}
+					</button>
+				{/each}
+				
+				<!-- Next Button -->
+				<button
+					on:click={nextPage}
+					disabled={currentPage === totalPages}
+					class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#0D4E6D] text-[#0D4E6D] hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#0D4E6D]"
+				>
+					<ChevronRight class="w-5 h-5" />
+				</button>
+			</div>
+		{/if}
 	{/if}
 </div>
 
