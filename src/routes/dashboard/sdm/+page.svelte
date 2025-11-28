@@ -22,7 +22,7 @@
 	
 	let searchQuery = '';
 	let selectedPosition = '';
-	let sortBy = 'name'; // name, experience, projects
+	let sortBy = 'latest'; // latest, name, experience, projects
 	let filteredMembers = [];
 	
 	// Pagination state
@@ -82,6 +82,15 @@
 		
 		// Sorting
 		switch (sortBy) {
+			case 'latest':
+				filtered.sort((a, b) => {
+					// Sort by created_at or member_id (descending - newest first)
+					if (a.created_at && b.created_at) {
+						return new Date(b.created_at) - new Date(a.created_at);
+					}
+					return b.member_id - a.member_id;
+				});
+				break;
 			case 'experience':
 				filtered.sort((a, b) => b.years_experience - a.years_experience);
 				break;
@@ -89,8 +98,16 @@
 				filtered.sort((a, b) => b.projects_count - a.projects_count);
 				break;
 			case 'name':
-			default:
 				filtered.sort((a, b) => a.member_name.localeCompare(b.member_name));
+				break;
+			default:
+				// Default to latest
+				filtered.sort((a, b) => {
+					if (a.created_at && b.created_at) {
+						return new Date(b.created_at) - new Date(a.created_at);
+					}
+					return b.member_id - a.member_id;
+				});
 				break;
 		}
 		
@@ -423,6 +440,7 @@
 						bind:value={sortBy}
 						class="appearance-none bg-white border border-gray-300 hover:border-gray-400 px-4 py-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-sm font-medium text-gray-700 min-w-[160px]"
 					>
+						<option value="latest">Terbaru</option>
 						<option value="name">Sort by Name</option>
 						<option value="experience">Sort by Experience</option>
 						<option value="projects">Sort by Projects</option>
