@@ -15,7 +15,7 @@
 		</div>
 
 		<!-- Content -->
-		<div class="w-full md:w-1/2 {fullWidth ? 'pr-4' : ''}">
+		<div class="w-full md:w-1/2 {fullWidth ? 'px-4 md:px-0 md:pr-4' : ''}">
 			<h3 class="text-2xl md:text-3xl font-semibold text-[#0E2144] mb-4">
 				{title}
 			</h3>
