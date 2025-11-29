@@ -27,7 +27,7 @@
 			{#each cards as card}
 				<div class="relative group overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300">
 					<!-- Background Image with Overlay -->
-					<div class="relative h-[400px] md:h-[450px]">
+					<div class="relative h-[450px] md:h-[500px]">
 						<img
 							src={card.image}
 							alt={card.title}
@@ -40,7 +40,7 @@
 					</div>
 
 					<!-- Content Overlay -->
-					<div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8 text-white">
+					<div class="absolute inset-0 flex flex-col justify-center p-6 md:p-8 text-white">
 						<h3 class="text-3xl self-center text-start w-[95%] font-family-sans md:text-4xl font-semibold mb-6">
 							{card.title}
 						</h3>
