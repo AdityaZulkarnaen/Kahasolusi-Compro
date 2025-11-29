@@ -121,7 +121,8 @@
 				html: `
 					<div style="position: relative;">
 						<div style="width: 40px; height: 40px; background: #004D66; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); position: relative; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-							<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); color: white; font-size: 20px;">📍</div>
+							<div style="background: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 20px; height: 20px; border-radius: 50%;">
+							</div>
 						</div>
 					</div>
 				`,
