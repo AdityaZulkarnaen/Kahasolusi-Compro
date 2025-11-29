@@ -1,14 +1,13 @@
 <script>
 	// Team Grid Component
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { sdmAPI } from '$lib/api.js';
 	import TeamCard from './TeamCard.svelte';
-	import SDMDetailModal from './SDMDetailModal.svelte';
 	import PersonIcon from '$lib/assets/svg/People.svg';
 
-	let selectedMember = null;
-	let isModalOpen = false;
+	const dispatch = createEventDispatcher();
+
 	let teamMembers = [];
 	let loading = true;
 	let error = null;
@@ -113,15 +112,10 @@
 	function handleMemberClick(event) {
 		console.log('Member clicked in TeamGrid:', event.detail);
 		const dbMember = event.detail;
-		selectedMember = transformMember(dbMember);
-		isModalOpen = true;
-		console.log('Modal should open now. isModalOpen:', isModalOpen);
-	}
-
-	function closeModal() {
-		console.log('Closing modal');
-		isModalOpen = false;
-		selectedMember = null;
+		const transformedMember = transformMember(dbMember);
+		
+		// Dispatch event to parent component
+		dispatch('memberClick', { transformedMember });
 	}
 
 </script>
@@ -192,6 +186,3 @@
 		{/if}
 	{/if}
 </div>
-
-<!-- Modal -->
-<SDMDetailModal member={selectedMember} isOpen={isModalOpen} on:close={closeModal} />
