@@ -61,6 +61,11 @@ export const portfolioAPI = {
         return await apiRequest('/portfolio');
     },
 
+    // Get featured portfolios only
+    async getFeatured(limit = 6) {
+        return await apiRequest(`/portfolio?featured=true&limit=${limit}`);
+    },
+
     // Get portfolio by ID
     async getById(id) {
         return await apiRequest(`/portfolio/${id}`);
