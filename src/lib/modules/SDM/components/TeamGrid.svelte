@@ -49,7 +49,12 @@
 		try {
 			loading = true;
 			const response = await sdmAPI.getAll();
-			teamMembers = response.data || response;
+			const allMembers = response.data || response;
+			
+			// Filter only active members (is_active = 1 or true)
+			teamMembers = allMembers.filter(member => member.is_active === 1 || member.is_active === true);
+			
+			console.log(`Total members: ${allMembers.length}, Active members: ${teamMembers.length}`);
 			error = null;
 		} catch (err) {
 			console.error('Failed to fetch SDM data:', err);
@@ -132,7 +137,7 @@
 		</div>
 	{:else if teamMembers.length === 0}
 		<div class="text-center py-12">
-			<p class="text-gray-500">No team members found</p>
+			<p class="text-gray-500">Tidak ada anggota tim yang aktif saat ini</p>
 		</div>
 	{:else}
 		<div
