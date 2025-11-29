@@ -288,9 +288,9 @@
                                 <div class="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                                     {#each project.technologies.slice(0, 5) as tech}
                                         <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-gradient-to-br from-[#176684] to-[#0D4E6D] rounded flex items-center justify-center overflow-hidden" title={tech.tech_name}>
-                                            {#if tech.icon_url || tech.logo_url}
+                                            {#if tech.logo_url}
                                                 <img 
-                                                    src={tech.icon_url ? `http://localhost:3001${tech.icon_url}` : `http://localhost:3001${tech.logo_url}`} 
+                                                    src={`http://localhost:3001${tech.logo_url}`} 
                                                     alt={tech.tech_name}
                                                     class="{isCenter ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} object-contain"
                                                 />

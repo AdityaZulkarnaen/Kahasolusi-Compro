@@ -172,12 +172,11 @@ export async function getTechnologies(filters = {}) {
 
 export async function createTechnology(data) {
   return await db.run(`
-    INSERT INTO technologies (tech_name, tech_type, icon_url, logo_url, tech_description, official_url, sort_order, created_by)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO technologies (tech_name, tech_type, logo_url, tech_description, official_url, sort_order, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [
     data.tech_name,
     data.tech_type,
-    data.icon_url,
     data.logo_url,
     data.tech_description,
     data.official_url,

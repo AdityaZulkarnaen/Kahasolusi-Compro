@@ -19,7 +19,6 @@
 		tech_type: '',
 		tech_description: '',
 		official_url: '',
-		icon_url: '',
 		logo_url: '',
 		is_active: true,
 		sort_order: 1
@@ -49,8 +48,6 @@
 	let errors = {};
 	let logoFile = null;
 	let logoPreview = '';
-	let iconFile = null;
-	let iconPreview = '';
 	let customType = '';
 	let showCustomType = false;
 	
@@ -104,19 +101,6 @@
 			reader.readAsDataURL(file);
 		}
 	}
-
-	function handleIconUpload(event) {
-		const file = event.target.files[0];
-		if (file) {
-			iconFile = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				iconPreview = e.target.result;
-				formData.icon_url = e.target.result;
-			};
-			reader.readAsDataURL(file);
-		}
-	}
 	
 	// Handle custom type
 	function handleTypeChange() {
@@ -153,12 +137,7 @@
 		isSubmitting = true;
 		
 		try {
-			// If there are files, upload them first and set returned paths
-			if (iconFile) {
-				const res = await uploadAPI.uploadTechnologyImage(iconFile);
-				if (res && res.path) formData.icon_url = res.path;
-			}
-
+			// If there is a logo file, upload it first and set returned path
 			if (logoFile) {
 				const res = await uploadAPI.uploadTechnologyImage(logoFile);
 				if (res && res.path) formData.logo_url = res.path;
@@ -185,12 +164,6 @@
 		logoFile = null;
 		logoPreview = '';
 		formData.logo_url = '';
-	}
-
-	function removeIcon() {
-		iconFile = null;
-		iconPreview = '';
-		formData.icon_url = '';
 	}
 </script>
 
@@ -338,37 +311,6 @@
 				<h2 class="text-xl font-semibold text-gray-900 mb-6">Visual Assets</h2>
 				
 				<div class="max-w-md mx-auto">
-					<!-- Icon Upload -->
-					<div class="mb-6">
-						<label class="block text-sm font-medium text-gray-700 mb-4">
-							Icon Teknologi (Rekomendasi: 48x48px, SVG/PNG)
-						</label>
-						<div class="flex items-center justify-center w-full">
-							<label class="flex flex-col items-center justify-center w-full h-28 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-								{#if iconPreview}
-									<div class="relative">
-										<img src={iconPreview} alt="Icon Preview" class="w-12 h-12 object-contain" />
-										<button
-											type="button"
-											onclick={(e) => { e.preventDefault(); removeIcon(); }}
-											class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
-										>
-											<X class="w-3 h-3" />
-										</button>
-									</div>
-								{:else}
-									<div class="flex flex-col items-center justify-center pt-5 pb-6">
-										<ImageIcon class="w-8 h-8 mb-2 text-gray-500" />
-										<p class="mb-2 text-sm text-gray-500">
-											<span class="font-semibold">Click to upload icon</span>
-										</p>
-										<p class="text-xs text-gray-500">SVG, PNG, JPG (MAX. 48x48px)</p>
-									</div>
-								{/if}
-								<input type="file" accept="image/*" class="hidden" onchange={handleIconUpload} />
-							</label>
-						</div>
-					</div>
 					<!-- Logo Upload -->
 					<div>
 						<label class="block text-sm font-medium text-gray-700 mb-4">
@@ -414,8 +356,7 @@
 							<h3 class="text-sm font-medium text-blue-800">Tips untuk Upload Gambar</h3>
 							<div class="mt-2 text-sm text-blue-700">
 								<ul class="list-disc list-inside space-y-1">
-									<li>Icon digunakan untuk tampilan grid teknologi (ukuran kecil)</li>
-									<li>Logo digunakan untuk tampilan detail dan presentasi (ukuran besar)</li>
+									<li>Logo digunakan untuk semua tampilan teknologi</li>
 									<li>Format SVG lebih direkomendasikan untuk kualitas yang scalable</li>
 									<li>Pastikan background transparan untuk hasil terbaik</li>
 								</ul>

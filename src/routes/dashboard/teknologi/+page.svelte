@@ -51,7 +51,6 @@
 		tech_name: '',
 		tech_type: '',
 		tech_description: '',
-		icon_url: '',
 		logo_url: '',
 		official_url: '',
 		is_active: 1,
@@ -59,9 +58,7 @@
 	};
 
 	// Image upload
-	let iconFile = null;
 	let logoFile = null;
-	let iconPreview = '';
 	let logoPreview = '';
 
 	// Load data on component mount
@@ -201,15 +198,12 @@
 			tech_name: tech.tech_name || '',
 			tech_type: tech.tech_type || '',
 			tech_description: tech.tech_description || '',
-			icon_url: tech.icon_url || '',
 			logo_url: tech.logo_url || '',
 			official_url: tech.official_url || '',
 			is_active: tech.is_active ? 1 : 0,
 			sort_order: tech.sort_order || 0
 		};
-		iconFile = null;
 		logoFile = null;
-		iconPreview = '';
 		logoPreview = '';
 		showModal = true;
 	}
@@ -220,29 +214,6 @@
 		editingTechnology = null;
 		error = null;
 		success = false;
-	}
-
-	// Handle file selection for icon
-	function handleIconFile(event) {
-		const file = event.target.files[0];
-		if (file) {
-			if (file.size > 5 * 1024 * 1024) { // 5MB limit
-				error = 'Ukuran file icon maksimal 5MB';
-				return;
-			}
-
-			if (!file.type.startsWith('image/')) {
-				error = 'File harus berupa gambar';
-				return;
-			}
-
-			iconFile = file;
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				iconPreview = e.target.result;
-			};
-			reader.readAsDataURL(file);
-		}
 	}
 
 	// Handle file selection for logo
@@ -269,14 +240,14 @@
 	}
 
 	// Upload image
-	async function uploadImage(file, type) {
+	async function uploadImage(file) {
 		if (!file) return null;
 
 		try {
 			const uploadResult = await uploadAPI.uploadTechnologyImage(file);
 			return uploadResult.path;
 		} catch (err) {
-			throw new Error(`Upload ${type} gagal: ${err.message}`);
+			throw new Error(`Upload logo gagal: ${err.message}`);
 		}
 	}
 
@@ -303,22 +274,16 @@
 		error = null;
 
 		try {
-			// Upload images if selected
-			let iconUrl = formData.icon_url;
+			// Upload logo if selected
 			let logoUrl = formData.logo_url;
 
-			if (iconFile) {
-				iconUrl = await uploadImage(iconFile, 'icon');
-			}
-
 			if (logoFile) {
-				logoUrl = await uploadImage(logoFile, 'logo');
+				logoUrl = await uploadImage(logoFile);
 			}
 
 			// Prepare submission data
 			const submissionData = {
 				...formData,
-				icon_url: iconUrl,
 				logo_url: logoUrl
 			};
 
@@ -593,7 +558,7 @@
 										<div class="flex-shrink-0 h-10 w-10 relative">
 											<img 
 												class="h-10 w-10 rounded-lg object-contain border border-gray-200" 
-												src={getImageUrl(tech.icon_url)} 
+												src={getImageUrl(tech.logo_url)} 
 												alt={tech.tech_name}
 												onerror={(e) => e.target.src = getImageUrl(null)}
 											/>
@@ -864,83 +829,44 @@
 
 				<!-- Image Upload -->
 				<div class="space-y-4">
-					<h4 class="text-lg font-medium text-gray-900">Icon & Logo</h4>
+					<h4 class="text-lg font-medium text-gray-900">Logo Teknologi</h4>
 					
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<!-- Icon Upload -->
-						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-3">Icon Teknologi</label>
-							<div class="space-y-3">
-								<div class="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-									{#if iconPreview}
-										<img src={iconPreview} alt="Icon Preview" class="w-full h-full object-contain rounded-lg" />
-									{:else if formData.icon_url}
-										<img src={getImageUrl(formData.icon_url)} alt="Current Icon" class="w-full h-full object-contain rounded-lg" />
-									{:else}
-										<div class="text-center">
-											<Upload class="mx-auto h-8 w-8 text-gray-400" />
-											<p class="mt-2 text-sm text-gray-500">Upload icon teknologi</p>
-										</div>
-									{/if}
-								</div>
-								<input
-									type="file"
-									accept="image/*"
-									onchange={handleIconFile}
-									class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-								/>
-								{#if iconPreview || formData.icon_url}
-									<button
-										type="button"
-										onclick={() => {
-											iconPreview = '';
-											iconFile = null;
-											formData.icon_url = '';
-										}}
-										class="text-sm text-red-600 hover:text-red-800"
-									>
-										Hapus Icon
-									</button>
+					<!-- Logo Upload -->
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-3">Logo</label>
+						<div class="space-y-3">
+							<div class="w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+								{#if logoPreview}
+									<img src={logoPreview} alt="Logo Preview" class="w-full h-full object-contain rounded-lg p-4" />
+								{:else if formData.logo_url}
+									<img src={getImageUrl(formData.logo_url)} alt="Current Logo" class="w-full h-full object-contain rounded-lg p-4" />
+								{:else}
+									<div class="text-center">
+										<Upload class="mx-auto h-8 w-8 text-gray-400" />
+										<p class="mt-2 text-sm text-gray-500">Upload logo teknologi</p>
+										<p class="mt-1 text-xs text-gray-400">PNG, JPG, SVG (Max 5MB)</p>
+									</div>
 								{/if}
 							</div>
-						</div>
-
-						<!-- Logo Upload -->
-						<div>
-							<label class="block text-sm font-medium text-gray-700 mb-3">Logo Teknologi</label>
-							<div class="space-y-3">
-								<div class="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-									{#if logoPreview}
-										<img src={logoPreview} alt="Logo Preview" class="w-full h-full object-contain rounded-lg" />
-									{:else if formData.logo_url}
-										<img src={getImageUrl(formData.logo_url)} alt="Current Logo" class="w-full h-full object-contain rounded-lg" />
-									{:else}
-										<div class="text-center">
-											<Upload class="mx-auto h-8 w-8 text-gray-400" />
-											<p class="mt-2 text-sm text-gray-500">Upload logo teknologi</p>
-										</div>
-									{/if}
-								</div>
-								<input
-									type="file"
-									accept="image/*"
-									onchange={handleLogoFile}
-									class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-								/>
-								{#if logoPreview || formData.logo_url}
-									<button
-										type="button"
-										onclick={() => {
-											logoPreview = '';
-											logoFile = null;
-											formData.logo_url = '';
-										}}
-										class="text-sm text-red-600 hover:text-red-800"
-									>
-										Hapus Logo
-									</button>
-								{/if}
-							</div>
+							<input
+								type="file"
+								accept="image/*"
+								onchange={handleLogoFile}
+								class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+							/>
+							{#if logoPreview || formData.logo_url}
+								<button
+									type="button"
+									onclick={() => {
+										logoPreview = '';
+										logoFile = null;
+										formData.logo_url = '';
+									}}
+									class="text-sm text-red-600 hover:text-red-800"
+								>
+									Hapus Logo
+								</button>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -1055,9 +981,9 @@
 					</p>
 					<div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
 						<div class="flex items-center gap-3">
-							{#if technologyToDelete.icon_url}
+							{#if technologyToDelete.logo_url}
 								<img 
-									src={getImageUrl(technologyToDelete.icon_url)} 
+									src={getImageUrl(technologyToDelete.logo_url)} 
 									alt={technologyToDelete.tech_name}
 									class="w-12 h-12 object-contain rounded-lg"
 								/>
@@ -1132,9 +1058,9 @@
 				<div class="flex items-start justify-between mb-4">
 					<div class="flex items-center gap-3">
 						<div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-							{#if tech.icon_url}
+							{#if tech.logo_url}
 								<img 
-									src={getImageUrl(tech.icon_url)} 
+									src={getImageUrl(tech.logo_url)} 
 									alt={tech.tech_name}
 									class="w-8 h-8 object-contain"
 									onerror={(e) => e.target.style.display = 'none'}
@@ -1322,9 +1248,9 @@
 					</p>
 					<div class="bg-gray-50 rounded-lg p-4 border-l-4 border-red-400">
 						<div class="flex items-center gap-3">
-							{#if technologyToDelete.icon_url}
+							{#if technologyToDelete.logo_url}
 								<img 
-									src={getImageUrl(technologyToDelete.icon_url)} 
+									src={getImageUrl(technologyToDelete.logo_url)} 
 									alt={technologyToDelete.tech_name}
 									class="w-12 h-12 object-contain rounded-lg"
 									onerror={(e) => e.target.src = getImageUrl(null)}
