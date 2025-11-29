@@ -1,7 +1,7 @@
 <script>
     import { onMount } from 'svelte';
     import { ChevronLeft, ChevronRight } from 'lucide-svelte';
-    import { projects } from '$lib/data/projects.js';
+    import { portfolioAPI } from '$lib/api.js';
     
     // Slider state
     let currentSlide = 0;
@@ -9,8 +9,9 @@
     let isAutoPlaying = true;
     let autoPlayInterval;
     let screenSize = 'desktop';
-    
-    const featuredProjects = projects.slice(0, 6);
+    let featuredProjects = [];
+    let loading = true;
+    let error = null;
     
     // infinity loop
     $: infiniteProjects = [
@@ -100,13 +101,54 @@
     }
     
     onMount(() => {
+        // Fetch featured portfolios from API
+        async function loadFeaturedProjects() {
+            try {
+                loading = true;
+                const response = await portfolioAPI.getFeatured(6);
+                
+                // Transform API data to match component structure
+                featuredProjects = response.map(project => {
+                    // Parse technologies JSON string
+                    let technologies = [];
+                    if (project.technologies) {
+                        try {
+                            technologies = typeof project.technologies === 'string' 
+                                ? JSON.parse(project.technologies) 
+                                : project.technologies;
+                        } catch (e) {
+                            console.error('Failed to parse technologies:', e);
+                            technologies = [];
+                        }
+                    }
+                    
+                    return {
+                        id: project.portfolio_id,
+                        title: project.project_name,
+                        description: project.project_description,
+                        image: project.image_url ? `http://localhost:3001${project.image_url}` : '/placeholder-project.jpg',
+                        category: project.categories || 'Uncategorized',
+                        technologies: technologies
+                    };
+                });
+                
+                loading = false;
+                
+                // Initialize slider after data is loaded
+                setTimeout(() => {
+                    updateSliderPosition();
+                }, 100);
+                
+                startAutoPlay();
+            } catch (err) {
+                console.error('Failed to load featured projects:', err);
+                error = 'Gagal memuat data portfolio';
+                loading = false;
+            }
+        }
+        
+        loadFeaturedProjects();
 
-        setTimeout(() => {
-            updateSliderPosition();
-        }, 100);
-        
-        startAutoPlay();
-        
         const handleResize = () => {
             setTimeout(() => {
                 updateSliderPosition();
@@ -142,6 +184,35 @@
         
         <!-- Slider Container -->
         <div class="relative w-full overflow-x-hidden">
+            {#if loading}
+                <!-- Loading State -->
+                <div class="flex items-center justify-center py-24">
+                    <div class="text-center">
+                        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#176684] mb-4"></div>
+                        <p class="text-gray-600 font-family-sans">Memuat portfolio...</p>
+                    </div>
+                </div>
+            {:else if error}
+                <!-- Error State -->
+                <div class="flex items-center justify-center py-24">
+                    <div class="text-center">
+                        <p class="text-red-600 font-family-sans mb-4">{error}</p>
+                        <button 
+                            class="text-[#176684] hover:underline font-family-sans"
+                            on:click={() => window.location.reload()}
+                        >
+                            Coba Lagi
+                        </button>
+                    </div>
+                </div>
+            {:else if featuredProjects.length === 0}
+                <!-- Empty State -->
+                <div class="flex items-center justify-center py-24">
+                    <div class="text-center">
+                        <p class="text-gray-600 font-family-sans">Belum ada portfolio featured</p>
+                    </div>
+                </div>
+            {:else}
             <!-- Navigation Buttons -->
             <button 
                 class="absolute left-2 sm:left-4 lg:left-8 top-[40%] sm:top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-[#176684] hover:bg-[#176684] hover:text-white transition-all duration-200 hover:scale-105"
@@ -213,6 +284,29 @@
                                 </p>
                                 
                                 <!-- Tech Stack Icons -->
+                                {#if project.technologies && project.technologies.length > 0}
+                                <div class="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                                    {#each project.technologies.slice(0, 5) as tech}
+                                        <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-gradient-to-br from-[#176684] to-[#0D4E6D] rounded flex items-center justify-center overflow-hidden" title={tech.tech_name}>
+                                            {#if tech.logo_url}
+                                                <img 
+                                                    src={`http://localhost:3001${tech.logo_url}`} 
+                                                    alt={tech.tech_name}
+                                                    class="{isCenter ? 'w-5 h-5 sm:w-6 sm:h-6' : 'w-4 h-4 sm:w-5 sm:h-5'} object-contain"
+                                                />
+                                            {:else}
+                                                <span class="text-white text-xs font-medium">{tech.tech_name.substring(0, 2).toUpperCase()}</span>
+                                            {/if}
+                                        </div>
+                                    {/each}
+                                    {#if project.technologies.length > 5}
+                                        <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-gray-200 rounded flex items-center justify-center">
+                                            <span class="text-gray-600 text-xs font-medium">+{project.technologies.length - 5}</span>
+                                        </div>
+                                    {/if}
+                                </div>
+                                {:else}
+                                <!-- Default tech stack if no technologies assigned -->
                                 <div class="flex items-center gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                                     <!-- HTML5 Icon -->
                                     <div class="{isCenter ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-7 h-7 sm:w-8 sm:h-8'} bg-[#E34F26] rounded flex items-center justify-center">
@@ -235,11 +329,13 @@
                                         </svg>
                                     </div>
                                 </div>
+                                {/if}
                             </div>
                         </div>
                     {/each}
                 </div>
             </div>
+            {/if}
         </div>
         
         <!-- View All Button -->

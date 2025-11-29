@@ -32,7 +32,7 @@
 {#if isOpen && member}
 	<!-- Modal Backdrop -->
 	<div
-		class="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+		class="fixed inset-0 bg-black/20 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto"
 		on:click={handleBackdropClick}
 		on:keydown={(e) => e.key === 'Escape' && closeModal()}
 		role="button"

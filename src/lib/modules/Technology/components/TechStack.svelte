@@ -25,8 +25,7 @@
 	// Get image URL with fallback to default
 	function getImageUrl(tech) {
 		const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-		// Prefer logo_url over icon_url
-		const imageUrl = tech.logo_url || tech.icon_url;
+		const imageUrl = tech.logo_url;
 		
 		if (imageUrl && imageUrl.trim() !== '') {
 			// Check if it's already a full URL

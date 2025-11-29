@@ -306,7 +306,7 @@
                                         const techs = project.technologies ? JSON.parse(project.technologies) : [];
                                         return techs.map(tech => ({
                                             name: tech.tech_name,
-                                            image: tech.icon_url ? `http://localhost:3001${tech.icon_url}` : (tech.logo_url ? `http://localhost:3001${tech.logo_url}` : null)
+                                            image: tech.logo_url ? `http://localhost:3001${tech.logo_url}` : null
                                         }));
                                     } catch (e) {
                                         console.error('Error parsing technologies:', e);

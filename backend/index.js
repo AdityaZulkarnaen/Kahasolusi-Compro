@@ -22,6 +22,7 @@ import healthRoutes from './routes/health.js'
 import uploadRoutes from './routes/upload.js'
 import authRoutes from './routes/auth.js'
 import analyticsRoutes from './routes/analytics.js'
+import geocodingRoutes from './routes/geocoding.js'
 
 const app = new Hono()
 
@@ -64,6 +65,7 @@ app.route('/api/feedback', feedbackRoutes)
 app.route('/api/health', healthRoutes)
 app.route('/api/upload', uploadRoutes)
 app.route('/api/analytics', analyticsRoutes)
+app.route('/api/geocoding', geocodingRoutes)
 
 // Error handling
 app.onError(errorHandler)

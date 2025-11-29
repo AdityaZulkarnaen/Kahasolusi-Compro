@@ -1,14 +1,13 @@
 <script>
 	// Team Grid Component
-	import { onMount } from 'svelte';
+	import { onMount, createEventDispatcher } from 'svelte';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { sdmAPI } from '$lib/api.js';
 	import TeamCard from './TeamCard.svelte';
-	import SDMDetailModal from './SDMDetailModal.svelte';
 	import PersonIcon from '$lib/assets/svg/People.svg';
 
-	let selectedMember = null;
-	let isModalOpen = false;
+	const dispatch = createEventDispatcher();
+
 	let teamMembers = [];
 	let loading = true;
 	let error = null;
@@ -49,7 +48,12 @@
 		try {
 			loading = true;
 			const response = await sdmAPI.getAll();
-			teamMembers = response.data || response;
+			const allMembers = response.data || response;
+			
+			// Filter only active members (is_active = 1 or true)
+			teamMembers = allMembers.filter(member => member.is_active === 1 || member.is_active === true);
+			
+			console.log(`Total members: ${allMembers.length}, Active members: ${teamMembers.length}`);
 			error = null;
 		} catch (err) {
 			console.error('Failed to fetch SDM data:', err);
@@ -108,15 +112,10 @@
 	function handleMemberClick(event) {
 		console.log('Member clicked in TeamGrid:', event.detail);
 		const dbMember = event.detail;
-		selectedMember = transformMember(dbMember);
-		isModalOpen = true;
-		console.log('Modal should open now. isModalOpen:', isModalOpen);
-	}
-
-	function closeModal() {
-		console.log('Closing modal');
-		isModalOpen = false;
-		selectedMember = null;
+		const transformedMember = transformMember(dbMember);
+		
+		// Dispatch event to parent component
+		dispatch('memberClick', { transformedMember });
 	}
 
 </script>
@@ -132,7 +131,7 @@
 		</div>
 	{:else if teamMembers.length === 0}
 		<div class="text-center py-12">
-			<p class="text-gray-500">No team members found</p>
+			<p class="text-gray-500">Tidak ada anggota tim yang aktif saat ini</p>
 		</div>
 	{:else}
 		<div
@@ -187,6 +186,3 @@
 		{/if}
 	{/if}
 </div>
-
-<!-- Modal -->
-<SDMDetailModal member={selectedMember} isOpen={isModalOpen} on:close={closeModal} />

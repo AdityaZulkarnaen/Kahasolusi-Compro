@@ -16,6 +16,8 @@
 		phone: '',
 		email: '',
 		linkedin_url: '',
+		latitude: -7.7797,
+		longitude: 110.3753,
 		created_at: '',
 		updated_at: '',
 		created_by: 1,
@@ -424,6 +426,40 @@
 					placeholder="Alamat lengkap perusahaan"
 					class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
 				></textarea>
+			</div>
+
+			<!-- Coordinates (Latitude & Longitude) -->
+			<div class="mt-6">
+				<label class="block text-sm font-medium text-gray-700 mb-2">
+					<MapPin class="w-4 h-4 inline mr-1" />
+					Koordinat Peta (Latitude & Longitude)
+				</label>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div>
+						<label class="block text-xs text-gray-600 mb-1">Latitude</label>
+						<input
+							type="number"
+							step="0.000001"
+							bind:value={companyData.latitude}
+							placeholder="-7.7797"
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+						/>
+					</div>
+					<div>
+						<label class="block text-xs text-gray-600 mb-1">Longitude</label>
+						<input
+							type="number"
+							step="0.000001"
+							bind:value={companyData.longitude}
+							placeholder="110.3753"
+							class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+						/>
+					</div>
+				</div>
+				<p class="text-xs text-gray-500 mt-2">
+					💡 Tips: Buka <a href="https://www.google.com/maps" target="_blank" class="text-blue-600 hover:underline">Google Maps</a>, 
+					klik kanan pada lokasi, lalu salin koordinat (format: Latitude, Longitude)
+				</p>
 			</div>
 
 			<!-- Description -->

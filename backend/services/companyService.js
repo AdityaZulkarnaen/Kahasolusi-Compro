@@ -36,18 +36,20 @@ export class CompanyService {
         linkedin_url, 
         logo_url, 
         vision, 
-        mission 
+        mission,
+        latitude,
+        longitude
       } = data
       
       const result = await db.run(`
         INSERT INTO company_profile (
           company_name, description, company_address, phone, email, 
-          linkedin_url, logo_url, vision, mission, 
+          linkedin_url, logo_url, vision, mission, latitude, longitude,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
       `, [
         company_name, description, company_address, phone, email, 
-        linkedin_url, logo_url, vision, mission
+        linkedin_url, logo_url, vision, mission, latitude || -7.7797, longitude || 110.3753
       ])
       
       return result.lastID
@@ -69,18 +71,20 @@ export class CompanyService {
         linkedin_url, 
         logo_url, 
         vision, 
-        mission 
+        mission,
+        latitude,
+        longitude
       } = data
       
       const result = await db.run(`
         UPDATE company_profile SET
           company_name = ?, description = ?, company_address = ?, phone = ?, 
           email = ?, linkedin_url = ?, logo_url = ?, 
-          vision = ?, mission = ?, updated_at = datetime('now')
+          vision = ?, mission = ?, latitude = ?, longitude = ?, updated_at = datetime('now')
         WHERE profile_id = ?
       `, [
         company_name, description, company_address, phone, email, 
-        linkedin_url, logo_url, vision, mission, id
+        linkedin_url, logo_url, vision, mission, latitude, longitude, id
       ])
       
       return result.changes > 0

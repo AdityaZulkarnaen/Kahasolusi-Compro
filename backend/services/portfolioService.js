@@ -37,7 +37,7 @@ export class PortfolioService {
     // Get technologies for each portfolio
     for (const portfolio of portfolios) {
       const technologies = await db.all(`
-        SELECT t.tech_id, t.tech_name, t.logo_url, t.icon_url
+        SELECT t.tech_id, t.tech_name, t.logo_url
         FROM technologies t
         INNER JOIN portfolio_technologies pt ON t.tech_id = pt.tech_id
         WHERE pt.portfolio_id = ? AND t.is_active = 1
@@ -69,7 +69,7 @@ export class PortfolioService {
     
     // Get technologies for this portfolio
     const technologies = await db.all(`
-      SELECT t.tech_id, t.tech_name, t.logo_url, t.icon_url
+      SELECT t.tech_id, t.tech_name, t.logo_url
       FROM technologies t
       INNER JOIN portfolio_technologies pt ON t.tech_id = pt.tech_id
       WHERE pt.portfolio_id = ? AND t.is_active = 1

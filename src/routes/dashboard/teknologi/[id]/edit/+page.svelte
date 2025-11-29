@@ -18,7 +18,6 @@
     tech_type: '',
     tech_description: '',
     official_url: '',
-    icon_url: '',
     logo_url: '',
     is_active: true,
     sort_order: 1
@@ -44,8 +43,6 @@
 
   let logoFile = null;
   let logoPreview = '';
-  let iconFile = null;
-  let iconPreview = '';
   let customType = '';
   let showCustomType = false;
 
@@ -73,18 +70,7 @@
     }
   }
 
-  function handleIconUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-      iconFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => { iconPreview = e.target.result; formData.icon_url = e.target.result; };
-      reader.readAsDataURL(file);
-    }
-  }
-
   function removeLogo() { logoFile = null; logoPreview = ''; formData.logo_url = ''; }
-  function removeIcon() { iconFile = null; iconPreview = ''; formData.icon_url = ''; }
 
   function handleTypeChange() {
     if (formData.tech_type === 'custom') { showCustomType = true; }
@@ -103,15 +89,11 @@
       formData.tech_type = tech.tech_type || '';
       formData.tech_description = tech.tech_description || '';
       formData.official_url = tech.official_url || '';
-      formData.icon_url = tech.icon_url || '';
       formData.logo_url = tech.logo_url || '';
       formData.is_active = tech.is_active ? true : false;
       formData.sort_order = tech.sort_order || 1;
 
       // set previews if existing paths
-      if (tech.icon_url) {
-        iconPreview = tech.icon_url.startsWith('http') ? tech.icon_url : `${BASE_URL}${tech.icon_url}`;
-      }
       if (tech.logo_url) {
         logoPreview = tech.logo_url.startsWith('http') ? tech.logo_url : `${BASE_URL}${tech.logo_url}`;
       }
@@ -135,10 +117,6 @@
 
     isSubmitting = true;
     try {
-      if (iconFile) {
-        const res = await uploadAPI.uploadTechnologyImage(iconFile);
-        if (res && res.path) formData.icon_url = res.path;
-      }
       if (logoFile) {
         const res = await uploadAPI.uploadTechnologyImage(logoFile);
         if (res && res.path) formData.logo_url = res.path;
@@ -227,28 +205,6 @@
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-6">Visual Assets</h2>
         <div class="max-w-md mx-auto">
-          <!-- Icon Upload -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-4">Icon Teknologi (Rekomendasi: 48x48px, SVG/PNG)</label>
-            <div class="flex items-center justify-center w-full">
-              <label class="flex flex-col items-center justify-center w-full h-28 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                {#if iconPreview}
-                  <div class="relative">
-                    <img src={iconPreview} alt="Icon Preview" class="w-12 h-12 object-contain" />
-                    <button type="button" onclick={(e) => { e.preventDefault(); removeIcon(); }} class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"><X class="w-3 h-3" /></button>
-                  </div>
-                {:else}
-                  <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                    <ImageIcon class="w-8 h-8 mb-2 text-gray-500" />
-                    <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload icon</span></p>
-                    <p class="text-xs text-gray-500">SVG, PNG, JPG (MAX. 48x48px)</p>
-                  </div>
-                {/if}
-                <input type="file" accept="image/*" class="hidden" onchange={handleIconUpload} />
-              </label>
-            </div>
-          </div>
-
           <!-- Logo Upload -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-4">Logo Teknologi (Rekomendasi: 200x100px, PNG/SVG)</label>
