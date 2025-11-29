@@ -12,6 +12,32 @@ async function getDB() {
     });
 }
 
+// Verify reCAPTCHA token
+async function verifyRecaptcha(token) {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+    
+    if (!secretKey) {
+        console.error('RECAPTCHA_SECRET_KEY not found in environment variables');
+        return false;
+    }
+    
+    try {
+        const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `secret=${secretKey}&response=${token}`
+        });
+        
+        const data = await response.json();
+        return data.success === true;
+    } catch (error) {
+        console.error('Error verifying reCAPTCHA:', error);
+        return false;
+    }
+}
+
 // Get all feedback
 feedbackRoutes.get('/', async (c) => {
   try {
@@ -57,13 +83,28 @@ feedbackRoutes.post('/', async (c) => {
       visitor_email, 
       company_name, 
       message, 
-      is_displayed 
+      is_displayed,
+      recaptcha_token
     } = body;
     
     // Validate required fields
     if (!visitor_name || !visitor_email || !message) {
       return c.json({ 
         error: 'Missing required fields: visitor_name, visitor_email, and message are required' 
+      }, 400);
+    }
+    
+    // Verify reCAPTCHA token
+    if (!recaptcha_token) {
+      return c.json({ 
+        error: 'reCAPTCHA verification is required' 
+      }, 400);
+    }
+    
+    const isRecaptchaValid = await verifyRecaptcha(recaptcha_token);
+    if (!isRecaptchaValid) {
+      return c.json({ 
+        error: 'reCAPTCHA verification failed. Please try again.' 
       }, 400);
     }
     

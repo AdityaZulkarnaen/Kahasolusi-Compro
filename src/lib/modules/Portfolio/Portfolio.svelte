@@ -5,6 +5,7 @@
     import IndonesiaMap from '$lib/components/IndonesiaMap.svelte';
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
+    import Recaptcha from '$lib/components/Recaptcha.svelte';
     import { feedbackAPI, portfolioAPI, categoriesAPI } from '$lib/api.js';
     
     // Filter state
@@ -33,6 +34,12 @@
     let submitting = $state(false);
     let submitSuccess = $state(false);
     let submitError = $state('');
+    let captchaToken = $state('');
+    let captchaVerified = $state(false);
+    let recaptchaComponent;
+    
+    // reCAPTCHA site key from environment variable
+    const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
     
     // Testimonial state
     let currentTestimonialSet = $state(0);
@@ -147,9 +154,38 @@
         currentTestimonialSet = index;
     }
 
+    // Handle CAPTCHA verification
+    function handleCaptchaSuccess(event) {
+        captchaToken = event.detail.token;
+        captchaVerified = true;
+        submitError = '';
+        console.log('reCAPTCHA verified successfully');
+    }
+
+    function handleCaptchaError(event) {
+        captchaVerified = false;
+        captchaToken = '';
+        submitError = 'Verifikasi CAPTCHA gagal. Silakan coba lagi.';
+        console.error('reCAPTCHA error:', event.detail);
+    }
+
+    function handleCaptchaExpired() {
+        captchaVerified = false;
+        captchaToken = '';
+        submitError = 'CAPTCHA telah kadaluarsa. Silakan verifikasi ulang.';
+        console.log('reCAPTCHA expired');
+    }
+
     // Handle form submission
     async function handleSubmit(event) {
         event.preventDefault();
+        
+        // Validate CAPTCHA first
+        if (!captchaVerified || !captchaToken) {
+            submitError = 'Mohon verifikasi CAPTCHA terlebih dahulu.';
+            submitSuccess = false;
+            return;
+        }
         
         // Validate form
         if (!feedbackForm.visitor_name || !feedbackForm.visitor_email || !feedbackForm.message) {
@@ -178,7 +214,8 @@
                 company_name: feedbackForm.company_name.trim() || null,
                 message: feedbackForm.message.trim(),
                 is_displayed: 1, // Always display, name is already anonymized if needed
-                is_read: 0 // Default unread
+                is_read: 0, // Default unread
+                recaptcha_token: captchaToken // Send reCAPTCHA token to backend
             };
 
             // Submit to API
@@ -188,7 +225,7 @@
                 submitSuccess = true;
                 submitError = '';
                 
-                // Reset form
+                // Reset form and CAPTCHA
                 feedbackForm = {
                     visitor_name: '',
                     visitor_email: '',
@@ -196,6 +233,13 @@
                     message: '',
                     hide_name: false
                 };
+                captchaVerified = false;
+                captchaToken = '';
+                
+                // Reset reCAPTCHA widget
+                if (recaptchaComponent && recaptchaComponent.reset) {
+                    recaptchaComponent.reset();
+                }
 
                 // Scroll to success message
                 setTimeout(() => {
@@ -579,10 +623,21 @@
                             </label>
                         </div>
                         
+                        <!-- reCAPTCHA -->
+                        <div class="flex justify-center">
+                            <Recaptcha
+                                bind:this={recaptchaComponent}
+                                sitekey={RECAPTCHA_SITE_KEY}
+                                on:success={handleCaptchaSuccess}
+                                on:error={handleCaptchaError}
+                                on:expired={handleCaptchaExpired}
+                            />
+                        </div>
+                        
                         <!-- Submit Button -->
                         <button 
                             type="submit"
-                            disabled={submitting}
+                            disabled={submitting || !captchaVerified}
                             class="w-full bg-[#176684] text-white py-3 px-6 rounded-lg font-medium font-family-sans hover:bg-[#145561] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
                         >
                             {#if submitting}
