@@ -2,28 +2,111 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
     import { MapPinned, Phone, Mail } from 'lucide-svelte';
+	import { companyAPI } from '$lib/api.js';
 
 	let mapContainer;
 	let map;
+	let companyInfo = null;
+	let loading = true;
+	let error = null;
 
-	const companyInfo = {
-		name: 'PT Kaha Solusi Indonesia',
-		address1: 'Grha Persatuan Yogya, Lantai 3, Blok A',
-        address2: 'Jl. Persatuan No. 56, Sleman, DI Yogyakarta',
-		phone: {
-			telepon: '021 123-456-789',
-			whatsapp: '0812-3456-7891'
-		},
-		email: 'halokaha@kahasolusi.co.id',
-		coordinates: [-7.7797, 110.3753] // Yogyakarta coordinates
-	};
+	// Default coordinates (Yogyakarta) - will be updated from database if available
+	let coordinates = [-7.766353531689975, 110.40146712219224];
+
+	async function loadCompanyData() {
+		try {
+			loading = true;
+			const response = await companyAPI.get();
+			
+			if (response && response.length > 0) {
+				const company = response[0]; // Get first company profile
+				
+				// Use coordinates from database (latitude & longitude fields)
+				if (company.latitude && company.longitude) {
+					coordinates = [parseFloat(company.latitude), parseFloat(company.longitude)];
+					console.log('Using coordinates from database:', coordinates);
+				} else {
+					console.log('No coordinates in database, using default');
+				}
+				
+				// Parse phone numbers
+				let phoneData = { telepon: '', whatsapp: '' };
+				if (company.phone) {
+					try {
+						// If phone is JSON string with telepon and whatsapp
+						const parsedPhone = typeof company.phone === 'string' ? JSON.parse(company.phone) : company.phone;
+						phoneData = {
+							telepon: parsedPhone.telepon || parsedPhone.phone || company.phone,
+							whatsapp: parsedPhone.whatsapp || parsedPhone.telepon || ''
+						};
+					} catch (e) {
+						// If phone is just a simple string
+						phoneData = { telepon: company.phone, whatsapp: company.phone };
+					}
+				}
+				
+				companyInfo = {
+					name: company.company_name || 'PT Kaha Solusi Indonesia',
+					address: company.company_address || 'Yogyakarta',
+					phone: phoneData,
+					email: company.email || 'info@kahasolusi.co.id',
+					coordinates: coordinates
+				};
+				
+				// Split address into two lines for better display
+				const addressParts = companyInfo.address.split(',');
+				if (addressParts.length >= 2) {
+					companyInfo.address1 = addressParts.slice(0, Math.ceil(addressParts.length / 2)).join(',').trim();
+					companyInfo.address2 = addressParts.slice(Math.ceil(addressParts.length / 2)).join(',').trim();
+				} else {
+					companyInfo.address1 = companyInfo.address;
+					companyInfo.address2 = '';
+				}
+			} else {
+				// Fallback to default data if no company profile exists
+				companyInfo = {
+					name: 'PT Kaha Solusi Indonesia',
+					address1: 'Grha Persatuan Yogya, Lantai 3, Blok A',
+					address2: 'Jl. Persatuan No. 56, Sleman, DI Yogyakarta',
+					phone: {
+						telepon: '021 123-456-789',
+						whatsapp: '0812-3456-7891'
+					},
+					email: 'halokaha@kahasolusi.co.id',
+					coordinates: coordinates
+				};
+			}
+			
+			loading = false;
+		} catch (err) {
+			console.error('Failed to load company data:', err);
+			error = 'Gagal memuat data perusahaan';
+			loading = false;
+			
+			// Use fallback data
+			companyInfo = {
+				name: 'PT Kaha Solusi Indonesia',
+				address1: 'Grha Persatuan Yogya, Lantai 3, Blok A',
+				address2: 'Jl. Persatuan No. 56, Sleman, DI Yogyakarta',
+				phone: {
+					telepon: '021 123-456-789',
+					whatsapp: '0812-3456-7891'
+				},
+				email: 'halokaha@kahasolusi.co.id',
+				coordinates: coordinates
+			};
+		}
+	}
 
 	onMount(async () => {
-		if (browser) {
+		// Load company data first
+		await loadCompanyData();
+
+		if (browser && companyInfo) {
 			const L = (await import('leaflet')).default;
 			await import('leaflet/dist/leaflet.css');
 
-			// Initialize map
+			// Initialize map with company coordinates
 			map = L.map(mapContainer).setView(companyInfo.coordinates, 15);
 
 			// Add tile layer
@@ -47,15 +130,17 @@
 				popupAnchor: [0, -40]
 			});
 
-			// Add marker
+			// Add marker with company info
+			const popupContent = `
+				<div style="font-family: sans-serif;">
+					<strong style="color: #004D66; font-size: 16px;">${companyInfo.name}</strong><br/>
+					<p style="margin: 8px 0; font-size: 14px;">${companyInfo.address1}${companyInfo.address2 ? '<br/>' + companyInfo.address2 : ''}</p>
+				</div>
+			`;
+
 			L.marker(companyInfo.coordinates, { icon: customIcon })
 				.addTo(map)
-				.bindPopup(
-					`<div style="font-family: sans-serif;">
-						<strong style="color: #004D66; font-size: 16px;">${companyInfo.name}</strong><br/>
-						<p style="margin: 8px 0; font-size: 14px;">${companyInfo.address}</p>
-					</div>`
-				)
+				.bindPopup(popupContent)
 				.openPopup();
 		}
 
@@ -69,6 +154,15 @@
 
 <section class="w-full bg-[#023F53] py-16 md:py-20 lg:py-24 px-6 sm:px-12">
 	<div class="max-w-7xl mx-auto">
+		{#if loading}
+			<!-- Loading State -->
+			<div class="flex items-center justify-center py-24">
+				<div class="text-center">
+					<div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+					<p class="text-white font-family-sans">Memuat data perusahaan...</p>
+				</div>
+			</div>
+		{:else if companyInfo}
 		<div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 			<!-- Map Container Wrapper -->
 			<div class="relative">
@@ -98,9 +192,11 @@
 						<p class="text-white/90 leading-relaxed font-family-sans">
 							{companyInfo.address1}
 						</p>
-                        <p class="text-white/90 leading-relaxed font-family-sans">
+						{#if companyInfo.address2}
+						<p class="text-white/90 leading-relaxed font-family-sans">
 							{companyInfo.address2}
 						</p>
+						{/if}
 					</div>
 				</div>
 
@@ -109,8 +205,12 @@
 					<Phone />
 					<div>
 						<h3 class="text-xl font-semibold mb-2">Kontak</h3>
+						{#if companyInfo.phone.telepon}
 						<p class="text-white/90 font-family-sans">Telepon: {companyInfo.phone.telepon}</p>
+						{/if}
+						{#if companyInfo.phone.whatsapp}
 						<p class="text-white/90 font-family-sans">WhatsApp: {companyInfo.phone.whatsapp}</p>
+						{/if}
 					</div>
 				</div>
 
@@ -124,6 +224,7 @@
 				</div>
 			</div>
 		</div>
+		{/if}
 	</div>
 </section>
 
