@@ -32,6 +32,9 @@
 	// Get portfolio ID from URL params
 	$: portfolioId = $page.params.id;
 
+	// Storage key for form state preservation (unique per portfolio)
+	$: STORAGE_KEY = `portfolio_edit_form_state_${portfolioId}`;
+
 	// Form data
 	let formData = {
 		project_name: '',
@@ -76,9 +79,66 @@
 	let imageFile = null;
 	let imagePreview = '';
 
+	// State preservation functions
+	function saveFormState() {
+		if (browser) {
+			const state = {
+				formData,
+				selectedCategories,
+				selectedTechnologies,
+				selectedClients,
+				imagePreview
+			};
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+		}
+	}
+
+	function restoreFormState() {
+		if (browser) {
+			const savedState = localStorage.getItem(STORAGE_KEY);
+			if (savedState) {
+				try {
+					const state = JSON.parse(savedState);
+					formData = state.formData || formData;
+					selectedCategories = state.selectedCategories || [];
+					selectedTechnologies = state.selectedTechnologies || [];
+					selectedClients = state.selectedClients || [];
+					imagePreview = state.imagePreview || '';
+					clearFormState();
+				} catch (err) {
+					console.error('Failed to restore form state:', err);
+				}
+			}
+		}
+	}
+
+	function clearFormState() {
+		if (browser) {
+			localStorage.removeItem(STORAGE_KEY);
+		}
+	}
+
+	function handleAddTechnology() {
+		saveFormState();
+		goto(`/dashboard/teknologi/create?returnTo=portfolio-edit&portfolioId=${portfolioId}`);
+	}
+
 	// Load data on mount
 	onMount(async () => {
 		await loadInitialData();
+		
+		// Check if returning from technology create
+		const returnFrom = $page.url.searchParams.get('returnFrom');
+		if (returnFrom === 'technology-create') {
+			restoreFormState();
+			// Reload technologies to include newly created one
+			try {
+				const technologiesData = await technologiesAPI.getAll();
+				availableTechnologies = technologiesData;
+			} catch (err) {
+				console.error('Failed to reload technologies:', err);
+			}
+		}
 	});
 
 	// Load portfolio data and options
@@ -898,7 +958,18 @@
 
 				<!-- Technologies Selection -->
 				<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-					<h2 class="text-xl font-semibold text-gray-900 mb-6">Teknologi yang Digunakan</h2>
+					<div class="flex justify-between items-center mb-6">
+						<h2 class="text-xl font-semibold text-gray-900">Teknologi yang Digunakan</h2>
+						<button
+							type="button"
+							onclick={handleAddTechnology}
+							class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+							title="Tambah Teknologi Baru"
+						>
+							<Plus class="w-4 h-4" />
+							Add Technology
+						</button>
+					</div>
 					
 					<div class="space-y-4">
 						{#each availableTechnologies as tech}
@@ -912,7 +983,6 @@
 								/>
 								<div class="ml-3">
 									<span class="text-sm font-medium text-gray-700">{tech.tech_name}</span>
-									<p class="text-xs text-gray-500">{tech.tech_type}</p>
 								</div>
 							</label>
 						{/each}

@@ -8,11 +8,6 @@ export class TechnologyService {
     let query = `SELECT * FROM technologies WHERE is_active = 1`;
     const params = [];
     
-    if (filters.type) {
-      query += ` AND tech_type = ?`;
-      params.push(filters.type);
-    }
-    
     query += ` ORDER BY sort_order ASC, tech_name ASC`;
     
     return await db.all(query, params);
@@ -28,15 +23,11 @@ export class TechnologyService {
     
     const result = await db.run(`
       INSERT INTO technologies (
-        tech_name, tech_type, logo_url, tech_description, 
-        official_url, sort_order, created_by
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        tech_name, logo_url, sort_order, created_by
+      ) VALUES (?, ?, ?, ?)
     `, [
       data.tech_name,
-      data.tech_type,
       data.logo_url,
-      data.tech_description,
-      data.official_url,
       data.sort_order || 0,
       data.created_by || 1
     ]);
@@ -49,16 +40,12 @@ export class TechnologyService {
     
     const result = await db.run(`
       UPDATE technologies SET
-        tech_name = ?, tech_type = ?, logo_url = ?, 
-        tech_description = ?, official_url = ?, sort_order = ?, 
+        tech_name = ?, logo_url = ?, sort_order = ?, 
         updated_at = datetime('now'), updated_by = ?
       WHERE tech_id = ?
     `, [
       data.tech_name,
-      data.tech_type,
       data.logo_url,
-      data.tech_description,
-      data.official_url,
       data.sort_order || 0,
       data.updated_by || 1,
       id

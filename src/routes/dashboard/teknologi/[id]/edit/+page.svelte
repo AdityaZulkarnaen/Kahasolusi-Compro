@@ -15,36 +15,13 @@
 
   let formData = {
     tech_name: '',
-    tech_type: '',
-    tech_description: '',
-    official_url: '',
     logo_url: '',
     is_active: true,
     sort_order: 1
   };
 
-  let techTypes = [
-    'Frontend Framework',
-    'Backend Framework',
-    'Backend Runtime',
-    'Database',
-    'CSS Framework',
-    'Programming Language',
-    'Mobile Framework',
-    'Cloud Service',
-    'DevOps Tool',
-    'Design Tool',
-    'Testing Framework',
-    'Build Tool',
-    'Package Manager',
-    'API Tool',
-    'Monitoring Tool'
-  ];
-
   let logoFile = null;
   let logoPreview = '';
-  let customType = '';
-  let showCustomType = false;
 
   function isValidUrl(string) {
     try { new URL(string); return true; } catch(_) { return false; }
@@ -53,9 +30,6 @@
   function validateForm() {
     errors = {};
     if (!formData.tech_name.trim()) errors.tech_name = 'Nama teknologi wajib diisi';
-    if (!formData.tech_type.trim() && !customType.trim()) errors.tech_type = 'Tipe teknologi wajib dipilih';
-    if (!formData.tech_description.trim()) errors.tech_description = 'Deskripsi teknologi wajib diisi';
-    if (formData.official_url && !isValidUrl(formData.official_url)) errors.official_url = 'URL tidak valid';
     if (formData.sort_order < 1) errors.sort_order = 'Urutan harus minimal 1';
     return Object.keys(errors).length === 0;
   }
@@ -72,11 +46,6 @@
 
   function removeLogo() { logoFile = null; logoPreview = ''; formData.logo_url = ''; }
 
-  function handleTypeChange() {
-    if (formData.tech_type === 'custom') { showCustomType = true; }
-    else { showCustomType = false; customType = ''; }
-  }
-
   onMount(async () => {
     const p = get(page);
     id = p.params.id;
@@ -86,9 +55,6 @@
       const tech = await technologiesAPI.getById(id);
       if (!tech) return;
       formData.tech_name = tech.tech_name || '';
-      formData.tech_type = tech.tech_type || '';
-      formData.tech_description = tech.tech_description || '';
-      formData.official_url = tech.official_url || '';
       formData.logo_url = tech.logo_url || '';
       formData.is_active = tech.is_active ? true : false;
       formData.sort_order = tech.sort_order || 1;
@@ -96,13 +62,6 @@
       // set previews if existing paths
       if (tech.logo_url) {
         logoPreview = tech.logo_url.startsWith('http') ? tech.logo_url : `${BASE_URL}${tech.logo_url}`;
-      }
-
-      // if tech_type not in list, treat as custom
-      if (tech.tech_type && !techTypes.includes(tech.tech_type)) {
-        showCustomType = true;
-        customType = tech.tech_type;
-        formData.tech_type = 'custom';
       }
     } catch (err) {
       console.error('Failed to load technology:', err);
@@ -112,7 +71,6 @@
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (showCustomType && customType.trim()) formData.tech_type = customType.trim();
     if (!validateForm()) return;
 
     isSubmitting = true;
@@ -156,49 +114,17 @@
         <h2 class="text-xl font-semibold text-gray-900 mb-6">Informasi Dasar</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Teknologi <span class="text-red-500">*</span></label>
-            <input type="text" bind:value={formData.tech_name} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: React, Node.js" />
+            <label for="tech_name" class="block text-sm font-medium text-gray-700 mb-2">Nama Teknologi <span class="text-red-500">*</span></label>
+            <input type="text" id="tech_name" bind:value={formData.tech_name} class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: React, Node.js" />
             {#if errors.tech_name}<p class="text-red-500 text-sm mt-1">{errors.tech_name}</p>{/if}
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Teknologi <span class="text-red-500">*</span></label>
-            <select bind:value={formData.tech_type} onchange={handleTypeChange} class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
-              <option value="">Pilih tipe teknologi</option>
-              {#each techTypes as type}<option value={type}>{type}</option>{/each}
-              <option value="custom">Custom Type...</option>
-            </select>
-            {#if errors.tech_type}<p class="text-red-500 text-sm mt-1">{errors.tech_type}</p>{/if}
-          </div>
-
-          {#if showCustomType}
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Custom Type <span class="text-red-500">*</span></label>
-              <input type="text" bind:value={customType} class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none" placeholder="Masukkan tipe custom" />
-            </div>
-          {/if}
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Official Website</label>
-            <input type="url" bind:value={formData.official_url} class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none" placeholder="https://example.com" />
-            {#if errors.official_url}<p class="text-red-500 text-sm mt-1">{errors.official_url}</p>{/if}
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Urutan Tampilan</label>
-            <input type="number" bind:value={formData.sort_order} min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none" />
+            <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">Urutan Tampilan</label>
+            <input type="number" id="sort_order" bind:value={formData.sort_order} min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none" />
             {#if errors.sort_order}<p class="text-red-500 text-sm mt-1">{errors.sort_order}</p>{/if}
             <p class="text-sm text-gray-500 mt-1">Teknologi dengan urutan lebih kecil akan ditampilkan lebih dulu</p>
           </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Deskripsi</h2>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Deskripsi Teknologi <span class="text-red-500">*</span></label>
-          <textarea bind:value={formData.tech_description} rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none" placeholder="Jelaskan tentang teknologi ini"></textarea>
-          {#if errors.tech_description}<p class="text-red-500 text-sm mt-1">{errors.tech_description}</p>{/if}
         </div>
       </div>
 

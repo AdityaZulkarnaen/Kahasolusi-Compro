@@ -39,9 +39,9 @@ export class TechnologyController {
     try {
       const data = await c.req.json()
       
-      if (!data.tech_name || !data.tech_type) {
+      if (!data.tech_name) {
         return c.json({ 
-          error: 'Missing required fields: tech_name, tech_type' 
+          error: 'Missing required field: tech_name' 
         }, 400)
       }
       
@@ -65,9 +65,9 @@ export class TechnologyController {
 
       const data = await c.req.json()
       
-      if (!data.tech_name || !data.tech_type) {
+      if (!data.tech_name) {
         return c.json({ 
-          error: 'Missing required fields: tech_name, tech_type' 
+          error: 'Missing required field: tech_name' 
         }, 400)
       }
 

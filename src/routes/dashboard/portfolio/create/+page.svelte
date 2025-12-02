@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI, clientsAPI } from '$lib/api.js';
 	import { indonesianProvinces } from '$lib/data/provinces.js';
 	import ClientModal from '$lib/components/ClientModal.svelte';
@@ -58,9 +59,56 @@
 	let success = false;
 	let successMessage = '';
 
+	// Save and restore form state
+	const STORAGE_KEY = 'portfolio_create_form_state';
+
+	function saveFormState() {
+		const state = {
+			formData,
+			selectedCategories,
+			selectedTechnologies,
+			selectedClients,
+			imagePreview,
+			hasilInput
+		};
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	}
+
+	function restoreFormState() {
+		const saved = localStorage.getItem(STORAGE_KEY);
+		if (saved) {
+			try {
+				const state = JSON.parse(saved);
+				formData = state.formData || formData;
+				selectedCategories = state.selectedCategories || [];
+				selectedTechnologies = state.selectedTechnologies || [];
+				selectedClients = state.selectedClients || [];
+				imagePreview = state.imagePreview || '';
+				hasilInput = state.hasilInput || '';
+			} catch (err) {
+				console.error('Failed to restore form state:', err);
+			}
+		}
+	}
+
+	function clearFormState() {
+		localStorage.removeItem(STORAGE_KEY);
+	}
+
+	function handleAddTechnology() {
+		saveFormState();
+		goto('/dashboard/teknologi/create?returnTo=portfolio-create');
+	}
+
 	// Load data on mount
 	onMount(async () => {
 		try {
+			// Check if returning from another page
+			const returnFrom = $page.url.searchParams.get('returnFrom');
+			if (returnFrom) {
+				restoreFormState();
+			}
+
 			const [categoriesData, technologiesData, clientsData] = await Promise.all([
 				categoriesAPI.getAll(),
 				technologiesAPI.getAll(),
@@ -893,7 +941,17 @@
 
 			<!-- Technologies -->
 			<div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-				<h2 class="text-xl font-semibold text-gray-900 mb-6">Teknologi yang Digunakan</h2>
+				<div class="flex justify-between items-center mb-6">
+					<h2 class="text-xl font-semibold text-gray-900">Teknologi yang Digunakan</h2>
+					<button
+						type="button"
+						onclick={handleAddTechnology}
+						class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+					>
+						<Plus class="w-4 h-4" />
+						Add Technology
+					</button>
+				</div>
 				
 				<div class="space-y-4">
 					<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
