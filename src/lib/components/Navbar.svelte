@@ -6,6 +6,9 @@
 	import LogoBlue from '$lib/assets/svg/LogoBlue.svg';
 	import LogoWhite from '$lib/assets/svg/LogoWhite.svg';
 	import { page } from '$app/stores';
+	import { companyAPI } from '$lib/api.js';
+
+	let whatsappLink = '#';
 
 	let isClientSectionVisible = false;
 	let observer;
@@ -14,7 +17,24 @@
 		isMenuOpen = !isMenuOpen;
 	}
 
-	onMount(() => {
+	onMount(async () => {
+		// Load WhatsApp link
+		try {
+			const companies = await companyAPI.get();
+			if (companies && companies.length > 0) {
+				let phone = companies[0].phone;
+				// Bersihkan dari karakter non-digit
+				let cleanPhone = phone.replace(/\D/g, '');
+				// Ganti 0 di awal dengan 62
+				if (cleanPhone.startsWith('0')) {
+					cleanPhone = '62' + cleanPhone.substring(1);
+				}
+				whatsappLink = `https://wa.me/${cleanPhone}?text=Halo%20Kahasolusi%2C%20saya%20ingin%20berkonsultasi`;
+			}
+		} catch (error) {
+			console.error('Failed to load company phone:', error);
+		}
+
 		// Observe the Client section for visibility
 		const clientSection = document.querySelector('[data-section="client"]');
 
@@ -117,11 +137,14 @@
 					Sign In
 				</a>
 				<div class="w-[2px] h-6 {Strip} transition-colors duration-300"></div>
-				<button
-					class="bg-[#176684] font-family-sans text-white px-4 xl:px-6 py-2 rounded-full text-xs xl:text-sm hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/40 transition-all whitespace-nowrap"
+				<a
+					href={whatsappLink}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="bg-[#176684] font-family-sans text-white px-4 xl:px-6 py-2 rounded-full text-xs xl:text-sm hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/40 transition-all whitespace-nowrap no-underline inline-block"
 				>
 					Hubungi Kami
-				</button>
+				</a>
 			</div>
 
 			<!-- Mobile Menu Toggle -->
@@ -198,11 +221,14 @@
 					>
 						Sign In
 					</a>
-					<button
-						class="bg-[#176684] font-family-sans text-white px-6 py-2.5 rounded-full text-sm hover:shadow-lg hover:shadow-cyan-500/40 transition-all w-full"
+					<a
+						href={whatsappLink}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="bg-[#176684] font-family-sans text-white px-6 py-2.5 rounded-full text-sm hover:shadow-lg hover:shadow-cyan-500/40 transition-all w-full no-underline inline-block text-center"
 					>
 						Hubungi Kami
-					</button>
+					</a>
 				</div>
 			</div>
 		</div>

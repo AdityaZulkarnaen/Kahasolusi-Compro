@@ -15,7 +15,6 @@
 		X,
 		Image,
 		MessageSquare,
-		Phone,
 		Briefcase
 	} from 'lucide-svelte';
 
@@ -144,16 +143,6 @@
 					>
 						<Image class="w-5 h-5" />
 						<span class="font-medium">Multimedia</span>
-					</a>
-				</li>
-				<li>
-					<a 
-						href="/dashboard/contact-cta" 
-						class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {isActive('/dashboard/contact-cta') ? 'text-[#176684] font-semibold' : 'text-gray-700 hover:bg-white'}"
-						style={isActive('/dashboard/contact-cta') ? 'background-color: rgba(23, 102, 132, 0.25);' : ''}
-					>
-						<Phone class="w-5 h-5" />
-						<span class="font-medium">Contact CTA</span>
 					</a>
 				</li>
 				<li>

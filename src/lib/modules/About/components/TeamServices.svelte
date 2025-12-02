@@ -1,6 +1,28 @@
 <script>
 	import coders from '$lib/assets/images/coders.png';
 	import working from '$lib/assets/images/working.png';
+	import { companyAPI } from '$lib/api.js';
+	import { onMount } from 'svelte';
+
+	let whatsappLink = '#';
+
+	onMount(async () => {
+		try {
+			const companies = await companyAPI.get();
+			if (companies && companies.length > 0) {
+				let phone = companies[0].phone;
+				// Bersihkan dari karakter non-digit
+				let cleanPhone = phone.replace(/\D/g, '');
+				// Ganti 0 di awal dengan 62
+				if (cleanPhone.startsWith('0')) {
+					cleanPhone = '62' + cleanPhone.substring(1);
+				}
+				whatsappLink = `https://wa.me/${cleanPhone}?text=Halo%20Kahasolusi%2C%20saya%20ingin%20berkonsultasi`;
+			}
+		} catch (error) {
+			console.error('Failed to load company phone:', error);
+		}
+	});
 
 	const cards = [
 		{
@@ -105,14 +127,16 @@
 				</p>
 				<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
 				<a
-					href='#'
-					class="w-full sm:w-auto px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl"
+					href={whatsappLink}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="w-full sm:w-auto px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl no-underline inline-block text-center"
 				>
 					Hubungi Kami
 				</a>
 				<a
 					href='/layanan'
-					class="w-full sm:w-auto px-8 py-3 border-2 border-[#004D66] text-[#004D66] rounded-full font-medium hover:bg-[#004D66] hover:text-white transition-all duration-300"
+					class="w-full sm:w-auto px-8 py-3 border-2 border-[#004D66] text-[#004D66] rounded-full font-medium hover:bg-[#004D66] hover:text-white transition-all duration-300 no-underline inline-block text-center"
 				>
 					Lihat Layanan
 				</a>

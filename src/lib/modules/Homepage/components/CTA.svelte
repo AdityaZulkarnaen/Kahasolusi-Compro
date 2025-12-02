@@ -1,4 +1,27 @@
 <script>
+	import { companyAPI } from '$lib/api.js';
+	import { onMount } from 'svelte';
+
+	let whatsappLink = '#';
+
+	onMount(async () => {
+		try {
+			const companies = await companyAPI.get();
+			if (companies && companies.length > 0) {
+				let phone = companies[0].phone;
+				// Bersihkan dari karakter non-digit
+				let cleanPhone = phone.replace(/\D/g, '');
+				// Ganti 0 di awal dengan 62
+				if (cleanPhone.startsWith('0')) {
+					cleanPhone = '62' + cleanPhone.substring(1);
+				}
+				whatsappLink = `https://wa.me/${cleanPhone}?text=Halo%20Kahasolusi%2C%20saya%20ingin%20berkonsultasi`;
+			}
+		} catch (error) {
+			console.error('Failed to load company phone:', error);
+		}
+	});
+
 	function ctaPressed() {
 		window.location.href='/layanan'
 	}
@@ -26,9 +49,13 @@
 				
 				<!-- CTA Buttons -->
 				<div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-					<button class="bg-[#176684] text-white px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors">
+					<a 
+						href={whatsappLink}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="bg-[#176684] text-white px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
 						Hubungi Kami
-					</button>
+					</a>
 					<button 
 						onclick={ctaPressed}
 						class="bg-transparent text-[#176684] px-8 py-3 rounded-full font-medium hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors border-2 border-[#176684]">

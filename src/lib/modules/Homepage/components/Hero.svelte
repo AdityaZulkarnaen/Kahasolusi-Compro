@@ -1,6 +1,28 @@
 <script>
 	import HeroBackground from '$lib/assets/images/HeroBackground.jpg';
 	import { ArrowRight } from 'lucide-svelte';
+	import { companyAPI } from '$lib/api.js';
+	import { onMount } from 'svelte';
+
+	let whatsappLink = '#';
+
+	onMount(async () => {
+		try {
+			const companies = await companyAPI.get();
+			if (companies && companies.length > 0) {
+				let phone = companies[0].phone;
+				// Bersihkan dari karakter non-digit
+				let cleanPhone = phone.replace(/\D/g, '');
+				// Ganti 0 di awal dengan 62
+				if (cleanPhone.startsWith('0')) {
+					cleanPhone = '62' + cleanPhone.substring(1);
+				}
+				whatsappLink = `https://wa.me/${cleanPhone}?text=Halo%20Kahasolusi%2C%20saya%20ingin%20berkonsultasi`;
+			}
+		} catch (error) {
+			console.error('Failed to load company phone:', error);
+		}
+	});
 </script>
 
 <!-- Hero Section -->
@@ -36,12 +58,15 @@
 				dengan kualitas terbaik, menghubungkan ide Anda<br class="hidden sm:block" />
 				dengan solusi nyata.
 			</p>
-			<button
-				class="inline-flex items-center gap-2 bg-[#176684] font-family-sans text-white px-8 py-4 rounded-full text-base font-semibold hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/30 transition-all group"
+			<a
+				href={whatsappLink}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-2 bg-[#176684] font-family-sans text-white px-8 py-4 rounded-full text-base font-semibold hover:-translate-y-1 hover:shadow-xl hover:shadow-cyan-500/30 transition-all group no-underline"
 			>
 				Hubungi Kami
 				<ArrowRight class="w-5 h-5" />
-			</button>
+			</a>
 		</div>
 	</div>
 </section>

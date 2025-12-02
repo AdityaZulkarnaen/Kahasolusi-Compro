@@ -6,7 +6,7 @@
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import Recaptcha from '$lib/components/Recaptcha.svelte';
-    import { feedbackAPI, portfolioAPI, categoriesAPI, clientsAPI } from '$lib/api.js';
+    import { feedbackAPI, portfolioAPI, categoriesAPI, clientsAPI, companyAPI } from '$lib/api.js';
     import { browser } from '$app/environment';
     
     // Filter state
@@ -15,6 +15,9 @@
     // Pagination state
     let currentPage = $state(1);
     const itemsPerPage = 8;
+    
+    // WhatsApp link
+    let whatsappLink = $state('#');
     
     // Data state
     let portfolios = $state([]);
@@ -84,11 +87,26 @@
     let paginatedProjects = $derived(filteredProjects.slice(startIndex, endIndex));
     
     // Load data on mount
-    onMount(async () => {
-        await loadData();
-    });
-    
-    async function loadData() {
+	onMount(async () => {
+		await loadData();
+
+		// Load WhatsApp link
+		try {
+			const companies = await companyAPI.get();
+			if (companies && companies.length > 0) {
+				let phone = companies[0].phone;
+				// Bersihkan dari karakter non-digit
+				let cleanPhone = phone.replace(/\D/g, '');
+				// Ganti 0 di awal dengan 62
+				if (cleanPhone.startsWith('0')) {
+					cleanPhone = '62' + cleanPhone.substring(1);
+				}
+				whatsappLink = `https://wa.me/${cleanPhone}?text=Halo%20Kahasolusi%2C%20saya%20ingin%20berkonsultasi`;
+			}
+		} catch (error) {
+			console.error('Failed to load company phone:', error);
+		}
+	});    async function loadData() {
         loading = true;
         error = '';
         try {
@@ -705,18 +723,26 @@
                     </div>
                     
                     <div class="flex flex-col sm:flex-row gap-4 lg:flex-shrink-0">
-                        <button class="bg-[#0D4E6D] text-white px-6 py-3 rounded-lg font-medium font-family-sans hover:bg-[#0a3d54] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg flex items-center gap-2">
+                        <a 
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="bg-[#0D4E6D] text-white px-6 py-3 rounded-lg font-medium font-family-sans hover:bg-[#0a3d54] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg flex items-center gap-2 no-underline justify-center">
                             Hubungi Kami
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M17 7H7M17 7V17"></path>
                             </svg>
-                        </button>
-                        <button class="bg-transparent border-2 border-[#0D4E6D] text-[#0D4E6D] px-6 py-3 rounded-lg font-medium font-family-sans hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 flex items-center gap-2">
+                        </a>
+                        <a 
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="bg-transparent border-2 border-[#0D4E6D] text-[#0D4E6D] px-6 py-3 rounded-lg font-medium font-family-sans hover:bg-[#0D4E6D] hover:text-white transition-all duration-200 flex items-center gap-2 no-underline justify-center">
                             Dapatkan penawaran
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M17 7H7M17 7V17"></path>
                             </svg>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
