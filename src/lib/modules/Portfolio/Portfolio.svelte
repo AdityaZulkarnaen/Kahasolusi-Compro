@@ -6,7 +6,8 @@
     import ClientExample from '$lib/assets/images/client_example.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import Recaptcha from '$lib/components/Recaptcha.svelte';
-    import { feedbackAPI, portfolioAPI, categoriesAPI } from '$lib/api.js';
+    import { feedbackAPI, portfolioAPI, categoriesAPI, clientsAPI } from '$lib/api.js';
+    import { browser } from '$app/environment';
     
     // Filter state
     let selectedFilter = $state('pemerintah');
@@ -20,8 +21,21 @@
     let categories = $state([]);
     let feedbacks = $state([]);
     let portfolioStats = $state([]);
+    let clients = $state([]);
+    let clientsWithLogo = $state([]);
     let loading = $state(true);
     let error = $state('');
+    
+    // Get base URL for images
+    const API_BASE_URL = browser ? import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api' : '';
+    const BASE_URL = API_BASE_URL.replace('/api', '');
+    
+    // Helper function to get full image URL
+    function getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+        return `${BASE_URL}${imagePath}`;
+    }
     
     // Feedback form state
     let feedbackForm = $state({
@@ -78,7 +92,7 @@
         loading = true;
         error = '';
         try {
-            const [portfolioData, categoryData, feedbackResponse, statsData] = await Promise.all([
+            const [portfolioData, categoryData, feedbackResponse, statsData, clientData] = await Promise.all([
                 portfolioAPI.getAll().catch(err => {
                     console.error('Failed to load portfolios:', err);
                     return [];
@@ -94,6 +108,10 @@
                 portfolioAPI.getByProvinces().catch(err => {
                     console.error('Failed to load portfolio stats:', err);
                     return [];
+                }),
+                clientsAPI.getAll().catch(err => {
+                    console.error('Failed to load clients:', err);
+                    return [];
                 })
             ]);
             
@@ -102,9 +120,16 @@
             feedbacks = Array.isArray(feedbackResponse.data) ? feedbackResponse.data : [];
             portfolioStats = Array.isArray(statsData) ? statsData : [];
             
+            // Process clients data
+            const clientArray = Array.isArray(clientData) ? clientData : (clientData.data || []);
+            clients = clientArray;
+            clientsWithLogo = clientArray.filter(client => client.client_logo);
+            
             console.log('✅ Loaded portfolios:', portfolios.length);
             console.log('✅ Loaded categories:', categories.length);
             console.log('✅ Loaded feedbacks:', feedbacks.length);
+            console.log('✅ Loaded clients:', clients.length);
+            console.log('✅ Clients with logo:', clientsWithLogo.length);
             console.log('📊 Portfolio stats by provinces:', portfolioStats);
             console.log('Displayed feedbacks:', feedbacks.filter(f => f.is_displayed === 1 || f.is_displayed === true));
             
@@ -415,18 +440,29 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-2xl sm:text-3xl font-medium text-[#0D4E6D] font-family-sans">
-                    Telah dipercaya lebih dari 20+ klien di seluruh Indonesia
+                    Telah dipercaya lebih dari {clients.length}+ klien di seluruh Indonesia
                 </h2>
             </div>
             
             <div class="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-6 items-center justify-items-center mb-16">
                 {#each Array(24) as _, index}
                     <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-lg shadow-sm flex items-center justify-center p-2">
-                        <img 
-                            src={ClientExample} 
-                            alt="Client {index + 1}" 
-                            class="w-full h-full object-contain opacity-60 hover:opacity-100 transition-opacity duration-200"
-                        />
+                        {#if index < clientsWithLogo.length}
+                            <img 
+                                src={getImageUrl(clientsWithLogo[index].client_logo)} 
+                                alt={clientsWithLogo[index].client_name}
+                                class="w-full h-full object-contain opacity-60 hover:opacity-100 transition-opacity duration-200"
+                                onerror={(e) => {
+                                    e.target.src = ClientExample;
+                                }}
+                            />
+                        {:else}
+                            <img 
+                                src={ClientExample} 
+                                alt="Client {index + 1}" 
+                                class="w-full h-full object-contain opacity-60 hover:opacity-100 transition-opacity duration-200"
+                            />
+                        {/if}
                     </div>
                 {/each}
             </div>
