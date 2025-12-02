@@ -23,6 +23,7 @@ import uploadRoutes from './routes/upload.js'
 import authRoutes from './routes/auth.js'
 import analyticsRoutes from './routes/analytics.js'
 import geocodingRoutes from './routes/geocoding.js'
+import clientsRoutes from './routes/clients.js'
 
 const app = new Hono()
 
@@ -57,6 +58,7 @@ app.route('/api/auth', authRoutes)
 app.route('/api/portfolio', portfolioRoutes)
 app.route('/api/categories', categoryRoutes)
 app.route('/api/technologies', technologyRoutes)
+app.route('/api/clients', clientsRoutes)
 app.route('/api/sdm', sdmRoutes)
 app.route('/api/company', companyRoutes)
 app.route('/api/multimedia', multimediaRoutes)

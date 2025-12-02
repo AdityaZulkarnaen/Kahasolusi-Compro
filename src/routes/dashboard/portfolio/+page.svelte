@@ -92,7 +92,7 @@
 			// Text search filter
 			const textMatch = !searchQuery.trim() || 
 				portfolio.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				portfolio.client_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				portfolio.client_names?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				portfolio.project_description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				portfolio.categories?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				portfolio.technologies?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -450,7 +450,16 @@
 									</div>
 								</td>
 							<td class="px-6 py-4">
-								<div class="text-sm text-gray-900">{portfolio.client_name || 'N/A'}</div>
+								<div class="flex flex-col gap-1">
+									{#if portfolio.clients}
+										{@const clientsArray = typeof portfolio.clients === 'string' ? JSON.parse(portfolio.clients) : portfolio.clients}
+										{#each clientsArray as client}
+											<span class="text-sm text-gray-900">{client.client_name}</span>
+										{/each}
+									{:else}
+										<span class="text-sm text-gray-400">No client</span>
+									{/if}
+								</div>
 							</td>
 							<td class="px-6 py-4">
 								<div class="flex flex-wrap gap-1">
@@ -650,9 +659,14 @@
 								<h4 class="font-medium text-gray-900 truncate">
 									{portfolioToDelete.project_name}
 								</h4>
-								<p class="text-sm text-gray-500 truncate">
-									{portfolioToDelete.client_name}
-								</p>
+								{#if portfolioToDelete.clients}
+									{@const clientsArray = typeof portfolioToDelete.clients === 'string' ? JSON.parse(portfolioToDelete.clients) : portfolioToDelete.clients}
+									<p class="text-sm text-gray-500 truncate">
+										{clientsArray.map(c => c.client_name).join(', ')}
+									</p>
+								{:else}
+									<p class="text-sm text-gray-500 truncate">No client</p>
+								{/if}
 							</div>
 						</div>
 					</div>

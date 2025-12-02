@@ -1,8 +1,9 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI } from '$lib/api.js';
+	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI, clientsAPI } from '$lib/api.js';
 	import { indonesianProvinces } from '$lib/data/provinces.js';
+	import ClientModal from '$lib/components/ClientModal.svelte';
 	import { 
 		ArrowLeft, 
 		Save, 
@@ -12,7 +13,9 @@
 		Calendar,
 		Link as LinkIcon,
 		Image as ImageIcon,
-		Eye
+		Eye,
+		Edit,
+		Trash2
 	} from 'lucide-svelte';
 	
 	// Form data
@@ -22,7 +25,6 @@
 		case_study: '',
 		permasalahan: '',
 		hasil: [],
-		client_name: '',
 		daerah: '',
 		project_start_date: '',
 		project_end_date: '',
@@ -35,8 +37,16 @@
 	// Available options from API
 	let availableCategories = [];
 	let availableTechnologies = [];
+	let availableClients = [];
 	let selectedCategories = [];
 	let selectedTechnologies = [];
+	let selectedClients = [];
+	let clientDropdownValue = '';
+	
+	// Client modal state
+	let isClientModalOpen = false;
+	let clientModalMode = 'create';
+	let editingClient = null;
 	
 	// Hasil items state
 	let hasilInput = '';
@@ -51,13 +61,15 @@
 	// Load data on mount
 	onMount(async () => {
 		try {
-			const [categoriesData, technologiesData] = await Promise.all([
+			const [categoriesData, technologiesData, clientsData] = await Promise.all([
 				categoriesAPI.getAll(),
-				technologiesAPI.getAll()
+				technologiesAPI.getAll(),
+				clientsAPI.getAll()
 			]);
 			
 			availableCategories = categoriesData;
 			availableTechnologies = technologiesData;
+			availableClients = clientsData;
 		} catch (err) {
 			error = err.message;
 			console.error('Failed to load form data:', err);
@@ -80,10 +92,6 @@
 		
 		if (!formData.project_description.trim()) {
 			errors.project_description = 'Deskripsi project wajib diisi';
-		}
-		
-		if (!formData.client_name.trim()) {
-			errors.client_name = 'Nama client wajib diisi';
 		}
 		
 		if (!formData.project_start_date) {
@@ -110,6 +118,10 @@
 		
 		if (selectedTechnologies.length === 0) {
 			errors.technologies = 'Minimal pilih satu teknologi';
+		}
+		
+		if (selectedClients.length === 0) {
+			errors.clients = 'Minimal pilih satu client';
 		}
 		
 		return Object.keys(errors).length === 0;
@@ -191,6 +203,54 @@
 		formData.technologies = selectedTechnologies;
 	}
 	
+	// Client management
+	function toggleClient(clientId) {
+		if (selectedClients.includes(clientId)) {
+			selectedClients = selectedClients.filter(id => id !== clientId);
+		} else {
+			selectedClients = [...selectedClients, clientId];
+		}
+		clientDropdownValue = ''; // Reset dropdown
+		formData.clients = selectedClients;
+	}
+	
+	function openAddClientModal() {
+		clientModalMode = 'create';
+		editingClient = null;
+		isClientModalOpen = true;
+	}
+	
+	function openEditClientModal(client) {
+		clientModalMode = 'edit';
+		editingClient = client;
+		isClientModalOpen = true;
+	}
+	
+	async function handleClientSave() {
+		isClientModalOpen = false;
+		clientDropdownValue = ''; // Reset dropdown
+		try {
+			const clientsData = await clientsAPI.getAll();
+			availableClients = clientsData;
+		} catch (err) {
+			console.error('Failed to reload clients:', err);
+		}
+	}
+	
+	async function handleDeleteClient(clientId, clientName) {
+		if (confirm(`Hapus client "${clientName}"?`)) {
+			try {
+				await clientsAPI.delete(clientId);
+				selectedClients = selectedClients.filter(id => id !== clientId);
+				clientDropdownValue = ''; // Reset dropdown
+				const clientsData = await clientsAPI.getAll();
+				availableClients = clientsData;
+			} catch (err) {
+				alert(`Gagal menghapus client: ${err.message}`);
+			}
+		}
+	}
+	
 	// Hasil management
 	function addHasil() {
 		if (hasilInput.trim()) {
@@ -234,16 +294,22 @@
 			return;
 		}
 
+		if (selectedClients.length === 0) {
+			error = 'Minimal pilih satu client';
+			return;
+		}
+
 		submitting = true;
 		error = null;
 
 		try {
-			// Prepare data with categories and technologies
+			// Prepare data with categories, technologies, and clients
 			const submissionData = {
 				...formData,
 				hasil: JSON.stringify(formData.hasil), // Convert array to JSON string
 				categories: selectedCategories,
-				technologies: selectedTechnologies
+				technologies: selectedTechnologies,
+				clients: selectedClients
 			};
 
 			await portfolioAPI.create(submissionData);
@@ -423,19 +489,99 @@
 					</div>
 					
 					<div>
-						<label for="client_name" class="block text-sm font-medium text-gray-700 mb-2">
-							Nama Client <span class="text-red-500">*</span>
+						<label for="client" class="block text-sm font-medium text-gray-700 mb-2">
+							Client <span class="text-red-500">*</span>
 						</label>
-						<input
-							type="text"
-							id="client_name"
-							bind:value={formData.client_name}
-							class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-							placeholder="Masukkan nama client"
-							class:border-red-500={errors.client_name}
-						/>
-						{#if errors.client_name}
-							<p class="text-red-500 text-sm mt-1">{errors.client_name}</p>
+						<div class="flex gap-2">
+							<div class="flex-1 relative">
+								<select
+									id="client"
+									bind:value={clientDropdownValue}
+									class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white"
+									onchange={(e) => {
+										const clientId = parseInt(e.target.value);
+										if (clientId && !selectedClients.includes(clientId)) {
+											selectedClients = [...selectedClients, clientId];
+										}
+										clientDropdownValue = '';
+									}}
+									class:border-red-500={errors.clients}
+								>
+									<option value="">Pilih Client</option>
+									{#each availableClients as client}
+										<option value={client.client_id}>{client.client_name}</option>
+									{/each}
+								</select>
+								<div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+									<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+									</svg>
+								</div>
+						</div>
+						<button
+							type="button"
+							onclick={openAddClientModal}
+							class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+							title="Tambah Client Baru"
+						>
+							<Plus class="w-4 h-4" />
+							Add Client
+						</button>
+					</div>						{#if errors.clients}
+							<p class="text-red-500 text-sm mt-1">{errors.clients}</p>
+						{/if}
+						
+						{#if selectedClients.length > 0}
+							<div class="mt-4">
+								<p class="text-sm font-medium text-gray-700 mb-2">Client terpilih:</p>
+								<div class="space-y-2">
+									{#each selectedClients as clientId}
+										{@const client = availableClients.find(c => c.client_id === clientId)}
+										{#if client}
+											<div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+												<div class="flex items-center gap-3">
+													{#if client.client_logo}
+														<img 
+															src="http://localhost:3001{client.client_logo}" 
+															alt={client.client_name}
+															class="w-8 h-8 object-contain rounded"
+														/>
+													{/if}
+													<span class="text-sm font-medium text-blue-900">{client.client_name}</span>
+												</div>
+												<div class="flex items-center gap-2">
+													<button
+														type="button"
+														onclick={() => openEditClientModal(client)}
+														class="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+														title="Edit Client"
+													>
+														<Edit class="w-4 h-4" />
+													</button>
+													{#if !client.portfolio_count || client.portfolio_count === 0}
+														<button
+															type="button"
+															onclick={() => handleDeleteClient(client.client_id, client.client_name)}
+															class="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors"
+															title="Hapus Client"
+														>
+															<Trash2 class="w-4 h-4" />
+														</button>
+													{/if}
+													<button
+														type="button"
+														onclick={() => toggleClient(clientId)}
+														class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+														title="Hapus dari pilihan"
+													>
+														<X class="w-4 h-4" />
+													</button>
+												</div>
+											</div>
+										{/if}
+									{/each}
+								</div>
+							</div>
 						{/if}
 					</div>
 
@@ -900,3 +1046,15 @@
 		</form>
 	</div>
 </div>
+
+<!-- Client Modal -->
+<ClientModal 
+	bind:isOpen={isClientModalOpen}
+	mode={clientModalMode}
+	clientData={editingClient}
+	on:save={handleClientSave}
+	on:close={() => {
+		isClientModalOpen = false;
+		editingClient = null;
+	}}
+/>

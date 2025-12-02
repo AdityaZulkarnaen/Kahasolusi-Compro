@@ -343,6 +343,36 @@ export const uploadAPI = {
         return await apiRequest(`/upload/company/${filename}`, {
             method: 'DELETE'
         });
+    },
+
+    // Upload client logo
+    async uploadClientLogo(file) {
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const response = await fetch(`${API_BASE_URL}/upload/client`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Client logo upload failed:', error);
+            throw error;
+        }
+    },
+
+    // Delete client logo
+    async deleteClientLogo(filename) {
+        return await apiRequest(`/upload/client/${filename}`, {
+            method: 'DELETE'
+        });
     }
 };
 
@@ -457,6 +487,49 @@ export const feedbackAPI = {
     async delete(id) {
         return await apiRequest(`/feedback/${id}`, {
             method: 'DELETE'
+        });
+    }
+};
+
+// Clients API functions
+export const clientsAPI = {
+    // Get all clients
+    async getAll() {
+        return await apiRequest('/clients');
+    },
+
+    // Get client by ID
+    async getById(id) {
+        return await apiRequest(`/clients/${id}`);
+    },
+
+    // Create new client
+    async create(clientData) {
+        return await apiRequest('/clients', {
+            method: 'POST',
+            body: JSON.stringify(clientData)
+        });
+    },
+
+    // Update client
+    async update(id, clientData) {
+        return await apiRequest(`/clients/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(clientData)
+        });
+    },
+
+    // Delete client
+    async delete(id) {
+        return await apiRequest(`/clients/${id}`, {
+            method: 'DELETE'
+        });
+    },
+
+    // Toggle active status
+    async toggleActive(id) {
+        return await apiRequest(`/clients/${id}/toggle`, {
+            method: 'PATCH'
         });
     }
 };

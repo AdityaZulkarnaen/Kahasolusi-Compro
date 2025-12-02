@@ -15,7 +15,8 @@
 		X,
 		Image,
 		MessageSquare,
-		Phone
+		Phone,
+		Briefcase
 	} from 'lucide-svelte';
 
 	let { children, data } = $props();
@@ -95,6 +96,16 @@
 					>
 						<Code class="w-5 h-5" />
 						<span class="font-medium">Teknologi</span>
+					</a>
+				</li>
+				<li>
+					<a 
+						href="/dashboard/clients" 
+						class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {isActive('/dashboard/clients') ? 'text-[#176684] font-semibold' : 'text-gray-700 hover:bg-white'}"
+						style={isActive('/dashboard/clients') ? 'background-color: rgba(23, 102, 132, 0.25);' : ''}
+					>
+						<Briefcase class="w-5 h-5" />
+						<span class="font-medium">Client</span>
 					</a>
 				</li>
 				<li>

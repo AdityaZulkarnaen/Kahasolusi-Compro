@@ -2,9 +2,10 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI } from '$lib/api.js';
+	import { portfolioAPI, categoriesAPI, technologiesAPI, uploadAPI, clientsAPI } from '$lib/api.js';
 	import { indonesianProvinces } from '$lib/data/provinces.js';
 	import { browser } from '$app/environment';
+	import ClientModal from '$lib/components/ClientModal.svelte';
 	import { 
 		ArrowLeft, 
 		Save, 
@@ -12,7 +13,9 @@
 		X, 
 		Plus,
 		Eye,
-		ImageIcon
+		ImageIcon,
+		Edit,
+		Trash2
 	} from 'lucide-svelte';
 
 	// Get base URL for images
@@ -36,7 +39,6 @@
 		case_study: '',
 		permasalahan: '',
 		hasil: [],
-		client_name: '',
 		daerah: '',
 		project_start_date: '',
 		project_end_date: '',
@@ -49,8 +51,16 @@
 	// Available options from API
 	let availableCategories = [];
 	let availableTechnologies = [];
+	let availableClients = [];
 	let selectedCategories = [];
 	let selectedTechnologies = [];
+	let selectedClients = [];
+	let clientDropdownValue = '';
+	
+	// Client modal state
+	let isClientModalOpen = false;
+	let clientModalMode = 'create';
+	let editingClient = null;
 	
 	// Hasil items state
 	let hasilInput = '';
@@ -76,12 +86,13 @@
 		loading = true;
 		error = null;
 		
-		try {
-			// Load portfolio, categories, and technologies in parallel
-			const [portfolioData, categoriesData, technologiesData] = await Promise.all([
+			try {
+			// Load portfolio, categories, technologies, and clients in parallel
+			const [portfolioData, categoriesData, technologiesData, clientsData] = await Promise.all([
 				portfolioAPI.getById(portfolioId),
 				categoriesAPI.getAll(),
-				technologiesAPI.getAll()
+				technologiesAPI.getAll(),
+				clientsAPI.getAll()
 			]);
 			
 			// Set form data
@@ -91,25 +102,23 @@
 				case_study: portfolioData.case_study || '',
 				permasalahan: portfolioData.permasalahan || '',
 				hasil: portfolioData.hasil ? JSON.parse(portfolioData.hasil) : [],
-				client_name: portfolioData.client_name || '',
+				daerah: portfolioData.daerah || '',
 				project_start_date: portfolioData.project_start_date || '',
 				project_end_date: portfolioData.project_end_date || '',
 				project_url: portfolioData.project_url || '',
 				url_youtube: portfolioData.url_youtube || '',
 				image_url: portfolioData.image_url || '',
 				is_featured: portfolioData.is_featured || 0
-			};
-
-			// Set image preview if exists
+			};			// Set image preview if exists
 			if (portfolioData.image_url) {
 				imagePreview = `http://localhost:3001${portfolioData.image_url}`;
 			}
 
 			// Set available options
+			
 			availableCategories = categoriesData;
 			availableTechnologies = technologiesData;
-
-			// Parse and set selected categories and technologies
+			availableClients = clientsData;			// Parse and set selected categories and technologies
 			if (portfolioData.categories) {
 				const categoryNames = portfolioData.categories.split(',');
 				selectedCategories = availableCategories
@@ -125,6 +134,16 @@
 				
 				// Extract tech IDs from the array
 				selectedTechnologies = techArray.map(tech => tech.tech_id);
+			}
+
+			if (portfolioData.clients) {
+				// Parse JSON string to get array of client objects
+				const clientArray = typeof portfolioData.clients === 'string' 
+					? JSON.parse(portfolioData.clients) 
+					: portfolioData.clients;
+				
+				// Extract client IDs from the array
+				selectedClients = clientArray.map(client => client.client_id);
 			}
 
 		} catch (err) {
@@ -200,6 +219,55 @@
 		}
 	}
 	
+	// Client management
+	function toggleClient(clientId) {
+		if (selectedClients.includes(clientId)) {
+			selectedClients = selectedClients.filter(id => id !== clientId);
+		} else {
+			selectedClients = [...selectedClients, clientId];
+		}
+		clientDropdownValue = ''; // Reset dropdown
+	}
+	
+	function openAddClientModal() {
+		clientModalMode = 'create';
+		editingClient = null;
+		isClientModalOpen = true;
+	}
+	
+	function openEditClientModal(client) {
+		clientModalMode = 'edit';
+		editingClient = client;
+		isClientModalOpen = true;
+	}
+	
+	async function handleClientSave() {
+		isClientModalOpen = false;
+		clientDropdownValue = ''; // Reset dropdown
+		// Refresh clients list
+		const clientsData = await clientsAPI.getAll();
+		availableClients = clientsData.data;
+	}
+	
+	async function handleDeleteClient(clientId) {
+		if (!confirm('Apakah Anda yakin ingin menghapus client ini?')) {
+			return;
+		}
+		
+		try {
+			await clientsAPI.delete(clientId);
+			// Remove from selected if it was selected
+			selectedClients = selectedClients.filter(id => id !== clientId);
+			clientDropdownValue = ''; // Reset dropdown
+			// Refresh clients list
+			const clientsData = await clientsAPI.getAll();
+			availableClients = clientsData.data;
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to delete client:', err);
+		}
+	}
+	
 	// Hasil management
 	function addHasil() {
 		if (hasilInput.trim()) {
@@ -243,16 +311,22 @@
 			return;
 		}
 
+		if (selectedClients.length === 0) {
+			error = 'Minimal pilih satu client';
+			return;
+		}
+
 		submitting = true;
 		error = null;
 
 		try {
-			// Prepare data with categories and technologies
+			// Prepare data with categories, technologies, and clients
 			const submissionData = {
 				...formData,
 				hasil: JSON.stringify(formData.hasil), // Convert array to JSON string
 				categories: selectedCategories,
-				technologies: selectedTechnologies
+				technologies: selectedTechnologies,
+				clients: selectedClients
 			};
 
 			await portfolioAPI.update(portfolioId, submissionData);
@@ -291,6 +365,12 @@
 	function getTechnologyName(techId) {
 		const tech = availableTechnologies.find(tech => tech.tech_id === techId);
 		return tech ? tech.tech_name : 'Unknown';
+	}
+	
+	// Get client name by ID
+	function getClientName(clientId) {
+		const client = availableClients.find(client => client.client_id === clientId);
+		return client ? client.client_name : 'Unknown';
 	}
 	
 	// Extract YouTube video ID from URL
@@ -434,18 +514,102 @@
 							/>
 						</div>
 						
+						<!-- Client Management -->
 						<div>
-							<label for="client_name" class="block text-sm font-medium text-gray-700 mb-2">
-								Nama Client <span class="text-red-500">*</span>
+							<label for="client" class="block text-sm font-medium text-gray-700 mb-2">
+								Client <span class="text-red-500">*</span>
 							</label>
-							<input
-								type="text"
-								id="client_name"
-								bind:value={formData.client_name}
-								class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-								placeholder="Masukkan nama client"
-								disabled={submitting}
-							/>
+							<div class="flex gap-2">
+								<div class="flex-1 relative">
+									<select
+										id="client"
+										bind:value={clientDropdownValue}
+										class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none bg-white"
+										onchange={(e) => {
+											const clientId = parseInt(e.target.value);
+											if (clientId && !selectedClients.includes(clientId)) {
+												selectedClients = [...selectedClients, clientId];
+											}
+											clientDropdownValue = '';
+										}}
+										disabled={submitting}
+									>
+										<option value="">Pilih Client</option>
+										{#each availableClients as client}
+											<option value={client.client_id}>{client.client_name}</option>
+										{/each}
+									</select>
+									<div class="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+										<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+										</svg>
+									</div>
+						</div>
+						<button
+							type="button"
+							onclick={openAddClientModal}
+							class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+							title="Tambah Client Baru"
+							disabled={submitting}
+						>
+							<Plus class="w-4 h-4" />
+							Add Client
+						</button>
+					</div>							{#if selectedClients.length > 0}
+								<div class="mt-4">
+									<p class="text-sm font-medium text-gray-700 mb-2">Client terpilih:</p>
+									<div class="space-y-2">
+										{#each selectedClients as clientId}
+											{@const client = availableClients.find(c => c.client_id === clientId)}
+											{#if client}
+												<div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+													<div class="flex items-center gap-3">
+														{#if client.client_logo}
+															<img 
+																src={getImageUrl(client.client_logo)} 
+																alt={client.client_name}
+																class="w-8 h-8 object-contain rounded"
+															/>
+														{/if}
+														<span class="text-sm font-medium text-blue-900">{client.client_name}</span>
+													</div>
+													<div class="flex items-center gap-2">
+														<button
+															type="button"
+															onclick={() => openEditClientModal(client)}
+															class="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+															disabled={submitting}
+															title="Edit Client"
+														>
+															<Edit class="w-4 h-4" />
+														</button>
+														{#if !client.portfolio_count || client.portfolio_count === 0}
+															<button
+																type="button"
+																onclick={() => handleDeleteClient(client.client_id)}
+																class="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors"
+																disabled={submitting}
+																title="Hapus Client"
+															>
+																<Trash2 class="w-4 h-4" />
+															</button>
+														{/if}
+														<button
+															type="button"
+															onclick={() => toggleClient(clientId)}
+															class="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+															disabled={submitting}
+															title="Hapus dari pilihan"
+														>
+															<X class="w-4 h-4" />
+														</button>
+													</div>
+												</div>
+											{/if}
+										{/each}
+									</div>
+								</div>
+							{/if}
 						</div>
 
 						<div>
@@ -873,3 +1037,12 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Client Modal -->
+<ClientModal 
+	bind:isOpen={isClientModalOpen}
+	mode={clientModalMode}
+	clientData={editingClient}
+	on:save={handleClientSave}
+	on:close={() => isClientModalOpen = false}
+/>

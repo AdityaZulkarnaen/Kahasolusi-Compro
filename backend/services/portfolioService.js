@@ -7,10 +7,13 @@ export class PortfolioService {
     
     let query = `
       SELECT p.*, 
-             GROUP_CONCAT(DISTINCT pc.category_name) as categories
+             GROUP_CONCAT(DISTINCT pc.category_name) as categories,
+             GROUP_CONCAT(DISTINCT c.client_name) as client_names
       FROM portfolio p
       LEFT JOIN portfolio_categories pcat ON p.portfolio_id = pcat.portfolio_id
       LEFT JOIN project_categories pc ON pcat.category_id = pc.category_id
+      LEFT JOIN portfolio_clients pcl ON p.portfolio_id = pcl.portfolio_id
+      LEFT JOIN clients c ON pcl.client_id = c.client_id
       WHERE p.is_active = 1
     `;
     
@@ -34,7 +37,7 @@ export class PortfolioService {
     
     const portfolios = await db.all(query, params);
     
-    // Get technologies for each portfolio
+    // Get technologies and clients for each portfolio
     for (const portfolio of portfolios) {
       const technologies = await db.all(`
         SELECT t.tech_id, t.tech_name, t.logo_url
@@ -44,7 +47,16 @@ export class PortfolioService {
         ORDER BY t.sort_order
       `, [portfolio.portfolio_id]);
       
+      const clients = await db.all(`
+        SELECT c.client_id, c.client_name, c.client_logo
+        FROM clients c
+        INNER JOIN portfolio_clients pc ON c.client_id = pc.client_id
+        WHERE pc.portfolio_id = ? AND c.is_active = 1
+        ORDER BY c.client_name ASC
+      `, [portfolio.portfolio_id]);
+      
       portfolio.technologies = JSON.stringify(technologies);
+      portfolio.clients = JSON.stringify(clients);
     }
     
     return portfolios;
@@ -55,10 +67,13 @@ export class PortfolioService {
     
     const portfolio = await db.get(`
       SELECT p.*, 
-             GROUP_CONCAT(DISTINCT pc.category_name) as categories
+             GROUP_CONCAT(DISTINCT pc.category_name) as categories,
+             GROUP_CONCAT(DISTINCT c.client_name) as client_names
       FROM portfolio p
       LEFT JOIN portfolio_categories pcat ON p.portfolio_id = pcat.portfolio_id
       LEFT JOIN project_categories pc ON pcat.category_id = pc.category_id
+      LEFT JOIN portfolio_clients pcl ON p.portfolio_id = pcl.portfolio_id
+      LEFT JOIN clients c ON pcl.client_id = c.client_id
       WHERE p.portfolio_id = ? AND p.is_active = 1
       GROUP BY p.portfolio_id
     `, [id]);
@@ -76,7 +91,17 @@ export class PortfolioService {
       ORDER BY t.sort_order
     `, [id]);
     
+    // Get clients for this portfolio
+    const clients = await db.all(`
+      SELECT c.client_id, c.client_name, c.client_logo
+      FROM clients c
+      INNER JOIN portfolio_clients pc ON c.client_id = pc.client_id
+      WHERE pc.portfolio_id = ? AND c.is_active = 1
+      ORDER BY c.client_name ASC
+    `, [id]);
+    
     portfolio.technologies = JSON.stringify(technologies);
+    portfolio.clients = JSON.stringify(clients);
     
     return portfolio;
   }
@@ -92,9 +117,9 @@ export class PortfolioService {
       const result = await db.run(`
         INSERT INTO portfolio (
           project_name, project_description, case_study, permasalahan, hasil,
-          image_url, project_url, url_youtube, client_name, project_start_date, project_end_date, 
+          image_url, project_url, url_youtube, project_start_date, project_end_date, 
           is_featured, daerah, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         data.project_name,
         data.project_description,
@@ -104,7 +129,6 @@ export class PortfolioService {
         data.image_url,
         data.project_url,
         data.url_youtube || null,
-        data.client_name,
         data.project_start_date,
         data.project_end_date,
         data.is_featured || 0,
@@ -134,6 +158,16 @@ export class PortfolioService {
         }
       }
       
+      // Insert clients relationships
+      if (data.clients && Array.isArray(data.clients)) {
+        for (const clientId of data.clients) {
+          await db.run(`
+            INSERT INTO portfolio_clients (portfolio_id, client_id)
+            VALUES (?, ?)
+          `, [portfolioId, clientId]);
+        }
+      }
+      
       // Commit transaction
       await db.run('COMMIT');
       
@@ -157,7 +191,7 @@ export class PortfolioService {
         UPDATE portfolio 
         SET project_name = ?, project_description = ?, case_study = ?, 
             permasalahan = ?, hasil = ?,
-            image_url = ?, project_url = ?, url_youtube = ?, client_name = ?, 
+            image_url = ?, project_url = ?, url_youtube = ?, 
             project_start_date = ?, project_end_date = ?, is_featured = ?, 
             daerah = ?,
             updated_at = CURRENT_TIMESTAMP, updated_by = ?
@@ -171,7 +205,6 @@ export class PortfolioService {
         data.image_url,
         data.project_url,
         data.url_youtube || null,
-        data.client_name,
         data.project_start_date,
         data.project_end_date,
         data.is_featured || 0,
@@ -180,9 +213,10 @@ export class PortfolioService {
         id
       ]);
       
-      // Delete existing categories and technologies relationships
+      // Delete existing relationships
       await db.run('DELETE FROM portfolio_categories WHERE portfolio_id = ?', [id]);
       await db.run('DELETE FROM portfolio_technologies WHERE portfolio_id = ?', [id]);
+      await db.run('DELETE FROM portfolio_clients WHERE portfolio_id = ?', [id]);
       
       // Insert new categories relationships
       if (data.categories && Array.isArray(data.categories)) {
@@ -201,6 +235,16 @@ export class PortfolioService {
             INSERT INTO portfolio_technologies (portfolio_id, tech_id)
             VALUES (?, ?)
           `, [id, techId]);
+        }
+      }
+      
+      // Insert new clients relationships
+      if (data.clients && Array.isArray(data.clients)) {
+        for (const clientId of data.clients) {
+          await db.run(`
+            INSERT INTO portfolio_clients (portfolio_id, client_id)
+            VALUES (?, ?)
+          `, [id, clientId]);
         }
       }
       
