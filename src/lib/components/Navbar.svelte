@@ -82,6 +82,14 @@
 	$: textColor = (isAboutPage || isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? 'text-[#0E2144]' : (isDarkMode ? 'text-white' : 'text-white');
 	$: logoSrc = (isTechPage || isLayananPage || isSDMPage || isPortfolioPage) ? LogoBlue : (isAboutPage ? LogoBlue : Logo);
 	$: Strip = (isHomePage) ? 'bg-white' : 'bg-[#176684]';
+	
+	// Helper function to get active link classes
+	function getActiveLinkClass(isActive) {
+		if (isActive) {
+			return 'text-orange-500 font-semibold relative after:content-[""] after:absolute after:bottom-[-4px] after:left-0 after:right-0 after:h-[2px] after:bg-orange-500';
+		}
+		return '';
+	}
 </script>
 
 <nav
@@ -98,33 +106,33 @@
 			<div class="hidden lg:flex gap-6 xl:gap-8 items-center font-family-sans">
 				<a
 					href="/"
-					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="{textColor} {getActiveLinkClass(isHomePage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Home</a
 				>
 				<a
 					href="/about"
-					class="flex items-center gap-1 {textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="flex items-center gap-1 {textColor} {getActiveLinkClass(isAboutPage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 				>
 					<span>Tentang Kami</span>
 				</a>
 				<a
 					href="/layanan"
-					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="{textColor} {getActiveLinkClass(isLayananPage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Layanan</a
 				>
 				<a
 					href="/portofolio"
-					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="{textColor} {getActiveLinkClass(isPortfolioPage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Portofolio</a
 				>
 				<a
 					href="/teknologi"
-					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="{textColor} {getActiveLinkClass(isTechPage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Teknologi</a
 				>
 				<a
 					href="/sdm"
-					class="{textColor} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
+					class="{textColor} {getActiveLinkClass(isSDMPage)} text-sm hover:text-orange-500 transition-colors cursor-pointer whitespace-nowrap"
 					>Tim Kami</a>
 			</div>
 
@@ -185,33 +193,39 @@
 			>
 				<a
 					href="/"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+					class="{textColor} {isHomePage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Home</a
 				>
 				<a
 					href="/about"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+					class="{textColor} {isAboutPage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Tentang Kami</a
 				>
 				<a
 					href="/layanan"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+					class="{textColor} {isLayananPage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Layanan</a
 				>
 				<a
 					href="/portofolio"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+					class="{textColor} {isPortfolioPage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Portofolio</a
 				>
 				<a
 					href="/teknologi"
-					class="{textColor} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+					class="{textColor} {isTechPage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
 						? 'hover:bg-white/10'
 						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Teknologi</a
+				>
+				<a
+					href="/sdm"
+					class="{textColor} {isSDMPage ? 'bg-orange-500/20 text-orange-500 font-semibold' : ''} py-2.5 px-2 hover:text-orange-500 {isDarkMode
+						? 'hover:bg-white/10'
+						: 'hover:bg-white/5'} rounded-lg transition-all font-family-sans">Tim Kami</a
 				>
 				
 				<div class="flex flex-col gap-3 mt-4 px-2">
