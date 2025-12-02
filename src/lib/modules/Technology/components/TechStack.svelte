@@ -1,11 +1,13 @@
 <script>
 	import { onMount } from 'svelte';
 	import { technologiesAPI } from '$lib/api.js';
-    import Default from '$lib/assets/svg/TechDefault.svg';
+	import Default from '$lib/assets/svg/TechDefault.svg';
 	
 	let technologies = [];
+	let technologiesWithLogo = [];
 	let loading = true;
 	let error = null;
+	let isHovered = false;
 
 	// Fetch technologies from database
 	onMount(async () => {
@@ -13,6 +15,17 @@
 			loading = true;
 			const response = await technologiesAPI.getAll();
 			technologies = response.data || response;
+			
+			// Filter only technologies with logo
+			technologiesWithLogo = technologies.filter(tech => tech.logo_url && tech.logo_url.trim() !== '');
+			
+			// If technologies with logo less than 8, duplicate for smooth animation
+			if (technologiesWithLogo.length > 0 && technologiesWithLogo.length < 8) {
+				const originalLength = technologiesWithLogo.length;
+				const multiplier = Math.ceil(8 / originalLength);
+				technologiesWithLogo = Array(multiplier).fill(technologiesWithLogo).flat();
+			}
+			
 			error = null;
 		} catch (err) {
 			console.error('Failed to fetch technologies:', err);
@@ -53,62 +66,105 @@
 		<div class="text-center py-12">
 			<p class="text-red-500">{error}</p>
 		</div>
-	{:else if technologies.length === 0}
+	{:else if technologiesWithLogo.length === 0}
 		<div class="text-center py-12">
-			<p class="text-gray-500">No technologies found</p>
+			<p class="text-gray-500">No technologies with logo found</p>
 		</div>
 	{:else}
-		<div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
-			{#each technologies as tech}
-				<div class="tech-item relative flex items-center justify-center p-6 bg-[#D7EDF5] rounded-2xl hover:bg-blue-100 transition-colors group">
-					<!-- Technology icon/image -->
-					<div class="w-12 h-12 flex items-center justify-center rounded-xl overflow-clip">
-						<img 
-							src={getImageUrl(tech)} 
-							alt={tech.tech_name} 
-							class="w-full h-full object-contain"
-							on:error={handleImageError}
-						>
-					</div>
-					
-					<!-- Bubble Chat Tooltip -->
-					<div class="tooltip absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out pointer-events-none">
-						<div class="bg-[#747474] text-white text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap shadow-lg">
-							{tech.tech_name}
-							<!-- Triangle pointer -->
-							<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-[#747474]"></div>
+		<!-- Infinite Scrolling Container -->
+		<div class="relative overflow-hidden">
+			<!-- Gradient Overlays -->
+			<div class="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+			<div class="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+
+			<!-- Scrolling Container -->
+			<div
+				class="scroll-container py-8"
+				on:mouseenter={() => (isHovered = true)}
+				on:mouseleave={() => (isHovered = false)}
+				role="region"
+				aria-label="Technology logos"
+			>
+				<div class="scroll-content {isHovered ? 'paused' : ''}">
+					<!-- First set of logos -->
+					{#each technologiesWithLogo as tech}
+						<div class="tech-logo">
+							<img
+								src={getImageUrl(tech)}
+								alt={tech.tech_name}
+								class="max-w-full max-h-full object-contain"
+								on:error={handleImageError}
+							/>
 						</div>
-					</div>
+					{/each}
+					<!-- Duplicate set for seamless infinite loop -->
+					{#each technologiesWithLogo as tech}
+						<div class="tech-logo">
+							<img
+								src={getImageUrl(tech)}
+								alt={tech.tech_name}
+								class="max-w-full max-h-full object-contain"
+								on:error={handleImageError}
+							/>
+						</div>
+					{/each}
 				</div>
-			{/each}
+			</div>
 		</div>
 	{/if}
 </div>
 
 <style>
-	.tech-item {
-		cursor: pointer;
+	.scroll-container {
+		overflow: hidden;
 		position: relative;
+		width: 100%;
 	}
 
-	.tooltip {
-		z-index: 50;
-		pointer-events: none;
+	.scroll-content {
+		display: flex;
+		gap: 3rem;
+		animation: scroll 30s linear infinite;
+		width: fit-content;
 	}
 
-	/* Smooth animation for tooltip */
-	.group:hover .tooltip {
-		animation: slideDown 0.3s ease-out;
+	.scroll-content.paused {
+		animation-play-state: paused;
 	}
 
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			transform: translate(0, 50%);
+	.tech-logo {
+		flex-shrink: 0;
+		width: 6rem;
+		height: 6rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0.8;
+		transition: all 0.3s ease;
+	}
+
+	.tech-logo:hover {
+		opacity: 1;
+		transform: scale(1.1);
+	}
+
+	@media (min-width: 768px) {
+		.scroll-content {
+			gap: 4rem;
 		}
-		to {
-			opacity: 1;
-			transform: translate(0, 0);
+
+		.tech-logo {
+			width: 7rem;
+			height: 7rem;
+		}
+	}
+
+	@keyframes scroll {
+		0% {
+			transform: translateX(0);
+		}
+		100% {
+			transform: translateX(-50%);
 		}
 	}
 </style>
