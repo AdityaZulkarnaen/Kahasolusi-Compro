@@ -1,4 +1,4 @@
-<script>
+	<script>
 	import { onMount, onDestroy } from 'svelte';
 	let isMenuOpen = false;
 	import { ChevronDown } from 'lucide-svelte';
@@ -15,6 +15,11 @@
 
 	function toggleMenu() {
 		isMenuOpen = !isMenuOpen;
+	}
+
+	// Close menu when route changes
+	$: if ($page.url.pathname) {
+		isMenuOpen = false;
 	}
 
 	onMount(async () => {
