@@ -72,7 +72,7 @@
 		</div>
 	{:else}
 		<!-- Infinite Scrolling Container -->
-		<div class="relative overflow-hidden">
+		<div class="relative overflow-hidden pb-12">
 			<!-- Gradient Overlays -->
 			<div class="absolute left-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
 			<div class="absolute right-0 top-0 bottom-0 w-20 md:w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
@@ -88,7 +88,7 @@
 				<div class="scroll-content {isHovered ? 'paused' : ''}">
 					<!-- First set of logos -->
 					{#each technologiesWithLogo as tech}
-						<div class="tech-logo">
+						<div class="tech-logo" data-tooltip={tech.tech_name}>
 							<img
 								src={getImageUrl(tech)}
 								alt={tech.tech_name}
@@ -99,7 +99,7 @@
 					{/each}
 					<!-- Duplicate set for seamless infinite loop -->
 					{#each technologiesWithLogo as tech}
-						<div class="tech-logo">
+						<div class="tech-logo" data-tooltip={tech.tech_name}>
 							<img
 								src={getImageUrl(tech)}
 								alt={tech.tech_name}
@@ -116,7 +116,7 @@
 
 <style>
 	.scroll-container {
-		overflow: hidden;
+		overflow: visible;
 		position: relative;
 		width: 100%;
 	}
@@ -141,11 +141,56 @@
 		justify-content: center;
 		opacity: 0.8;
 		transition: all 0.3s ease;
+		position: relative;
+		cursor: pointer;
 	}
 
 	.tech-logo:hover {
 		opacity: 1;
 		transform: scale(1.1);
+	}
+
+	/* Tooltip styles */
+	.tech-logo::after {
+		content: attr(data-tooltip);
+		position: absolute;
+		bottom: -2.5rem;
+		left: 50%;
+		transform: translateX(-50%) translateY(10px);
+		background-color: rgba(23, 102, 132, 0.95);
+		color: white;
+		padding: 0.5rem 1rem;
+		border-radius: 0.5rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		white-space: nowrap;
+		opacity: 0;
+		pointer-events: none;
+		transition: all 0.3s ease;
+		z-index: 100;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	/* Tooltip arrow */
+	.tech-logo::before {
+		content: '';
+		position: absolute;
+		bottom: -0.5rem;
+		left: 50%;
+		transform: translateX(-50%) translateY(10px);
+		border-left: 6px solid transparent;
+		border-right: 6px solid transparent;
+		border-bottom: 6px solid rgba(23, 102, 132, 0.95);
+		opacity: 0;
+		pointer-events: none;
+		transition: all 0.3s ease;
+		z-index: 100;
+	}
+
+	.tech-logo:hover::after,
+	.tech-logo:hover::before {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
 	}
 
 	@media (min-width: 768px) {
