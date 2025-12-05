@@ -678,14 +678,16 @@
                         </div>
                         
                         <!-- reCAPTCHA -->
-                        <div class="flex justify-center">
-                            <Recaptcha
-                                bind:this={recaptchaComponent}
-                                sitekey={RECAPTCHA_SITE_KEY}
-                                on:success={handleCaptchaSuccess}
-                                on:error={handleCaptchaError}
-                                on:expired={handleCaptchaExpired}
-                            />
+                        <div class="flex justify-center items-center w-full">
+                            <div class="transform scale-[0.85] sm:scale-90 md:scale-100 origin-center">
+                                <Recaptcha
+                                    bind:this={recaptchaComponent}
+                                    sitekey={RECAPTCHA_SITE_KEY}
+                                    on:success={handleCaptchaSuccess}
+                                    on:error={handleCaptchaError}
+                                    on:expired={handleCaptchaExpired}
+                                />
+                            </div>
                         </div>
                         
                         <!-- Submit Button -->
