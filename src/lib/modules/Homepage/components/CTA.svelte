@@ -53,12 +53,12 @@
 						href={whatsappLink}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="bg-[#176684] text-white px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
+						class="bg-[#176684] w-full md:w-1/3 lg:w-1/3 md:text-base lg:text-base text-white px-8 md:px-24 lg:px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
 						Hubungi Kami
 					</a>
 					<button 
 						onclick={ctaPressed}
-						class="bg-transparent text-[#176684] px-8 py-3 rounded-full font-medium hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors border-2 border-[#176684]">
+						class="bg-transparent w-full md:w-1/5 lg:w-1/5 text-[#176684] px-8 py-3 rounded-full font-medium hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors border-2 border-[#176684]">
 						Lihat Layanan
 					</button>
 				</div>

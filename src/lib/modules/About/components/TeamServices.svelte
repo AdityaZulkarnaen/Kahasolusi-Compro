@@ -130,7 +130,7 @@
 					href={whatsappLink}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="w-full sm:w-auto px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl no-underline inline-block text-center"
+					class="w-full sm:w-auto px-8 md:px-24 lg:px-24 py-3 bg-[#004D66] text-white rounded-full font-medium hover:bg-[#003D56] transition-all duration-300 shadow-lg hover:shadow-xl no-underline inline-block text-center"
 				>
 					Hubungi Kami
 				</a>

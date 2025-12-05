@@ -30,11 +30,11 @@
 			</div>
 
 			<!-- Navigation Links -->
-			<nav class="flex flex-wrap justify-center items-center gap-4 md:gap-6 lg:gap-8">
+			<nav class="flex flex-wrap justify-center items-center gap-2 md:gap-6 lg:gap-8">
 				{#each navLinks as link}
 					<a
 						href={link.href}
-						class="text-xs md:text-sm lg:text-base hover:text-gray-300 transition-colors duration-200"
+						class="text-[11px] md:text-sm lg:text-base hover:text-gray-300 transition-colors duration-200"
 					>
 						{link.name}
 					</a>

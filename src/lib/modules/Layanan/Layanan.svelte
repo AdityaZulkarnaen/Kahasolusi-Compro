@@ -109,7 +109,7 @@
 							href={whatsappLink}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="bg-[#176684] text-white px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
+							class="bg-[#176684] text-white px-8 md:px-24 lg:px-24 py-3 rounded-full font-medium hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
 							Hubungi Kami
 						</a>
 					</div>
