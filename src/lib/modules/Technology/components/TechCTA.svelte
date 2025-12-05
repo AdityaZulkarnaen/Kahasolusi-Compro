@@ -37,17 +37,17 @@
 					Mulai Transformasi Digital Anda<br />dengan Kahasolusi
 				</h2>
 			</div>
-			<div class="flex gap-4">
+			<div class="flex w-full md:w-1/2 lg:w-1/2 gap-4 md:flex-row lg:flex-row flex-col justify-center items-center">
 				<a
 					href={whatsappLink}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="px-6 md:px-18 py-3 bg-[#176684] text-white rounded-full font-semibold hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
+					class="px-6 md:px-4 lg:px-6 py-3 w-full md:w-1/2 lg:w-1/2 bg-[#176684] text-white rounded-full font-semibold hover:bg-[#0d4d5f] transition-colors no-underline inline-block text-center">
 					Hubungi Kami
 				</a>
 				<a 
 					href="/layanan"
-					class="px-6 py-3 bg-[#D0E6F3] text-[#176684] border-2 border-[#176684] rounded-full font-semibold hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors no-underline inline-block text-center">
+					class="px-6 py-3 md:px-4 lg:px-6 bg-[#D0E6F3] w-full md:w-1/2 lg:w-1/2 text-[#176684] border-2 border-[#176684] rounded-full font-semibold hover:bg-[#9ACFDD] hover:border-[#9ACFDD] hover:text-white transition-colors no-underline inline-block text-center">
 					Lihat Layanan
 				</a>
 			</div>
