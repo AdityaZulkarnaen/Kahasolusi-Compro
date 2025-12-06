@@ -37,7 +37,7 @@
 	<section class="pt-32 pb-6 px-4">
 		<div class="max-w-4xl mx-auto text-center">
 			<h1 class="text-4xl md:text-5xl font-medium font-family-sans text-gray-900 mb-4">
-				Layanan.
+				Layanan
 			</h1>
 			<div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
             <p class="text-lg md:text-xl text-[#176684] max-w-6xl font-semibold mx-auto leading-relaxed">
