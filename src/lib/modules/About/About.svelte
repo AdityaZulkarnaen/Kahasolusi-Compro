@@ -12,7 +12,7 @@
 	<section class="pt-32 pb-16 px-4">
 		<div class="max-w-7xl mx-auto text-center">
 			<h1 class="text-4xl md:text-5xl font-medium font-family-sans text-gray-900 mb-4">
-				Tentang Kahasolusi.
+				Tentang Kahasolusi
 			</h1>
 			<div class="w-64 h-1 bg-[#004D66] mx-auto"></div>
 		</div>

@@ -6,7 +6,7 @@
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 		<div class="text-center">
 			<h1 class="text-4xl md:text-5xl font-medium font-family-sans text-gray-900 mb-4">
-				Teknologi.
+				Teknologi
 			</h1>
 			<div class="w-64 h-1 bg-[#176684] mx-auto mb-6"></div>
 			<p class="text-lg md:text-xl text-[#176684] max-w-6xl font-semibold mx-auto leading-relaxed">
