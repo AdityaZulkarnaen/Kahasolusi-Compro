@@ -5,10 +5,20 @@ export class TechnologyService {
   static async getAll(filters = {}) {
     const db = getDatabase();
     
-    let query = `SELECT * FROM technologies WHERE is_active = 1`;
+    let query = `SELECT * FROM technologies`;
     const params = [];
     
-    query += ` ORDER BY sort_order ASC, tech_name ASC`;
+    // Only filter by is_active if includeInactive is not specified
+    if (!filters.includeInactive) {
+      query += ` WHERE is_active = 1`;
+    }
+    
+    // Different sorting for dashboard (show newest first) vs public page
+    if (filters.includeInactive) {
+      query += ` ORDER BY created_at DESC, tech_id DESC`;
+    } else {
+      query += ` ORDER BY sort_order ASC, tech_name ASC`;
+    }
     
     return await db.all(query, params);
   }
@@ -70,5 +80,31 @@ export class TechnologyService {
     const db = getDatabase();
     const result = await db.get('SELECT COUNT(*) as count FROM technologies WHERE is_active = 1');
     return result.count;
+  }
+
+  static async toggleActive(id) {
+    const db = getDatabase();
+    
+    // First check if technology exists
+    const technology = await db.get('SELECT * FROM technologies WHERE tech_id = ?', [id]);
+    
+    if (!technology) {
+      return null;
+    }
+    
+    // Toggle the is_active status
+    const newStatus = technology.is_active ? 0 : 1;
+    
+    const result = await db.run(`
+      UPDATE technologies 
+      SET is_active = ?, updated_at = datetime('now')
+      WHERE tech_id = ?
+    `, [newStatus, id]);
+    
+    if (result.changes > 0) {
+      return { is_active: newStatus };
+    }
+    
+    return null;
   }
 }

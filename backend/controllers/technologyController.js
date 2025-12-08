@@ -5,8 +5,11 @@ export class TechnologyController {
   static async getAll(c) {
     try {
       const type = c.req.query('type')
+      const includeInactive = c.req.query('includeInactive') === 'true'
+      
       const filters = {}
       if (type) filters.type = type
+      if (includeInactive) filters.includeInactive = true
       
       const technologies = await TechnologyService.getAll(filters)
       return c.json(technologies)
@@ -99,6 +102,28 @@ export class TechnologyController {
     } catch (error) {
       console.error('Error deleting technology:', error)
       return c.json({ error: 'Failed to delete technology' }, 500)
+    }
+  }
+
+  static async toggleActive(c) {
+    try {
+      const id = c.req.param('id')
+      if (!id || isNaN(id)) {
+        return c.json({ error: 'Invalid technology ID' }, 400)
+      }
+
+      const result = await TechnologyService.toggleActive(id)
+      if (!result) {
+        return c.json({ error: 'Technology not found' }, 404)
+      }
+
+      return c.json({ 
+        message: 'Technology status updated successfully',
+        is_active: result.is_active
+      })
+    } catch (error) {
+      console.error('Error toggling technology status:', error)
+      return c.json({ error: 'Failed to toggle technology status' }, 500)
     }
   }
 }
