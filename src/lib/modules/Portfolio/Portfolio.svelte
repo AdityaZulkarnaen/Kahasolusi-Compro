@@ -3,7 +3,7 @@
     import { fade, fly } from 'svelte/transition';
     import { ChevronLeft, ChevronRight } from 'lucide-svelte';
     import IndonesiaMap from '$lib/components/IndonesiaMap.svelte';
-    import ClientExample from '$lib/assets/images/client_example.png';
+    import ClientExample from '$lib/assets/images/client_placeholder.png';
     import ProjectCard from '$lib/components/ProjectCard.svelte';
     import Recaptcha from '$lib/components/Recaptcha.svelte';
     import { feedbackAPI, portfolioAPI, categoriesAPI, clientsAPI, companyAPI } from '$lib/api.js';
@@ -458,7 +458,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-2xl sm:text-3xl font-medium text-[#0D4E6D] font-family-sans">
-                    Telah dipercaya lebih dari {clients.length}+ klien di seluruh Indonesia
+                    Telah dipercaya lebih dari 20+ klien di seluruh Indonesia
                 </h2>
             </div>
             

@@ -9,13 +9,35 @@
 	let companyInfo = null;
 	let loading = true;
 	let error = null;
+	let mapError = null;
 
 	// Default coordinates (Yogyakarta) - will be updated from database if available
 	let coordinates = [-7.766353531689975, 110.40146712219224];
 
+	// Function to validate coordinates
+	function isValidCoordinate(lat, lng) {
+		const latitude = parseFloat(lat);
+		const longitude = parseFloat(lng);
+		
+		// Check if they are valid numbers
+		if (isNaN(latitude) || isNaN(longitude)) {
+			return false;
+		}
+		
+		// Check if they are within valid ranges
+		// Latitude must be between -90 and 90
+		// Longitude must be between -180 and 180
+		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+			return false;
+		}
+		
+		return true;
+	}
+
 	async function loadCompanyData() {
 		try {
 			loading = true;
+			mapError = null;
 			const response = await companyAPI.get();
 			
 			if (response && response.length > 0) {
@@ -23,8 +45,18 @@
 				
 				// Use coordinates from database (latitude & longitude fields)
 				if (company.latitude && company.longitude) {
-					coordinates = [parseFloat(company.latitude), parseFloat(company.longitude)];
-					console.log('Using coordinates from database:', coordinates);
+					const lat = parseFloat(company.latitude);
+					const lng = parseFloat(company.longitude);
+					
+					// Validate coordinates
+					if (isValidCoordinate(lat, lng)) {
+						coordinates = [lat, lng];
+						console.log('Using coordinates from database:', coordinates);
+					} else {
+						console.error('Invalid coordinates in database:', { lat, lng });
+						mapError = 'Format koordinat tidak valid';
+						// Keep default coordinates
+					}
 				} else {
 					console.log('No coordinates in database, using default');
 				}
@@ -102,23 +134,24 @@
 		// Load company data first
 		await loadCompanyData();
 
-		if (browser && companyInfo) {
-			const L = (await import('leaflet')).default;
-			await import('leaflet/dist/leaflet.css');
+		if (browser && companyInfo && !mapError) {
+			try {
+				const L = (await import('leaflet')).default;
+				await import('leaflet/dist/leaflet.css');
 
-			// Initialize map with company coordinates
-			map = L.map(mapContainer).setView(companyInfo.coordinates, 15);
+				// Initialize map with company coordinates
+				map = L.map(mapContainer).setView(companyInfo.coordinates, 15);
 
-			// Add tile layer
-			L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© OpenStreetMap contributors',
-				maxZoom: 19
-			}).addTo(map);
+				// Add tile layer
+				L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '© OpenStreetMap contributors',
+					maxZoom: 19
+				}).addTo(map);
 
-			// Custom marker icon
-			const customIcon = L.divIcon({
-				className: 'custom-marker',
-				html: `
+				// Custom marker icon
+				const customIcon = L.divIcon({
+					className: 'custom-marker',
+					html: `
 					<div style="position: relative;">
 						<div style="width: 40px; height: 40px; background: #004D66; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); position: relative; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
 							<div style="background: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 20px; height: 20px; border-radius: 50%;">
@@ -126,23 +159,27 @@
 						</div>
 					</div>
 				`,
-				iconSize: [40, 40],
-				iconAnchor: [20, 40],
-				popupAnchor: [0, -40]
-			});
+					iconSize: [40, 40],
+					iconAnchor: [20, 40],
+					popupAnchor: [0, -40]
+				});
 
-			// Add marker with company info
-			const popupContent = `
+				// Add marker with company info
+				const popupContent = `
 				<div style="font-family: sans-serif;">
 					<strong style="color: #004D66; font-size: 16px;">${companyInfo.name}</strong><br/>
 					<p style="margin: 8px 0; font-size: 14px;">${companyInfo.address1}${companyInfo.address2 ? '<br/>' + companyInfo.address2 : ''}</p>
 				</div>
 			`;
 
-			L.marker(companyInfo.coordinates, { icon: customIcon })
-				.addTo(map)
-				.bindPopup(popupContent)
-				.openPopup();
+				L.marker(companyInfo.coordinates, { icon: customIcon })
+					.addTo(map)
+					.bindPopup(popupContent)
+					.openPopup();
+			} catch (err) {
+				console.error('Failed to initialize map:', err);
+				mapError = 'Gagal memuat peta. Silakan coba lagi nanti.';
+			}
 		}
 
 		return () => {
@@ -169,7 +206,22 @@
 			<div class="relative">
 				<!-- Map Container -->
 				<div class="h-[300px] md:h-[400px] w-[100%] lg:w-[110%] rounded-2xl overflow-hidden">
-					<div bind:this={mapContainer} class="w-full h-full z-10"></div>
+					{#if mapError}
+						<!-- Map Error Display -->
+						<div class="w-full h-full bg-red-900/20 backdrop-blur-sm flex items-center justify-center p-6">
+							<div class="text-center max-w-md">
+								<div class="mb-4">
+									<svg class="w-16 h-16 mx-auto text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+									</svg>
+								</div>
+								<h3 class="text-xl font-semibold text-white mb-2">Error Peta</h3>
+								<p class="text-white/90 text-sm font-family-sans">{mapError}</p>
+							</div>
+						</div>
+					{:else}
+						<div bind:this={mapContainer} class="w-full h-full z-10"></div>
+					{/if}
 				</div>
 				<!-- Overlay Label -->
 				<div
@@ -220,7 +272,12 @@
 					<Mail />
 					<div>
 						<h3 class="text-xl font-semibold mb-2">Email</h3>
-						<p class="text-white/90 font-family-sans">{companyInfo.email}</p>
+						<a 
+							href="mailto:{companyInfo.email}" 
+							class="text-white/90 font-family-sans hover:text-white hover:underline transition-all"
+						>
+							{companyInfo.email}
+						</a>
 					</div>
 				</div>
 			</div>
