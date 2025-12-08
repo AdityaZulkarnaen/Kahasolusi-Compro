@@ -72,7 +72,7 @@
 		error = null;
 		
 		try {
-			technologies = await technologiesAPI.getAll();
+			technologies = await technologiesAPI.getAll(true); // Include inactive technologies for dashboard
 			filterTechnologies();
 		} catch (err) {
 			error = err.message;
@@ -174,6 +174,26 @@
 	function cancelDelete() {
 		showDeleteModal = false;
 		technologyToDelete = null;
+	}
+
+	// Toggle active status
+	async function toggleActive(techId) {
+		try {
+			const result = await technologiesAPI.toggleActive(techId);
+			
+			// Update the local state
+			technologies = technologies.map(tech => 
+				tech.tech_id === techId 
+					? { ...tech, is_active: result.is_active } 
+					: tech
+			);
+			
+			// Reapply filters
+			filterTechnologies();
+		} catch (err) {
+			error = err.message;
+			console.error('Failed to toggle technology status:', err);
+		}
 	}
 
 	// Handle ESC key to close modal
@@ -1108,13 +1128,6 @@
 				<!-- Actions -->
 				<div class="flex items-center justify-between pt-4 border-t border-gray-200 mt-auto">
 					<div class="flex items-center gap-2">
-						<button 
-							onclick={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}`}
-							class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-							title="View Details"
-						>
-							<Eye class="w-4 h-4" />
-						</button>
 						<button 
 							onclick={() => window.location.href = `/dashboard/teknologi/${tech.tech_id}/edit`}
 							class="text-indigo-600 hover:text-indigo-900 p-2 hover:bg-indigo-50 rounded-lg transition-colors"

@@ -18,4 +18,7 @@ technologyRoutes.put('/:id', TechnologyController.update)
 // DELETE /api/technologies/:id - Delete technology
 technologyRoutes.delete('/:id', TechnologyController.delete)
 
+// PATCH /api/technologies/:id/toggle-active - Toggle technology active status
+technologyRoutes.patch('/:id/toggle-active', TechnologyController.toggleActive)
+
 export default technologyRoutes

@@ -141,8 +141,9 @@ export const categoriesAPI = {
 
 // Technologies API functions
 export const technologiesAPI = {
-    async getAll() {
-        return await apiRequest('/technologies');
+    async getAll(includeInactive = false) {
+        const queryParam = includeInactive ? '?includeInactive=true' : '';
+        return await apiRequest(`/technologies${queryParam}`);
     },
 
     async getById(id) {
@@ -166,6 +167,12 @@ export const technologiesAPI = {
     async delete(id) {
         return await apiRequest(`/technologies/${id}`, {
             method: 'DELETE'
+        });
+    },
+
+    async toggleActive(id) {
+        return await apiRequest(`/technologies/${id}/toggle-active`, {
+            method: 'PATCH'
         });
     }
 };

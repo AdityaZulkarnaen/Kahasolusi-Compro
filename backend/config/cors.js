@@ -6,5 +6,5 @@ export const corsConfig = {
     'https://kahasolusi.com'
   ],
   allowHeaders: ['Content-Type', 'Authorization'],
-  allowMethods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
+  allowMethods: ['POST', 'GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }
